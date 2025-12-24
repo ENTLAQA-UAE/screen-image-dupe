@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Assessments from "./pages/Assessments";
 import AssessmentGroups from "./pages/AssessmentGroups";
+import Participants from "./pages/Participants";
 import Auth from "./pages/Auth";
 import SuperAdmin from "./pages/SuperAdmin";
 import NotFound from "./pages/NotFound";
@@ -52,7 +53,15 @@ const App = () => (
                 } 
               />
               <Route 
-                path="/super-admin" 
+                path="/participants" 
+                element={
+                  <ProtectedRoute>
+                    <Participants />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/super-admin"
                 element={
                   <ProtectedRoute requiredRoles={['super_admin']}>
                     <SuperAdmin />
