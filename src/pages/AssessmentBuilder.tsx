@@ -13,6 +13,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -36,6 +54,7 @@ import {
   RefreshCw,
   X,
   Save,
+  Library,
 } from "lucide-react";
 
 // Assessment types
@@ -138,6 +157,13 @@ export default function AssessmentBuilder() {
   const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
   const [editingQuestion, setEditingQuestion] = useState<GeneratedQuestion | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [savingToBank, setSavingToBank] = useState(false);
+  
+  // Import from bank
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [bankQuestions, setBankQuestions] = useState<any[]>([]);
+  const [selectedBankQuestions, setSelectedBankQuestions] = useState<Set<string>>(new Set());
+  const [loadingBank, setLoadingBank] = useState(false);
 
   useEffect(() => {
     const fetchOrg = async () => {
@@ -358,6 +384,146 @@ export default function AssessmentBuilder() {
     setGeneratedQuestions((prev) => [...prev, newQuestion]);
     setEditingQuestionIndex(generatedQuestions.length);
     setEditingQuestion(newQuestion);
+  };
+
+  const handleSaveQuestionToBank = async (questionIndex: number) => {
+    if (!organizationId) {
+      toast.error("Organization not found");
+      return;
+    }
+    
+    const question = generatedQuestions[questionIndex];
+    try {
+      const { error } = await supabase.from("question_bank").insert({
+        organization_id: organizationId,
+        text: question.text,
+        type: question.type,
+        options: question.options,
+        correct_answer: question.correctAnswer !== undefined 
+          ? { index: question.correctAnswer } 
+          : question.scoringLogic,
+        language: formData.language,
+        assessment_type: assessmentType,
+        difficulty: question.metadata?.difficulty || formData.difficulty,
+        subdomain: question.metadata?.subdomain || question.metadata?.trait || null,
+        tags: [assessmentType, formData.difficulty].filter(Boolean),
+      });
+      
+      if (error) throw error;
+      toast.success("Question saved to bank");
+    } catch (error: any) {
+      console.error("Error saving to bank:", error);
+      toast.error("Failed to save question to bank");
+    }
+  };
+
+  const handleSaveAllToBank = async () => {
+    if (!organizationId) {
+      toast.error("Organization not found");
+      return;
+    }
+    
+    if (generatedQuestions.length === 0) {
+      toast.error("No questions to save");
+      return;
+    }
+    
+    setSavingToBank(true);
+    try {
+      const questionsToInsert = generatedQuestions.map((q) => ({
+        organization_id: organizationId,
+        text: q.text,
+        type: q.type,
+        options: q.options,
+        correct_answer: q.correctAnswer !== undefined 
+          ? { index: q.correctAnswer } 
+          : q.scoringLogic,
+        language: formData.language,
+        assessment_type: assessmentType,
+        difficulty: q.metadata?.difficulty || formData.difficulty,
+        subdomain: q.metadata?.subdomain || q.metadata?.trait || null,
+        tags: [assessmentType, formData.difficulty].filter(Boolean),
+      }));
+      
+      const { error } = await supabase.from("question_bank").insert(questionsToInsert);
+      
+      if (error) throw error;
+      toast.success(`${generatedQuestions.length} questions saved to bank`);
+    } catch (error: any) {
+      console.error("Error saving to bank:", error);
+      toast.error("Failed to save questions to bank");
+    } finally {
+      setSavingToBank(false);
+    }
+  };
+
+  const fetchBankQuestions = async () => {
+    if (!organizationId) return;
+    setLoadingBank(true);
+    try {
+      let query = supabase
+        .from("question_bank")
+        .select("*")
+        .eq("organization_id", organizationId)
+        .order("created_at", { ascending: false });
+      
+      // Optionally filter by assessment type and language
+      if (assessmentType) {
+        query = query.eq("assessment_type", assessmentType);
+      }
+      if (formData.language) {
+        query = query.eq("language", formData.language);
+      }
+      
+      const { data, error } = await query;
+      if (error) throw error;
+      setBankQuestions((data || []).map((q: any) => ({
+        ...q,
+        options: Array.isArray(q.options) ? q.options : [],
+        tags: Array.isArray(q.tags) ? q.tags : [],
+      })));
+    } catch (error: any) {
+      console.error("Error fetching bank questions:", error);
+      toast.error("Failed to load question bank");
+    } finally {
+      setLoadingBank(false);
+    }
+  };
+
+  const handleOpenImportDialog = () => {
+    setSelectedBankQuestions(new Set());
+    fetchBankQuestions();
+    setImportDialogOpen(true);
+  };
+
+  const toggleBankQuestionSelection = (questionId: string) => {
+    const newSelection = new Set(selectedBankQuestions);
+    if (newSelection.has(questionId)) {
+      newSelection.delete(questionId);
+    } else {
+      newSelection.add(questionId);
+    }
+    setSelectedBankQuestions(newSelection);
+  };
+
+  const handleImportSelectedQuestions = () => {
+    const questionsToImport = bankQuestions
+      .filter((q) => selectedBankQuestions.has(q.id))
+      .map((q) => ({
+        text: q.text,
+        type: q.type,
+        options: q.options,
+        correctAnswer: q.correct_answer?.index,
+        scoringLogic: q.correct_answer,
+        metadata: {
+          difficulty: q.difficulty,
+          subdomain: q.subdomain,
+        },
+      }));
+    
+    setGeneratedQuestions((prev) => [...prev, ...questionsToImport]);
+    setImportDialogOpen(false);
+    toast.success(`Imported ${questionsToImport.length} questions`);
   };
 
   const currentTypeConfig = TYPE_CONFIGS[assessmentType] || { fields: [] };
@@ -703,24 +869,36 @@ export default function AssessmentBuilder() {
       exit={{ opacity: 0, x: -20 }}
       className="space-y-6 max-w-4xl mx-auto"
     >
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="text-2xl font-bold mb-2">Review & Edit Questions</h2>
-          <p className="text-muted-foreground">
-            {generatedQuestions.length} questions. Drag to reorder, click to edit, or add new ones.
-          </p>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-2xl font-bold mb-2">Review & Edit Questions</h2>
+            <p className="text-muted-foreground">
+              {generatedQuestions.length} questions. Drag to reorder, click to edit, or add new ones.
+            </p>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="outline" onClick={handleOpenImportDialog}>
+              <Library className="w-4 h-4 mr-2" />
+              Import from Bank
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleSaveAllToBank}
+              disabled={savingToBank || generatedQuestions.length === 0}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {savingToBank ? "Saving..." : "Save All to Bank"}
+            </Button>
+            <Button variant="outline" onClick={handleAddManualQuestion}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Question
+            </Button>
+            <Button variant="outline" onClick={() => setStep(4)}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Regenerate
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleAddManualQuestion}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Question
-          </Button>
-          <Button variant="outline" onClick={() => setStep(4)}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Regenerate
-          </Button>
-        </div>
-      </div>
       
       <div className="space-y-3">
         {generatedQuestions.map((question, index) => (
@@ -862,6 +1040,15 @@ export default function AssessmentBuilder() {
                     )}
                   </div>
                   <div className="flex gap-1 shrink-0">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => handleSaveQuestionToBank(index)}
+                      className="h-8 w-8"
+                      title="Save to Question Bank"
+                    >
+                      <Library className="w-4 h-4" />
+                    </Button>
                     <Button
                       size="icon"
                       variant="ghost"
@@ -1012,6 +1199,65 @@ export default function AssessmentBuilder() {
           )}
         </div>
       </div>
+
+      {/* Import from Bank Dialog */}
+      <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Import from Question Bank</DialogTitle>
+            <DialogDescription>
+              Select questions to import. Showing {bankQuestions.length} questions matching your assessment type and language.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <ScrollArea className="h-96">
+            {loadingBank ? (
+              <div className="flex items-center justify-center h-32">
+                <Loader2 className="w-6 h-6 animate-spin" />
+              </div>
+            ) : bankQuestions.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No questions found in your bank for this assessment type.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12"></TableHead>
+                    <TableHead>Question</TableHead>
+                    <TableHead>Difficulty</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {bankQuestions.map((q) => (
+                    <TableRow key={q.id} className="cursor-pointer" onClick={() => toggleBankQuestionSelection(q.id)}>
+                      <TableCell>
+                        <Checkbox 
+                          checked={selectedBankQuestions.has(q.id)}
+                          onCheckedChange={() => toggleBankQuestionSelection(q.id)}
+                        />
+                      </TableCell>
+                      <TableCell className="max-w-md">
+                        <p className="truncate">{q.text}</p>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="capitalize">{q.difficulty || "—"}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </ScrollArea>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setImportDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleImportSelectedQuestions} disabled={selectedBankQuestions.size === 0}>
+              Import {selectedBankQuestions.size} Questions
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }

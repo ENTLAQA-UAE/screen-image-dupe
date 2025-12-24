@@ -16,6 +16,7 @@ import {
   UserCog,
   CreditCard,
   PieChart,
+  Library,
 } from "lucide-react";
 
 interface NavItem {
@@ -31,6 +32,7 @@ const hrAdminNavItems: NavItem[] = [
   { icon: FolderKanban, label: "Assessment Groups", href: "/assessment-groups" },
   { icon: Users, label: "Participants", href: "/participants" },
   { icon: UserCircle, label: "Employees", href: "/employees" },
+  { icon: Library, label: "Question Bank", href: "/question-bank" },
   { icon: PieChart, label: "Reports", href: "/reports" },
 ];
 

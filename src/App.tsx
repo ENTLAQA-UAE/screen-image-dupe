@@ -16,6 +16,7 @@ import Reports from "./pages/Reports";
 import Participants from "./pages/Participants";
 import Employees from "./pages/Employees";
 import EmployeeDetail from "./pages/EmployeeDetail";
+import QuestionBank from "./pages/QuestionBank";
 import OrganizationSettings from "./pages/OrganizationSettings";
 import TakeAssessment from "./pages/TakeAssessment";
 import Auth from "./pages/Auth";
@@ -106,6 +107,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <EmployeeDetail />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/question-bank" 
+                element={
+                  <ProtectedRoute>
+                    <QuestionBank />
                   </ProtectedRoute>
                 } 
               />
