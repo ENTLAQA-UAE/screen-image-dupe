@@ -13,14 +13,15 @@ import {
   TrendingUp,
   Clock,
   CheckCircle2,
-  AlertCircle,
   Play,
   Eye,
   MoreHorizontal,
   Brain,
   Heart,
   MessageSquare,
-  Languages
+  Languages,
+  Shield,
+  LogOut
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -117,15 +118,17 @@ const statusColors = {
 interface DashboardSidebarProps {
   userName: string;
   roleLabel: string;
+  isSuperAdmin: boolean;
+  onSignOut: () => void;
 }
 
-const DashboardSidebar = ({ userName, roleLabel }: DashboardSidebarProps) => {
+const DashboardSidebar = ({ userName, roleLabel, isSuperAdmin, onSignOut }: DashboardSidebarProps) => {
   const navItems = [
-    { icon: BarChart3, label: "Dashboard", active: true },
-    { icon: FileText, label: "Assessments", active: false },
-    { icon: Users, label: "Assessment Groups", active: false },
-    { icon: Users, label: "Employees", active: false },
-    { icon: Settings, label: "Settings", active: false },
+    { icon: BarChart3, label: "Dashboard", href: "/dashboard", active: true },
+    { icon: FileText, label: "Assessments", href: "/dashboard", active: false },
+    { icon: Users, label: "Assessment Groups", href: "/dashboard", active: false },
+    { icon: Users, label: "Employees", href: "/dashboard", active: false },
+    { icon: Settings, label: "Settings", href: "/dashboard", active: false },
   ];
 
   return (
@@ -145,6 +148,15 @@ const DashboardSidebar = ({ userName, roleLabel }: DashboardSidebarProps) => {
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1">
+        {isSuperAdmin && (
+          <Link
+            to="/super-admin"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 bg-highlight/10 text-highlight hover:bg-highlight/20 mb-2"
+          >
+            <Shield className="w-5 h-5" />
+            Super Admin Console
+          </Link>
+        )}
         {navItems.map((item) => (
           <button
             key={item.label}
@@ -172,8 +184,14 @@ const DashboardSidebar = ({ userName, roleLabel }: DashboardSidebarProps) => {
             <p className="text-sm font-medium text-sidebar-foreground truncate">{userName}</p>
             <p className="text-xs text-sidebar-foreground/60 truncate">{roleLabel}</p>
           </div>
-          <ChevronDown className="w-4 h-4 text-sidebar-foreground/60" />
         </div>
+        <button
+          onClick={onSignOut}
+          className="w-full flex items-center gap-3 px-4 py-2 mt-2 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+          Sign Out
+        </button>
       </div>
     </aside>
   );
@@ -195,7 +213,12 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardSidebar userName={getUserName()} roleLabel={getRoleLabel()} />
+      <DashboardSidebar 
+        userName={getUserName()} 
+        roleLabel={getRoleLabel()} 
+        isSuperAdmin={isSuperAdmin()}
+        onSignOut={signOut}
+      />
 
       {/* Main Content */}
       <div className="pl-64">
