@@ -337,7 +337,7 @@ const Assessments = () => {
               Create and manage your assessment templates.
             </p>
           </div>
-          <Button variant="hero" onClick={() => setIsCreateOpen(true)}>
+          <Button variant="hero" onClick={() => navigate('/assessments/new')}>
             <Plus className="w-4 h-4" />
             Create Assessment
           </Button>
@@ -375,7 +375,7 @@ const Assessments = () => {
               {searchQuery ? 'Try a different search term.' : 'Create your first assessment to get started.'}
             </p>
             {!searchQuery && (
-              <Button variant="hero" onClick={() => setIsCreateOpen(true)}>
+              <Button variant="hero" onClick={() => navigate('/assessments/new')}>
                 <Plus className="w-4 h-4 mr-2" />
                 Create Assessment
               </Button>
