@@ -50,7 +50,8 @@ import {
   Play,
   CalendarIcon,
   UserPlus,
-  Link as LinkIcon
+  Link as LinkIcon,
+  BarChart3
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -504,6 +505,10 @@ const AssessmentGroups = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => navigate(`/assessment-groups/${group.id}/report`)}>
+                              <BarChart3 className="w-4 h-4 mr-2" />
+                              View Report
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => openEditDialog(group)}>
                               <Edit className="w-4 h-4 mr-2" />
                               Edit
