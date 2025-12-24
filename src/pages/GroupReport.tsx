@@ -27,7 +27,9 @@ import {
   Loader2,
   Brain,
   Sparkles,
+  Download,
 } from "lucide-react";
+import { generateGroupPDF, generateParticipantPDF } from "@/lib/pdfGenerator";
 import {
   BarChart,
   Bar,
@@ -239,6 +241,52 @@ const GroupReport = () => {
     return format(new Date(dateString), "MMM d, yyyy HH:mm");
   };
 
+  const handleExportGroupPDF = () => {
+    if (!group || !stats) return;
+    generateGroupPDF({
+      groupName: group.name,
+      assessmentTitle: group.assessment?.title || "Unknown",
+      assessmentType: group.assessment?.type || "unknown",
+      startDate: group.start_date,
+      endDate: group.end_date,
+      organizationName: "Organization",
+      stats: {
+        totalParticipants: stats.totalParticipants,
+        completed: stats.completed,
+        inProgress: stats.inProgress,
+        invited: stats.invited,
+        completionRate: stats.completionRate,
+        averageScore: stats.averageScore,
+        highestScore: stats.highestScore,
+        lowestScore: stats.lowestScore,
+      },
+      participants: participants.map((p) => ({
+        name: p.full_name || "",
+        email: p.email || "",
+        status: p.status || "invited",
+        score: p.score_summary?.percentage ?? null,
+        completedAt: p.completed_at,
+      })),
+    });
+    toast.success("PDF exported successfully");
+  };
+
+  const handleExportParticipantPDF = (participant: ParticipantData) => {
+    if (!group) return;
+    generateParticipantPDF({
+      participantName: participant.full_name || "",
+      participantEmail: participant.email || "",
+      groupName: group.name,
+      assessmentTitle: group.assessment?.title || "Unknown",
+      assessmentType: group.assessment?.type || "unknown",
+      completedAt: participant.completed_at,
+      scoreSummary: participant.score_summary,
+      aiReport: participant.ai_report_text,
+      organizationName: "Organization",
+    });
+    toast.success("PDF exported successfully");
+  };
+
   const statusData = stats
     ? [
         { name: "Completed", value: stats.completed, color: STATUS_COLORS.completed },
@@ -282,6 +330,10 @@ const GroupReport = () => {
               {formatDate(group.start_date)} - {formatDate(group.end_date)}
             </p>
           </div>
+          <Button variant="outline" onClick={handleExportGroupPDF}>
+            <Download className="w-4 h-4 mr-2" />
+            Export PDF
+          </Button>
           <Badge variant={group.is_active ? "default" : "secondary"}>
             {group.is_active ? "Active" : "Inactive"}
           </Badge>
