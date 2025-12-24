@@ -12,6 +12,8 @@ import Assessments from "./pages/Assessments";
 import AssessmentBuilder from "./pages/AssessmentBuilder";
 import AssessmentGroups from "./pages/AssessmentGroups";
 import Participants from "./pages/Participants";
+import Employees from "./pages/Employees";
+import EmployeeDetail from "./pages/EmployeeDetail";
 import OrganizationSettings from "./pages/OrganizationSettings";
 import TakeAssessment from "./pages/TakeAssessment";
 import Auth from "./pages/Auth";
@@ -72,6 +74,22 @@ const App = () => (
                 } 
               />
               <Route 
+                path="/employees" 
+                element={
+                  <ProtectedRoute>
+                    <Employees />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/employees/:email" 
+                element={
+                  <ProtectedRoute>
+                    <EmployeeDetail />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route
                 path="/settings" 
                 element={
                   <ProtectedRoute requiredRoles={['org_admin', 'super_admin']}>
