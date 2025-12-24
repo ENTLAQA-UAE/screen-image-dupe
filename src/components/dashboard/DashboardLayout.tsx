@@ -9,7 +9,9 @@ import {
   Settings, 
   LogOut,
   Bell,
-  Search
+  Search,
+  FolderKanban,
+  UserCircle,
 } from "lucide-react";
 
 interface NavItem {
@@ -21,8 +23,9 @@ interface NavItem {
 const navItems: NavItem[] = [
   { icon: BarChart3, label: "Dashboard", href: "/dashboard" },
   { icon: FileText, label: "Assessments", href: "/assessments" },
-  { icon: Users, label: "Assessment Groups", href: "/assessment-groups" },
+  { icon: FolderKanban, label: "Assessment Groups", href: "/assessment-groups" },
   { icon: Users, label: "Participants", href: "/participants" },
+  { icon: UserCircle, label: "Employees", href: "/employees" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ];
 

@@ -153,11 +153,13 @@ export type Database = {
           access_token: string | null
           ai_report_text: string | null
           completed_at: string | null
+          department: string | null
           email: string | null
           employee_code: string | null
           full_name: string | null
           group_id: string | null
           id: string
+          job_title: string | null
           organization_id: string
           score_summary: Json | null
           started_at: string | null
@@ -167,11 +169,13 @@ export type Database = {
           access_token?: string | null
           ai_report_text?: string | null
           completed_at?: string | null
+          department?: string | null
           email?: string | null
           employee_code?: string | null
           full_name?: string | null
           group_id?: string | null
           id?: string
+          job_title?: string | null
           organization_id: string
           score_summary?: Json | null
           started_at?: string | null
@@ -181,11 +185,13 @@ export type Database = {
           access_token?: string | null
           ai_report_text?: string | null
           completed_at?: string | null
+          department?: string | null
           email?: string | null
           employee_code?: string | null
           full_name?: string | null
           group_id?: string | null
           id?: string
+          job_title?: string | null
           organization_id?: string
           score_summary?: Json | null
           started_at?: string | null

@@ -86,17 +86,7 @@ const Employees = () => {
       // Fetch all participants and aggregate by email
       const { data: participants, error } = await supabase
         .from("participants")
-        .select(`
-          id,
-          email,
-          full_name,
-          department,
-          job_title,
-          employee_code,
-          status,
-          completed_at,
-          organization_id
-        `)
+        .select("*")
         .eq("organization_id", organizationId);
 
       if (error) throw error;
@@ -104,7 +94,7 @@ const Employees = () => {
       // Aggregate participants by email to get unique employees
       const employeeMap = new Map<string, Employee>();
 
-      (participants || []).forEach((p) => {
+      ((participants || []) as any[]).forEach((p) => {
         if (!p.email) return;
 
         const existing = employeeMap.get(p.email);
