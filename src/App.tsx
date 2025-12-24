@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Assessments from "./pages/Assessments";
+import AssessmentBuilder from "./pages/AssessmentBuilder";
 import AssessmentGroups from "./pages/AssessmentGroups";
 import Participants from "./pages/Participants";
 import OrganizationSettings from "./pages/OrganizationSettings";
@@ -42,6 +43,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Assessments />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/assessments/new" 
+                element={
+                  <ProtectedRoute>
+                    <AssessmentBuilder />
                   </ProtectedRoute>
                 } 
               />
