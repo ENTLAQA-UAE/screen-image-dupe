@@ -2,3 +2,9 @@ project_id = "ephwmhikhiiyrnikvrwp"
 
 [functions.generate-questions]
 verify_jwt = false
+
+[functions.get-assessment]
+verify_jwt = false
+
+[functions.submit-assessment]
+verify_jwt = false

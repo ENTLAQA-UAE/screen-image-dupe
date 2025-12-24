@@ -13,6 +13,7 @@ import AssessmentBuilder from "./pages/AssessmentBuilder";
 import AssessmentGroups from "./pages/AssessmentGroups";
 import Participants from "./pages/Participants";
 import OrganizationSettings from "./pages/OrganizationSettings";
+import TakeAssessment from "./pages/TakeAssessment";
 import Auth from "./pages/Auth";
 import SuperAdmin from "./pages/SuperAdmin";
 import NotFound from "./pages/NotFound";
@@ -86,6 +87,8 @@ const App = () => (
                   </ProtectedRoute>
                 } 
               />
+              {/* Public assessment taking page */}
+              <Route path="/assess" element={<TakeAssessment />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
