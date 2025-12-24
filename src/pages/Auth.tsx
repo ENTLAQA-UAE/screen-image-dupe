@@ -28,7 +28,7 @@ const signupSchema = z.object({
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { user, loading, signIn, signUp } = useAuth();
+  const { user, loading, signIn, signUp, isSuperAdmin } = useAuth();
   const { toast } = useToast();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,9 +49,14 @@ export default function Auth() {
 
   useEffect(() => {
     if (!loading && user) {
-      navigate('/dashboard');
+      // Redirect Super Admins to Super Admin Console, others to Dashboard
+      if (isSuperAdmin()) {
+        navigate('/super-admin');
+      } else {
+        navigate('/dashboard');
+      }
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, isSuperAdmin]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

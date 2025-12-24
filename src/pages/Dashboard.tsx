@@ -9,7 +9,6 @@ import {
   Settings, 
   Bell,
   Search,
-  ChevronDown,
   TrendingUp,
   Clock,
   CheckCircle2,
@@ -21,7 +20,10 @@ import {
   MessageSquare,
   Languages,
   Shield,
-  LogOut
+  LogOut,
+  Building2,
+  CreditCard,
+  UserCog
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -150,14 +152,44 @@ const DashboardSidebar = ({ userName, roleLabel, isSuperAdmin, onSignOut }: Dash
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1">
         {isSuperAdmin ? (
-          // Super Admin sees only the Super Admin Console link
-          <Link
-            to="/super-admin"
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 bg-sidebar-accent text-sidebar-primary"
-          >
-            <Shield className="w-5 h-5" />
-            Super Admin Console
-          </Link>
+          // Super Admin navigation
+          <>
+            <Link
+              to="/super-admin"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 bg-sidebar-accent text-sidebar-primary"
+            >
+              <BarChart3 className="w-5 h-5" />
+              Dashboard
+            </Link>
+            <Link
+              to="/super-admin"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+            >
+              <Building2 className="w-5 h-5" />
+              Organizations
+            </Link>
+            <Link
+              to="/super-admin"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+            >
+              <UserCog className="w-5 h-5" />
+              Users & Roles
+            </Link>
+            <Link
+              to="/super-admin"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+            >
+              <CreditCard className="w-5 h-5" />
+              Subscriptions
+            </Link>
+            <Link
+              to="/super-admin"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+            >
+              <Settings className="w-5 h-5" />
+              Platform Settings
+            </Link>
+          </>
         ) : (
           // Org Admin / HR Admin sees regular navigation
           orgNavItems.map((item) => (
