@@ -28,9 +28,8 @@ interface Organization {
 interface OrgUser {
   id: string;
   full_name: string | null;
-  role: string | null;
   created_at: string;
-  user_id?: string;
+  role?: string | null;
 }
 
 interface UsageStats {
@@ -130,17 +129,31 @@ export default function OrganizationSettings() {
     
     if (!profile?.organization_id) return;
     
-    const { data, error } = await supabase
+    // Get profiles for this organization
+    const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
-      .select("id, full_name, role, created_at")
+      .select("id, full_name, created_at")
       .eq("organization_id", profile.organization_id);
     
-    if (error) {
+    if (profilesError) {
       toast.error("Failed to load users");
       return;
     }
+
+    // Get roles for these users
+    const userIds = profiles?.map(p => p.id) || [];
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("user_id, role")
+      .in("user_id", userIds);
+
+    // Combine profiles with roles
+    const usersWithRoles: OrgUser[] = (profiles || []).map(p => ({
+      ...p,
+      role: roles?.find(r => r.user_id === p.id)?.role || null,
+    }));
     
-    setOrgUsers(data || []);
+    setOrgUsers(usersWithRoles);
   };
 
   const fetchUsageStats = async () => {

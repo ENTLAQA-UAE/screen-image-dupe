@@ -117,9 +117,13 @@ export type Database = {
       }
       organizations: {
         Row: {
+          assessment_limit: number | null
+          billing_cycle_start: string | null
           created_at: string | null
           id: string
+          is_active: boolean | null
           logo_url: string | null
+          max_hr_admins: number | null
           name: string
           plan: string | null
           primary_color: string | null
@@ -127,9 +131,13 @@ export type Database = {
           slug: string | null
         }
         Insert: {
+          assessment_limit?: number | null
+          billing_cycle_start?: string | null
           created_at?: string | null
           id?: string
+          is_active?: boolean | null
           logo_url?: string | null
+          max_hr_admins?: number | null
           name: string
           plan?: string | null
           primary_color?: string | null
@@ -137,9 +145,13 @@ export type Database = {
           slug?: string | null
         }
         Update: {
+          assessment_limit?: number | null
+          billing_cycle_start?: string | null
           created_at?: string | null
           id?: string
+          is_active?: boolean | null
           logo_url?: string | null
+          max_hr_admins?: number | null
           name?: string
           plan?: string | null
           primary_color?: string | null
@@ -220,21 +232,18 @@ export type Database = {
           full_name: string | null
           id: string
           organization_id: string | null
-          role: string | null
         }
         Insert: {
           created_at?: string | null
           full_name?: string | null
           id: string
           organization_id?: string | null
-          role?: string | null
         }
         Update: {
           created_at?: string | null
           full_name?: string | null
           id?: string
           organization_id?: string | null
-          role?: string | null
         }
         Relationships: [
           {
@@ -375,6 +384,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_hr_admin: { Args: { _user_id?: string }; Returns: boolean }
+      is_org_admin: { Args: { _user_id?: string }; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
     }
     Enums: {

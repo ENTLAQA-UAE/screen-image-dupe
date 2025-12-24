@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,9 @@ import {
   Search,
   FolderKanban,
   UserCircle,
+  Building2,
+  UserCog,
+  CreditCard,
 } from "lucide-react";
 
 interface NavItem {
@@ -20,13 +23,21 @@ interface NavItem {
   href: string;
 }
 
-const navItems: NavItem[] = [
+// HR Admin navigation - operational features
+const hrAdminNavItems: NavItem[] = [
   { icon: BarChart3, label: "Dashboard", href: "/dashboard" },
   { icon: FileText, label: "Assessments", href: "/assessments" },
   { icon: FolderKanban, label: "Assessment Groups", href: "/assessment-groups" },
   { icon: Users, label: "Participants", href: "/participants" },
   { icon: UserCircle, label: "Employees", href: "/employees" },
-  { icon: Settings, label: "Settings", href: "/settings" },
+];
+
+// Org Admin navigation - management features
+const orgAdminNavItems: NavItem[] = [
+  { icon: BarChart3, label: "Dashboard", href: "/dashboard" },
+  { icon: Building2, label: "Organization", href: "/settings" },
+  { icon: UserCog, label: "User Management", href: "/user-management" },
+  { icon: CreditCard, label: "Subscription", href: "/subscription" },
 ];
 
 interface DashboardLayoutProps {
@@ -37,6 +48,14 @@ interface DashboardLayoutProps {
 export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const { user, signOut, isOrgAdmin, isHrAdmin } = useAuth();
+
+  // Determine which nav items to show based on role
+  const navItems = useMemo(() => {
+    if (isOrgAdmin()) return orgAdminNavItems;
+    if (isHrAdmin()) return hrAdminNavItems;
+    // Default to HR admin items for users with no specific role
+    return hrAdminNavItems;
+  }, [isOrgAdmin, isHrAdmin]);
 
   const getRoleLabel = () => {
     if (isOrgAdmin()) return "Org Admin";
