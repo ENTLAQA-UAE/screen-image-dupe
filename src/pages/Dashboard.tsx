@@ -123,7 +123,8 @@ interface DashboardSidebarProps {
 }
 
 const DashboardSidebar = ({ userName, roleLabel, isSuperAdmin, onSignOut }: DashboardSidebarProps) => {
-  const navItems = [
+  // Different nav items based on role
+  const orgNavItems = [
     { icon: BarChart3, label: "Dashboard", href: "/dashboard", active: true },
     { icon: FileText, label: "Assessments", href: "/dashboard", active: false },
     { icon: Users, label: "Assessment Groups", href: "/dashboard", active: false },
@@ -148,28 +149,31 @@ const DashboardSidebar = ({ userName, roleLabel, isSuperAdmin, onSignOut }: Dash
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1">
-        {isSuperAdmin && (
+        {isSuperAdmin ? (
+          // Super Admin sees only the Super Admin Console link
           <Link
             to="/super-admin"
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 bg-highlight/10 text-highlight hover:bg-highlight/20 mb-2"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 bg-sidebar-accent text-sidebar-primary"
           >
             <Shield className="w-5 h-5" />
             Super Admin Console
           </Link>
+        ) : (
+          // Org Admin / HR Admin sees regular navigation
+          orgNavItems.map((item) => (
+            <button
+              key={item.label}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                item.active 
+                  ? "bg-sidebar-accent text-sidebar-primary" 
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+              }`}
+            >
+              <item.icon className="w-5 h-5" />
+              {item.label}
+            </button>
+          ))
         )}
-        {navItems.map((item) => (
-          <button
-            key={item.label}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-              item.active 
-                ? "bg-sidebar-accent text-sidebar-primary" 
-                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-            }`}
-          >
-            <item.icon className="w-5 h-5" />
-            {item.label}
-          </button>
-        ))}
       </nav>
 
       {/* User Section */}
