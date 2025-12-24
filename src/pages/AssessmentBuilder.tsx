@@ -55,6 +55,7 @@ import {
   X,
   Save,
   Library,
+  Timer,
 } from "lucide-react";
 
 // Assessment types
@@ -149,6 +150,8 @@ export default function AssessmentBuilder() {
     showResultsToEmployee: true,
     allowEmployeePdfDownload: false,
     aiFeedbackEnabled: true,
+    timeLimit: 0, // 0 means no limit, otherwise in minutes
+    timeLimitEnabled: false,
   });
   const [typeConfig, setTypeConfig] = useState<Record<string, any>>({});
   
@@ -242,6 +245,7 @@ export default function AssessmentBuilder() {
             showResultsToEmployee: formData.showResultsToEmployee,
             allowEmployeePdfDownload: formData.allowEmployeePdfDownload,
             aiFeedbackEnabled: formData.aiFeedbackEnabled,
+            timeLimit: formData.timeLimitEnabled ? formData.timeLimit : null,
             ...typeConfig,
           },
         })
@@ -856,6 +860,51 @@ export default function AssessmentBuilder() {
                 onCheckedChange={(checked) => setFormData({ ...formData, aiFeedbackEnabled: checked })}
               />
             </div>
+          </div>
+
+          {/* Time Limit Settings */}
+          <div className="border-t pt-6 space-y-4">
+            <h3 className="font-semibold flex items-center gap-2">
+              <Timer className="w-4 h-4" />
+              Time Settings
+            </h3>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <Label>Enable time limit</Label>
+                <p className="text-xs text-muted-foreground">Auto-submit when time expires</p>
+              </div>
+              <Switch
+                checked={formData.timeLimitEnabled}
+                onCheckedChange={(checked) => setFormData({ 
+                  ...formData, 
+                  timeLimitEnabled: checked,
+                  timeLimit: checked && formData.timeLimit === 0 ? Math.ceil(formData.questionCount * 1.5) : formData.timeLimit
+                })}
+              />
+            </div>
+
+            {formData.timeLimitEnabled && (
+              <div className="space-y-2 p-4 bg-muted rounded-lg">
+                <div className="flex items-center justify-between">
+                  <Label>Time limit (minutes)</Label>
+                  <span className="text-sm font-medium">{formData.timeLimit} min</span>
+                </div>
+                <Slider
+                  value={[formData.timeLimit]}
+                  onValueChange={([value]) => setFormData({ ...formData, timeLimit: value })}
+                  min={5}
+                  max={180}
+                  step={5}
+                  className="mt-2"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>5 min</span>
+                  <span>Recommended: ~{Math.ceil(formData.questionCount * 1.5)} min</span>
+                  <span>180 min</span>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

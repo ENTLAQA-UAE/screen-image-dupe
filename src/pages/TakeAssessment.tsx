@@ -228,6 +228,7 @@ export default function TakeAssessment() {
   // Timer
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [timerActive, setTimerActive] = useState(false);
+  const [shownWarnings, setShownWarnings] = useState<Set<number>>(new Set());
 
   // Submission results
   const [submissionResults, setSubmissionResults] = useState<any>(null);
@@ -253,13 +254,27 @@ export default function TakeAssessment() {
     }
   }, [token]);
 
-  // Timer effect
+  // Timer effect with warnings
   useEffect(() => {
     if (!timerActive || timeRemaining === null) return;
 
     if (timeRemaining <= 0) {
+      toast.error(isArabic ? "انتهى الوقت! جاري الإرسال..." : "Time's up! Submitting...");
       handleSubmit();
       return;
+    }
+
+    // Show warnings at 5 min, 2 min, and 1 min
+    const warningThresholds = [300, 120, 60];
+    for (const threshold of warningThresholds) {
+      if (timeRemaining === threshold && !shownWarnings.has(threshold)) {
+        const minutes = Math.floor(threshold / 60);
+        const message = isArabic 
+          ? `تنبيه: متبقي ${minutes === 1 ? "دقيقة واحدة" : `${minutes} دقائق`}!` 
+          : `Warning: ${minutes} minute${minutes > 1 ? "s" : ""} remaining!`;
+        toast.warning(message, { duration: 5000 });
+        setShownWarnings(prev => new Set([...prev, threshold]));
+      }
     }
 
     const interval = setInterval(() => {
@@ -270,7 +285,7 @@ export default function TakeAssessment() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [timerActive, timeRemaining]);
+  }, [timerActive, timeRemaining, shownWarnings, isArabic]);
 
   const loadAssessment = async () => {
     try {
@@ -667,11 +682,21 @@ export default function TakeAssessment() {
 
           {/* Timer warning */}
           {timeRemaining !== null && (
-            <div className="flex items-center gap-3 p-4 bg-highlight/10 border border-highlight/20 rounded-xl">
-              <Timer className="w-5 h-5 text-highlight" />
-              <p className="text-sm">
-                <strong>{t.timeLimit}:</strong> {Math.floor(timeRemaining / 60)} {t.minutes}
-              </p>
+            <div className="flex items-center gap-3 p-4 bg-warning/10 border border-warning/20 rounded-xl">
+              <div className="w-10 h-10 rounded-lg bg-warning/20 flex items-center justify-center flex-shrink-0">
+                <Timer className="w-5 h-5 text-warning" />
+              </div>
+              <div>
+                <p className="font-semibold text-warning">
+                  {isArabic ? "تقييم محدد بوقت" : "Timed Assessment"}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {isArabic 
+                    ? `لديك ${Math.floor(timeRemaining / 60)} دقيقة لإكمال هذا التقييم. سيتم الإرسال تلقائياً عند انتهاء الوقت.`
+                    : `You have ${Math.floor(timeRemaining / 60)} minutes to complete this assessment. It will auto-submit when time expires.`
+                  }
+                </p>
+              </div>
             </div>
           )}
 
@@ -710,14 +735,24 @@ export default function TakeAssessment() {
                   .replace("{total}", String(assessmentData.questions.length))}
               </span>
               {timeRemaining !== null && (
-                <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
-                  timeRemaining < 60 ? "bg-destructive/10 text-destructive" : 
-                  timeRemaining < 300 ? "bg-highlight/10 text-highlight" : 
-                  "bg-primary/10 text-primary"
-                }`}>
-                  <Timer className="w-4 h-4" />
+                <motion.div 
+                  className={`flex items-center gap-2 px-3 py-1 rounded-full ${
+                    timeRemaining < 60 ? "bg-destructive/10 text-destructive" : 
+                    timeRemaining < 300 ? "bg-warning/10 text-warning" : 
+                    "bg-primary/10 text-primary"
+                  }`}
+                  animate={timeRemaining < 60 ? { scale: [1, 1.05, 1] } : {}}
+                  transition={{ repeat: Infinity, duration: 1 }}
+                >
+                  <Timer className={`w-4 h-4 ${timeRemaining < 60 ? "animate-pulse" : ""}`} />
                   <span className="font-mono font-semibold text-sm">{formatTime(timeRemaining)}</span>
-                </div>
+                  {timeRemaining < 300 && timeRemaining >= 60 && (
+                    <span className="text-xs hidden sm:inline">{t.timeRemaining}</span>
+                  )}
+                  {timeRemaining < 60 && (
+                    <AlertTriangle className="w-4 h-4 animate-pulse" />
+                  )}
+                </motion.div>
               )}
             </div>
             <Progress value={progress} className="h-2" />
