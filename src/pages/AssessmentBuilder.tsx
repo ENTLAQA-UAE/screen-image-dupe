@@ -29,6 +29,13 @@ import {
   Zap,
   ClipboardCheck,
   User,
+  Trash2,
+  GripVertical,
+  Pencil,
+  Plus,
+  RefreshCw,
+  X,
+  Save,
 } from "lucide-react";
 
 // Assessment types
@@ -128,6 +135,9 @@ export default function AssessmentBuilder() {
   
   // Step 5: Generated Questions
   const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedQuestion[]>([]);
+  const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null);
+  const [editingQuestion, setEditingQuestion] = useState<GeneratedQuestion | null>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchOrg = async () => {
@@ -251,6 +261,103 @@ export default function AssessmentBuilder() {
       ? current.filter((o: string) => o !== option)
       : [...current, option];
     updateTypeConfig(key, updated);
+  };
+
+  // Question Management Functions
+  const handleDeleteQuestion = (index: number) => {
+    setGeneratedQuestions((prev) => prev.filter((_, i) => i !== index));
+    toast.success("Question deleted");
+  };
+
+  const handleStartEditQuestion = (index: number) => {
+    setEditingQuestionIndex(index);
+    setEditingQuestion({ ...generatedQuestions[index] });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingQuestionIndex(null);
+    setEditingQuestion(null);
+  };
+
+  const handleSaveEdit = () => {
+    if (editingQuestionIndex === null || !editingQuestion) return;
+    setGeneratedQuestions((prev) =>
+      prev.map((q, i) => (i === editingQuestionIndex ? editingQuestion : q))
+    );
+    setEditingQuestionIndex(null);
+    setEditingQuestion(null);
+    toast.success("Question updated");
+  };
+
+  const handleUpdateEditingQuestion = (field: string, value: any) => {
+    if (!editingQuestion) return;
+    setEditingQuestion({ ...editingQuestion, [field]: value });
+  };
+
+  const handleUpdateEditingOption = (optionIndex: number, field: string, value: any) => {
+    if (!editingQuestion) return;
+    const newOptions = [...editingQuestion.options];
+    newOptions[optionIndex] = { ...newOptions[optionIndex], [field]: value };
+    setEditingQuestion({ ...editingQuestion, options: newOptions });
+  };
+
+  const handleAddOption = () => {
+    if (!editingQuestion) return;
+    const newOptions = [...editingQuestion.options, { text: "" }];
+    setEditingQuestion({ ...editingQuestion, options: newOptions });
+  };
+
+  const handleRemoveOption = (optionIndex: number) => {
+    if (!editingQuestion) return;
+    const newOptions = editingQuestion.options.filter((_, i) => i !== optionIndex);
+    // Adjust correctAnswer if needed
+    let correctAnswer = editingQuestion.correctAnswer;
+    if (correctAnswer !== undefined) {
+      if (optionIndex === correctAnswer) {
+        correctAnswer = undefined;
+      } else if (optionIndex < correctAnswer) {
+        correctAnswer = correctAnswer - 1;
+      }
+    }
+    setEditingQuestion({ ...editingQuestion, options: newOptions, correctAnswer });
+  };
+
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+    
+    const newQuestions = [...generatedQuestions];
+    const draggedItem = newQuestions[draggedIndex];
+    newQuestions.splice(draggedIndex, 1);
+    newQuestions.splice(index, 0, draggedItem);
+    setGeneratedQuestions(newQuestions);
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+  };
+
+  const handleAddManualQuestion = () => {
+    const newQuestion: GeneratedQuestion = {
+      text: "",
+      type: category === "graded_quiz" ? "mcq_single" : "likert",
+      options: [
+        { text: "" },
+        { text: "" },
+        { text: "" },
+        { text: "" },
+      ],
+      correctAnswer: category === "graded_quiz" ? 0 : undefined,
+      metadata: {},
+    };
+    setGeneratedQuestions((prev) => [...prev, newQuestion]);
+    setEditingQuestionIndex(generatedQuestions.length);
+    setEditingQuestion(newQuestion);
   };
 
   const currentTypeConfig = TYPE_CONFIGS[assessmentType] || { fields: [] };
@@ -596,68 +703,206 @@ export default function AssessmentBuilder() {
       exit={{ opacity: 0, x: -20 }}
       className="space-y-6 max-w-4xl mx-auto"
     >
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold mb-2">Review Generated Questions</h2>
-        <p className="text-muted-foreground">
-          {generatedQuestions.length} questions generated. Review and save to create your assessment.
-        </p>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h2 className="text-2xl font-bold mb-2">Review & Edit Questions</h2>
+          <p className="text-muted-foreground">
+            {generatedQuestions.length} questions. Drag to reorder, click to edit, or add new ones.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleAddManualQuestion}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Question
+          </Button>
+          <Button variant="outline" onClick={() => setStep(4)}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Regenerate
+          </Button>
+        </div>
       </div>
       
-      <div className="space-y-4">
+      <div className="space-y-3">
         {generatedQuestions.map((question, index) => (
-          <Card key={index}>
+          <Card 
+            key={index}
+            draggable={editingQuestionIndex !== index}
+            onDragStart={() => handleDragStart(index)}
+            onDragOver={(e) => handleDragOver(e, index)}
+            onDragEnd={handleDragEnd}
+            className={`transition-all ${draggedIndex === index ? "opacity-50 scale-[0.98]" : ""} ${editingQuestionIndex === index ? "ring-2 ring-primary" : ""}`}
+          >
             <CardContent className="p-4">
-              <div className="flex items-start gap-4">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-sm font-semibold text-primary">
-                  {index + 1}
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium mb-2">{question.text}</p>
-                  <div className="space-y-1">
-                    {question.options.map((option, optIndex) => (
-                      <div
-                        key={optIndex}
-                        className={`text-sm px-3 py-1.5 rounded ${
-                          question.correctAnswer === optIndex
-                            ? "bg-success/10 text-success border border-success/20"
-                            : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        {option.text}
-                        {question.correctAnswer === optIndex && (
-                          <CheckCircle2 className="w-3 h-3 inline ml-2" />
+              {editingQuestionIndex === index && editingQuestion ? (
+                // Edit Mode
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Badge>Editing Question {index + 1}</Badge>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="ghost" onClick={handleCancelEdit}>
+                        <X className="w-4 h-4 mr-1" />
+                        Cancel
+                      </Button>
+                      <Button size="sm" onClick={handleSaveEdit}>
+                        <Save className="w-4 h-4 mr-1" />
+                        Save
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Question Text</Label>
+                    <Textarea
+                      value={editingQuestion.text}
+                      onChange={(e) => handleUpdateEditingQuestion("text", e.target.value)}
+                      rows={2}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Options</Label>
+                      <Button size="sm" variant="ghost" onClick={handleAddOption}>
+                        <Plus className="w-3 h-3 mr-1" />
+                        Add Option
+                      </Button>
+                    </div>
+                    {editingQuestion.options.map((option, optIndex) => (
+                      <div key={optIndex} className="flex items-center gap-2">
+                        <Input
+                          value={option.text}
+                          onChange={(e) => handleUpdateEditingOption(optIndex, "text", e.target.value)}
+                          placeholder={`Option ${optIndex + 1}`}
+                          className="flex-1"
+                        />
+                        {category === "graded_quiz" && (
+                          <Button
+                            size="sm"
+                            variant={editingQuestion.correctAnswer === optIndex ? "default" : "outline"}
+                            onClick={() => handleUpdateEditingQuestion("correctAnswer", optIndex)}
+                            className="shrink-0"
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                          </Button>
                         )}
-                        {option.value !== undefined && (
-                          <span className="text-xs ml-2">({option.value})</span>
+                        {category === "profile" && (
+                          <Input
+                            type="number"
+                            value={option.value || ""}
+                            onChange={(e) => handleUpdateEditingOption(optIndex, "value", parseInt(e.target.value))}
+                            placeholder="Score"
+                            className="w-20"
+                          />
                         )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleRemoveOption(optIndex)}
+                          className="text-destructive shrink-0"
+                          disabled={editingQuestion.options.length <= 2}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
                       </div>
                     ))}
                   </div>
-                  {question.metadata && (
-                    <div className="flex gap-2 mt-2">
-                      {question.metadata.difficulty && (
-                        <Badge variant="outline" className="text-xs capitalize">
-                          {question.metadata.difficulty}
-                        </Badge>
-                      )}
-                      {question.metadata.subdomain && (
-                        <Badge variant="outline" className="text-xs capitalize">
-                          {question.metadata.subdomain}
-                        </Badge>
-                      )}
-                      {question.metadata.trait && (
-                        <Badge variant="outline" className="text-xs capitalize">
-                          {question.metadata.trait}
-                        </Badge>
-                      )}
-                    </div>
-                  )}
                 </div>
-              </div>
+              ) : (
+                // View Mode
+                <div className="flex items-start gap-3">
+                  <div 
+                    className="cursor-grab hover:bg-muted p-1 rounded"
+                    title="Drag to reorder"
+                  >
+                    <GripVertical className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-sm font-semibold text-primary">
+                    {index + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium mb-2">{question.text || <span className="text-muted-foreground italic">No question text</span>}</p>
+                    <div className="space-y-1">
+                      {question.options.map((option, optIndex) => (
+                        <div
+                          key={optIndex}
+                          className={`text-sm px-3 py-1.5 rounded ${
+                            question.correctAnswer === optIndex
+                              ? "bg-success/10 text-success border border-success/20"
+                              : "bg-muted text-muted-foreground"
+                          }`}
+                        >
+                          {option.text || <span className="italic">Empty option</span>}
+                          {question.correctAnswer === optIndex && (
+                            <CheckCircle2 className="w-3 h-3 inline ml-2" />
+                          )}
+                          {option.value !== undefined && (
+                            <span className="text-xs ml-2">({option.value})</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    {question.metadata && (
+                      <div className="flex gap-2 mt-2">
+                        {question.metadata.difficulty && (
+                          <Badge variant="outline" className="text-xs capitalize">
+                            {question.metadata.difficulty}
+                          </Badge>
+                        )}
+                        {question.metadata.subdomain && (
+                          <Badge variant="outline" className="text-xs capitalize">
+                            {question.metadata.subdomain}
+                          </Badge>
+                        )}
+                        {question.metadata.trait && (
+                          <Badge variant="outline" className="text-xs capitalize">
+                            {question.metadata.trait}
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => handleStartEditQuestion(index)}
+                      className="h-8 w-8"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => handleDeleteQuestion(index)}
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}
       </div>
+      
+      {generatedQuestions.length === 0 && (
+        <Card className="p-12 text-center">
+          <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-semibold mb-2">No questions yet</h3>
+          <p className="text-muted-foreground mb-4">Go back to generate questions or add them manually.</p>
+          <div className="flex gap-2 justify-center">
+            <Button variant="outline" onClick={() => setStep(4)}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Generate with AI
+            </Button>
+            <Button onClick={handleAddManualQuestion}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Manually
+            </Button>
+          </div>
+        </Card>
+      )}
     </motion.div>
   );
 
