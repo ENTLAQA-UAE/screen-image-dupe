@@ -174,7 +174,7 @@ const Participants = () => {
           )
         `)
         .eq('organization_id', organizationId)
-        .order('created_at', { ascending: false });
+        .order('id', { ascending: false });
 
       if (error) throw error;
 
