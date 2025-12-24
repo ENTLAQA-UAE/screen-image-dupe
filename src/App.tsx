@@ -18,6 +18,7 @@ import OrganizationSettings from "./pages/OrganizationSettings";
 import TakeAssessment from "./pages/TakeAssessment";
 import Auth from "./pages/Auth";
 import SuperAdmin from "./pages/SuperAdmin";
+import UserManagement from "./pages/UserManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -94,6 +95,14 @@ const App = () => (
                 element={
                   <ProtectedRoute requiredRoles={['org_admin', 'super_admin']}>
                     <OrganizationSettings />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route
+                path="/user-management" 
+                element={
+                  <ProtectedRoute requiredRoles={['org_admin', 'super_admin']}>
+                    <UserManagement />
                   </ProtectedRoute>
                 } 
               />
