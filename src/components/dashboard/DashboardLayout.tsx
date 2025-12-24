@@ -15,6 +15,7 @@ import {
   Building2,
   UserCog,
   CreditCard,
+  PieChart,
 } from "lucide-react";
 
 interface NavItem {
@@ -30,11 +31,13 @@ const hrAdminNavItems: NavItem[] = [
   { icon: FolderKanban, label: "Assessment Groups", href: "/assessment-groups" },
   { icon: Users, label: "Participants", href: "/participants" },
   { icon: UserCircle, label: "Employees", href: "/employees" },
+  { icon: PieChart, label: "Reports", href: "/reports" },
 ];
 
 // Org Admin navigation - management features
 const orgAdminNavItems: NavItem[] = [
   { icon: BarChart3, label: "Dashboard", href: "/dashboard" },
+  { icon: PieChart, label: "Reports", href: "/reports" },
   { icon: Building2, label: "Organization", href: "/settings" },
   { icon: UserCog, label: "User Management", href: "/user-management" },
   { icon: CreditCard, label: "Subscription", href: "/subscription" },
