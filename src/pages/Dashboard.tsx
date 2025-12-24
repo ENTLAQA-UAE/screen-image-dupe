@@ -189,14 +189,15 @@ const DashboardSidebar = ({ userName, roleLabel, onSignOut }: DashboardSidebarPr
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, roles, signOut, isSuperAdmin, isOrgAdmin, isHrAdmin } = useAuth();
+  const { user, roles, loading, signOut, isSuperAdmin, isOrgAdmin, isHrAdmin } = useAuth();
   
   // Redirect Super Admins to their dedicated console
   useEffect(() => {
-    if (isSuperAdmin()) {
+    // Wait for roles to be loaded before checking
+    if (!loading && roles.length > 0 && isSuperAdmin()) {
       navigate('/super-admin', { replace: true });
     }
-  }, [isSuperAdmin, navigate]);
+  }, [loading, roles, isSuperAdmin, navigate]);
 
   const getRoleLabel = () => {
     if (isOrgAdmin()) return "Org Admin";
@@ -207,6 +208,15 @@ const Dashboard = () => {
   const getUserName = () => {
     return user?.user_metadata?.full_name || user?.email?.split('@')[0] || "User";
   };
+
+  // Show loading while checking roles
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
+      </div>
+    );
+  }
 
   // Don't render dashboard for Super Admins
   if (isSuperAdmin()) {
