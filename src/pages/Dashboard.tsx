@@ -1,6 +1,6 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   Plus, 
   FileText, 
@@ -114,7 +114,12 @@ const statusColors = {
   completed: "bg-accent/10 text-accent border-accent/20",
 };
 
-const DashboardSidebar = () => {
+interface DashboardSidebarProps {
+  userName: string;
+  roleLabel: string;
+}
+
+const DashboardSidebar = ({ userName, roleLabel }: DashboardSidebarProps) => {
   const navItems = [
     { icon: BarChart3, label: "Dashboard", active: true },
     { icon: FileText, label: "Assessments", active: false },
@@ -159,11 +164,13 @@ const DashboardSidebar = () => {
       <div className="p-4 border-t border-sidebar-border">
         <div className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-sidebar-accent/50 cursor-pointer transition-colors">
           <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center">
-            <span className="text-sidebar-foreground font-semibold text-sm">HR</span>
+            <span className="text-sidebar-foreground font-semibold text-sm">
+              {userName.charAt(0).toUpperCase()}
+            </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-sidebar-foreground truncate">HR Admin</p>
-            <p className="text-xs text-sidebar-foreground/60 truncate">Acme Corporation</p>
+            <p className="text-sm font-medium text-sidebar-foreground truncate">{userName}</p>
+            <p className="text-xs text-sidebar-foreground/60 truncate">{roleLabel}</p>
           </div>
           <ChevronDown className="w-4 h-4 text-sidebar-foreground/60" />
         </div>
@@ -173,9 +180,22 @@ const DashboardSidebar = () => {
 };
 
 const Dashboard = () => {
+  const { user, roles, signOut, isSuperAdmin, isOrgAdmin, isHrAdmin } = useAuth();
+  
+  const getRoleLabel = () => {
+    if (isSuperAdmin()) return "Super Admin";
+    if (isOrgAdmin()) return "Org Admin";
+    if (isHrAdmin()) return "HR Admin";
+    return "User";
+  };
+
+  const getUserName = () => {
+    return user?.user_metadata?.full_name || user?.email?.split('@')[0] || "User";
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      <DashboardSidebar />
+      <DashboardSidebar userName={getUserName()} roleLabel={getRoleLabel()} />
 
       {/* Main Content */}
       <div className="pl-64">
@@ -212,7 +232,7 @@ const Dashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-2xl font-display font-bold text-foreground mb-1"
             >
-              Welcome back, HR Admin
+              Welcome back, {getUserName()}
             </motion.h1>
             <p className="text-muted-foreground">
               Here's what's happening with your assessments today.
