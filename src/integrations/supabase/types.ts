@@ -255,6 +255,72 @@ export type Database = {
           },
         ]
       }
+      question_bank: {
+        Row: {
+          assessment_type: string | null
+          correct_answer: Json | null
+          created_at: string
+          difficulty: string | null
+          id: string
+          language: string
+          options: Json | null
+          organization_id: string
+          question_id: string | null
+          subdomain: string | null
+          tags: string[] | null
+          text: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          assessment_type?: string | null
+          correct_answer?: Json | null
+          created_at?: string
+          difficulty?: string | null
+          id?: string
+          language?: string
+          options?: Json | null
+          organization_id: string
+          question_id?: string | null
+          subdomain?: string | null
+          tags?: string[] | null
+          text: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          assessment_type?: string | null
+          correct_answer?: Json | null
+          created_at?: string
+          difficulty?: string | null
+          id?: string
+          language?: string
+          options?: Json | null
+          organization_id?: string
+          question_id?: string | null
+          subdomain?: string | null
+          tags?: string[] | null
+          text?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_bank_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_bank_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       questions: {
         Row: {
           assessment_id: string | null
