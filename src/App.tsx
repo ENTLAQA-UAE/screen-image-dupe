@@ -19,6 +19,7 @@ import TakeAssessment from "./pages/TakeAssessment";
 import Auth from "./pages/Auth";
 import SuperAdmin from "./pages/SuperAdmin";
 import UserManagement from "./pages/UserManagement";
+import Subscription from "./pages/Subscription";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -103,6 +104,14 @@ const App = () => (
                 element={
                   <ProtectedRoute requiredRoles={['org_admin', 'super_admin']}>
                     <UserManagement />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route
+                path="/subscription" 
+                element={
+                  <ProtectedRoute requiredRoles={['org_admin', 'super_admin']}>
+                    <Subscription />
                   </ProtectedRoute>
                 } 
               />
