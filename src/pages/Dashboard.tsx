@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate, Link } from "react-router-dom";
 import { 
   Plus, 
   FileText, 
@@ -19,13 +21,8 @@ import {
   Heart,
   MessageSquare,
   Languages,
-  Shield,
-  LogOut,
-  Building2,
-  CreditCard,
-  UserCog
+  LogOut
 } from "lucide-react";
-import { Link } from "react-router-dom";
 
 // Stats data
 const stats = [
@@ -120,11 +117,10 @@ const statusColors = {
 interface DashboardSidebarProps {
   userName: string;
   roleLabel: string;
-  isSuperAdmin: boolean;
   onSignOut: () => void;
 }
 
-const DashboardSidebar = ({ userName, roleLabel, isSuperAdmin, onSignOut }: DashboardSidebarProps) => {
+const DashboardSidebar = ({ userName, roleLabel, onSignOut }: DashboardSidebarProps) => {
   // Different nav items based on role
   const orgNavItems = [
     { icon: BarChart3, label: "Dashboard", href: "/dashboard", active: true },
@@ -151,61 +147,19 @@ const DashboardSidebar = ({ userName, roleLabel, isSuperAdmin, onSignOut }: Dash
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-1">
-        {isSuperAdmin ? (
-          // Super Admin navigation
-          <>
-            <Link
-              to="/super-admin"
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 bg-sidebar-accent text-sidebar-primary"
-            >
-              <BarChart3 className="w-5 h-5" />
-              Dashboard
-            </Link>
-            <Link
-              to="/super-admin"
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-            >
-              <Building2 className="w-5 h-5" />
-              Organizations
-            </Link>
-            <Link
-              to="/super-admin"
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-            >
-              <UserCog className="w-5 h-5" />
-              Users & Roles
-            </Link>
-            <Link
-              to="/super-admin"
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-            >
-              <CreditCard className="w-5 h-5" />
-              Subscriptions
-            </Link>
-            <Link
-              to="/super-admin"
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-            >
-              <Settings className="w-5 h-5" />
-              Platform Settings
-            </Link>
-          </>
-        ) : (
-          // Org Admin / HR Admin sees regular navigation
-          orgNavItems.map((item) => (
-            <button
-              key={item.label}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                item.active 
-                  ? "bg-sidebar-accent text-sidebar-primary" 
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-              }`}
-            >
-              <item.icon className="w-5 h-5" />
-              {item.label}
-            </button>
-          ))
-        )}
+        {orgNavItems.map((item) => (
+          <button
+            key={item.label}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+              item.active 
+                ? "bg-sidebar-accent text-sidebar-primary" 
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+            }`}
+          >
+            <item.icon className="w-5 h-5" />
+            {item.label}
+          </button>
+        ))}
       </nav>
 
       {/* User Section */}
@@ -234,10 +188,17 @@ const DashboardSidebar = ({ userName, roleLabel, isSuperAdmin, onSignOut }: Dash
 };
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const { user, roles, signOut, isSuperAdmin, isOrgAdmin, isHrAdmin } = useAuth();
   
+  // Redirect Super Admins to their dedicated console
+  useEffect(() => {
+    if (isSuperAdmin()) {
+      navigate('/super-admin', { replace: true });
+    }
+  }, [isSuperAdmin, navigate]);
+
   const getRoleLabel = () => {
-    if (isSuperAdmin()) return "Super Admin";
     if (isOrgAdmin()) return "Org Admin";
     if (isHrAdmin()) return "HR Admin";
     return "User";
@@ -247,12 +208,16 @@ const Dashboard = () => {
     return user?.user_metadata?.full_name || user?.email?.split('@')[0] || "User";
   };
 
+  // Don't render dashboard for Super Admins
+  if (isSuperAdmin()) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <DashboardSidebar 
         userName={getUserName()} 
         roleLabel={getRoleLabel()} 
-        isSuperAdmin={isSuperAdmin()}
         onSignOut={signOut}
       />
 
