@@ -1,0 +1,704 @@
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import {
+  ArrowLeft,
+  Users,
+  CheckCircle2,
+  Clock,
+  Play,
+  TrendingUp,
+  Award,
+  BarChart3,
+  User,
+  Eye,
+  FileText,
+  Loader2,
+  Brain,
+  Sparkles,
+} from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
+
+interface GroupData {
+  id: string;
+  name: string;
+  start_date: string | null;
+  end_date: string | null;
+  is_active: boolean | null;
+  assessment: {
+    id: string;
+    title: string;
+    type: string;
+    is_graded: boolean | null;
+  } | null;
+}
+
+interface ParticipantData {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  employee_code: string | null;
+  status: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  score_summary: any;
+  ai_report_text: string | null;
+}
+
+interface GroupStats {
+  totalParticipants: number;
+  completed: number;
+  inProgress: number;
+  invited: number;
+  completionRate: number;
+  averageScore: number | null;
+  highestScore: number | null;
+  lowestScore: number | null;
+  gradeDistribution: { grade: string; count: number }[];
+  traitAverages: { trait: string; average: number }[] | null;
+}
+
+const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
+
+const STATUS_COLORS = {
+  completed: "hsl(var(--success))",
+  started: "hsl(var(--warning))",
+  invited: "hsl(var(--muted-foreground))",
+};
+
+const GroupReport = () => {
+  const { groupId } = useParams<{ groupId: string }>();
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+
+  const [loading, setLoading] = useState(true);
+  const [group, setGroup] = useState<GroupData | null>(null);
+  const [participants, setParticipants] = useState<ParticipantData[]>([]);
+  const [stats, setStats] = useState<GroupStats | null>(null);
+  const [selectedParticipant, setSelectedParticipant] = useState<ParticipantData | null>(null);
+
+  useEffect(() => {
+    if (groupId && user) {
+      fetchGroupData();
+    }
+  }, [groupId, user]);
+
+  const fetchGroupData = async () => {
+    setLoading(true);
+    try {
+      // Fetch group with assessment
+      const { data: groupData, error: groupError } = await supabase
+        .from("assessment_groups")
+        .select(`
+          id, name, start_date, end_date, is_active,
+          assessment:assessments(id, title, type, is_graded)
+        `)
+        .eq("id", groupId)
+        .maybeSingle();
+
+      if (groupError) throw groupError;
+      if (!groupData) {
+        toast.error("Group not found");
+        navigate("/assessment-groups");
+        return;
+      }
+
+      setGroup(groupData as GroupData);
+
+      // Fetch participants
+      const { data: participantsData, error: participantsError } = await supabase
+        .from("participants")
+        .select("*")
+        .eq("group_id", groupId)
+        .order("completed_at", { ascending: false, nullsFirst: false });
+
+      if (participantsError) throw participantsError;
+
+      const participantsList = participantsData || [];
+      setParticipants(participantsList);
+
+      // Calculate statistics
+      calculateStats(participantsList, groupData.assessment?.is_graded);
+    } catch (error) {
+      console.error("Error fetching group data:", error);
+      toast.error("Failed to load group data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateStats = (participantsList: ParticipantData[], isGraded: boolean | null | undefined) => {
+    const total = participantsList.length;
+    const completed = participantsList.filter((p) => p.status === "completed").length;
+    const inProgress = participantsList.filter((p) => p.status === "started").length;
+    const invited = participantsList.filter((p) => p.status === "invited").length;
+
+    const completedWithScores = participantsList.filter(
+      (p) => p.status === "completed" && p.score_summary
+    );
+
+    let averageScore: number | null = null;
+    let highestScore: number | null = null;
+    let lowestScore: number | null = null;
+    let gradeDistribution: { grade: string; count: number }[] = [];
+    let traitAverages: { trait: string; average: number }[] | null = null;
+
+    if (isGraded && completedWithScores.length > 0) {
+      // Calculate score stats for graded assessments
+      const scores = completedWithScores
+        .map((p) => p.score_summary?.percentage)
+        .filter((s): s is number => typeof s === "number");
+
+      if (scores.length > 0) {
+        averageScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+        highestScore = Math.max(...scores);
+        lowestScore = Math.min(...scores);
+      }
+
+      // Calculate grade distribution
+      const grades = completedWithScores
+        .map((p) => p.score_summary?.grade)
+        .filter((g): g is string => typeof g === "string");
+
+      const gradeCount: Record<string, number> = {};
+      grades.forEach((g) => {
+        gradeCount[g] = (gradeCount[g] || 0) + 1;
+      });
+
+      gradeDistribution = ["A", "B", "C", "D", "F"]
+        .filter((g) => gradeCount[g])
+        .map((g) => ({ grade: g, count: gradeCount[g] || 0 }));
+    } else if (!isGraded && completedWithScores.length > 0) {
+      // Calculate trait averages for personality/trait-based assessments
+      const allTraits: Record<string, number[]> = {};
+      
+      completedWithScores.forEach((p) => {
+        const traits = p.score_summary?.traits;
+        if (traits && typeof traits === "object") {
+          Object.entries(traits).forEach(([trait, score]) => {
+            if (typeof score === "number") {
+              if (!allTraits[trait]) allTraits[trait] = [];
+              allTraits[trait].push(score);
+            }
+          });
+        }
+      });
+
+      if (Object.keys(allTraits).length > 0) {
+        traitAverages = Object.entries(allTraits).map(([trait, scores]) => ({
+          trait: trait.charAt(0).toUpperCase() + trait.slice(1),
+          average: Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10,
+        }));
+      }
+    }
+
+    setStats({
+      totalParticipants: total,
+      completed,
+      inProgress,
+      invited,
+      completionRate: total > 0 ? Math.round((completed / total) * 100) : 0,
+      averageScore,
+      highestScore,
+      lowestScore,
+      gradeDistribution,
+      traitAverages,
+    });
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "-";
+    return format(new Date(dateString), "MMM d, yyyy");
+  };
+
+  const formatDateTime = (dateString: string | null) => {
+    if (!dateString) return "-";
+    return format(new Date(dateString), "MMM d, yyyy HH:mm");
+  };
+
+  const statusData = stats
+    ? [
+        { name: "Completed", value: stats.completed, color: STATUS_COLORS.completed },
+        { name: "In Progress", value: stats.inProgress, color: STATUS_COLORS.started },
+        { name: "Invited", value: stats.invited, color: STATUS_COLORS.invited },
+      ].filter((d) => d.value > 0)
+    : [];
+
+  if (authLoading || loading) {
+    return (
+      <DashboardLayout activeItem="Assessment Groups">
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 animate-spin text-accent" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!group || !stats) {
+    return null;
+  }
+
+  return (
+    <DashboardLayout activeItem="Assessment Groups">
+      <div className="p-8">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-8">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/assessment-groups")}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex-1">
+            <motion.h1
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-2xl font-display font-bold text-foreground"
+            >
+              {group.name}
+            </motion.h1>
+            <p className="text-muted-foreground">
+              {group.assessment?.title || "No assessment assigned"} •{" "}
+              {formatDate(group.start_date)} - {formatDate(group.end_date)}
+            </p>
+          </div>
+          <Badge variant={group.is_active ? "default" : "secondary"}>
+            {group.is_active ? "Active" : "Inactive"}
+          </Badge>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Users className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{stats.totalParticipants}</p>
+                    <p className="text-sm text-muted-foreground">Total Participants</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+          >
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
+                    <CheckCircle2 className="w-6 h-6 text-success" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{stats.completionRate}%</p>
+                    <p className="text-sm text-muted-foreground">Completion Rate</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {stats.averageScore !== null && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+                      <TrendingUp className="w-6 h-6 text-accent" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{stats.averageScore}%</p>
+                      <p className="text-sm text-muted-foreground">Average Score</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {stats.highestScore !== null && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+            >
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
+                      <Award className="w-6 h-6 text-warning" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{stats.highestScore}%</p>
+                      <p className="text-sm text-muted-foreground">Highest Score</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </div>
+
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="participants">Participants ({stats.totalParticipants})</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Status Distribution */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <BarChart3 className="w-5 h-5" />
+                    Status Distribution
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {statusData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={statusData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={100}
+                          paddingAngle={2}
+                          dataKey="value"
+                          label={({ name, value }) => `${name}: ${value}`}
+                        >
+                          {statusData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Legend />
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+                      No participants yet
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Grade Distribution or Trait Averages */}
+              {group.assessment?.is_graded && stats.gradeDistribution.length > 0 ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Award className="w-5 h-5" />
+                      Grade Distribution
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <BarChart data={stats.gradeDistribution}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                        <XAxis dataKey="grade" className="text-xs" />
+                        <YAxis allowDecimals={false} className="text-xs" />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--card))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "8px",
+                          }}
+                        />
+                        <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              ) : stats.traitAverages && stats.traitAverages.length > 0 ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Brain className="w-5 h-5" />
+                      Trait Averages
+                    </CardTitle>
+                    <CardDescription>Average scores across all completed assessments</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <BarChart data={stats.traitAverages} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                        <XAxis type="number" domain={[0, 5]} className="text-xs" />
+                        <YAxis dataKey="trait" type="category" width={100} className="text-xs" />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--card))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "8px",
+                          }}
+                        />
+                        <Bar dataKey="average" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <BarChart3 className="w-5 h-5" />
+                      Score Analysis
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+                      {stats.completed === 0
+                        ? "No completed assessments yet"
+                        : "Score data not available"}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* Score Range Summary */}
+            {stats.averageScore !== null && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Score Summary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid sm:grid-cols-3 gap-6">
+                    <div className="text-center p-4 rounded-lg bg-muted/50">
+                      <p className="text-3xl font-bold text-destructive">{stats.lowestScore}%</p>
+                      <p className="text-sm text-muted-foreground mt-1">Lowest Score</p>
+                    </div>
+                    <div className="text-center p-4 rounded-lg bg-primary/10">
+                      <p className="text-3xl font-bold text-primary">{stats.averageScore}%</p>
+                      <p className="text-sm text-muted-foreground mt-1">Average Score</p>
+                    </div>
+                    <div className="text-center p-4 rounded-lg bg-success/10">
+                      <p className="text-3xl font-bold text-success">{stats.highestScore}%</p>
+                      <p className="text-sm text-muted-foreground mt-1">Highest Score</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="participants">
+            <Card>
+              <CardHeader>
+                <CardTitle>All Participants</CardTitle>
+                <CardDescription>View individual results and AI-generated feedback</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {participants.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No participants in this group yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {participants.map((participant, index) => {
+                      const isCompleted = participant.status === "completed";
+                      const hasScore = participant.score_summary?.percentage !== undefined;
+                      const hasTraits = participant.score_summary?.traits;
+                      const hasAIReport = !!participant.ai_report_text;
+
+                      return (
+                        <motion.div
+                          key={participant.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.03 }}
+                          className="flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <User className="w-5 h-5 text-primary" />
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">
+                              {participant.full_name || participant.email || "Anonymous"}
+                            </p>
+                            <p className="text-sm text-muted-foreground truncate">
+                              {participant.email || participant.employee_code || "-"}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            {isCompleted && hasScore && (
+                              <div className="text-center">
+                                <p className="text-xl font-bold text-primary">
+                                  {participant.score_summary.percentage}%
+                                </p>
+                                <p className="text-xs text-muted-foreground">Score</p>
+                              </div>
+                            )}
+
+                            {hasAIReport && (
+                              <Badge variant="outline" className="gap-1">
+                                <Sparkles className="w-3 h-3" />
+                                AI Report
+                              </Badge>
+                            )}
+
+                            <Badge
+                              variant={
+                                participant.status === "completed"
+                                  ? "default"
+                                  : participant.status === "started"
+                                  ? "secondary"
+                                  : "outline"
+                              }
+                            >
+                              {participant.status === "completed" && <CheckCircle2 className="w-3 h-3 mr-1" />}
+                              {participant.status === "started" && <Play className="w-3 h-3 mr-1" />}
+                              {participant.status === "invited" && <Clock className="w-3 h-3 mr-1" />}
+                              {participant.status?.charAt(0).toUpperCase() + participant.status?.slice(1)}
+                            </Badge>
+
+                            {isCompleted && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setSelectedParticipant(participant)}
+                              >
+                                <Eye className="w-4 h-4 mr-1" />
+                                View
+                              </Button>
+                            )}
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Participant Report Dialog */}
+      <Dialog open={!!selectedParticipant} onOpenChange={() => setSelectedParticipant(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <User className="w-5 h-5" />
+              {selectedParticipant?.full_name || selectedParticipant?.email || "Participant Report"}
+            </DialogTitle>
+            <DialogDescription>
+              Completed {formatDateTime(selectedParticipant?.completed_at || null)}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            {/* Score Summary */}
+            {selectedParticipant?.score_summary && (
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Results
+                </h3>
+                {selectedParticipant.score_summary.percentage !== undefined ? (
+                  <div className="text-center p-6 bg-muted rounded-xl">
+                    <div className="text-5xl font-bold text-primary mb-2">
+                      {selectedParticipant.score_summary.percentage}%
+                    </div>
+                    <p className="text-muted-foreground">
+                      {selectedParticipant.score_summary.correctCount} of{" "}
+                      {selectedParticipant.score_summary.totalPossible} correct
+                    </p>
+                    {selectedParticipant.score_summary.grade && (
+                      <Badge className="mt-3" variant="secondary">
+                        Grade: {selectedParticipant.score_summary.grade}
+                      </Badge>
+                    )}
+                  </div>
+                ) : selectedParticipant.score_summary.traits ? (
+                  <div className="space-y-3 p-4 bg-muted/50 rounded-xl">
+                    {Object.entries(selectedParticipant.score_summary.traits).map(
+                      ([trait, score]: [string, any]) => (
+                        <div key={trait} className="flex items-center justify-between gap-4">
+                          <span className="capitalize font-medium">{trait}</span>
+                          <div className="flex items-center gap-3 flex-1 max-w-xs">
+                            <Progress value={(score / 5) * 100} className="h-2" />
+                            <span className="text-sm font-semibold w-10 text-right">
+                              {score.toFixed(1)}
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                ) : (
+                  <pre className="text-sm bg-muted p-4 rounded-lg overflow-auto">
+                    {JSON.stringify(selectedParticipant.score_summary, null, 2)}
+                  </pre>
+                )}
+              </div>
+            )}
+
+            {/* AI Report */}
+            {selectedParticipant?.ai_report_text && (
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  AI-Generated Feedback
+                </h3>
+                <div className="prose prose-sm max-w-none bg-gradient-to-br from-primary/5 to-accent/5 p-5 rounded-xl border border-primary/10">
+                  <p className="whitespace-pre-wrap text-foreground leading-relaxed">
+                    {selectedParticipant.ai_report_text}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {!selectedParticipant?.score_summary && !selectedParticipant?.ai_report_text && (
+              <div className="text-center py-8 text-muted-foreground">
+                No detailed results available
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </DashboardLayout>
+  );
+};
+
+export default GroupReport;

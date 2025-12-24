@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Assessments from "./pages/Assessments";
 import AssessmentBuilder from "./pages/AssessmentBuilder";
 import AssessmentGroups from "./pages/AssessmentGroups";
+import GroupReport from "./pages/GroupReport";
 import Participants from "./pages/Participants";
 import Employees from "./pages/Employees";
 import EmployeeDetail from "./pages/EmployeeDetail";
@@ -64,6 +65,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <AssessmentGroups />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/assessment-groups/:groupId/report" 
+                element={
+                  <ProtectedRoute>
+                    <GroupReport />
                   </ProtectedRoute>
                 } 
               />
