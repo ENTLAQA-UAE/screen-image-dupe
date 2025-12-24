@@ -123,6 +123,7 @@ export type Database = {
           name: string
           plan: string | null
           primary_color: string | null
+          primary_language: string | null
           slug: string | null
         }
         Insert: {
@@ -132,6 +133,7 @@ export type Database = {
           name: string
           plan?: string | null
           primary_color?: string | null
+          primary_language?: string | null
           slug?: string | null
         }
         Update: {
@@ -141,6 +143,7 @@ export type Database = {
           name?: string
           plan?: string | null
           primary_color?: string | null
+          primary_language?: string | null
           slug?: string | null
         }
         Relationships: []

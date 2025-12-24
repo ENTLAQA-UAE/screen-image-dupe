@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Assessments from "./pages/Assessments";
 import AssessmentGroups from "./pages/AssessmentGroups";
 import Participants from "./pages/Participants";
+import OrganizationSettings from "./pages/OrganizationSettings";
 import Auth from "./pages/Auth";
 import SuperAdmin from "./pages/SuperAdmin";
 import NotFound from "./pages/NotFound";
@@ -57,6 +58,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Participants />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/settings" 
+                element={
+                  <ProtectedRoute requiredRoles={['org_admin', 'super_admin']}>
+                    <OrganizationSettings />
                   </ProtectedRoute>
                 } 
               />
