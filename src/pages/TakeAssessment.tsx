@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -200,8 +200,10 @@ interface CompletedData {
 type PageState = "loading" | "error" | "not_started" | "expired" | "closed" | "register" | "intro" | "questions" | "submitting" | "completed" | "results";
 
 export default function TakeAssessment() {
+  const { token: pathToken } = useParams<{ token: string }>();
   const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
+  const queryToken = searchParams.get("token");
+  const token = pathToken || queryToken;
   const isGroupLink = searchParams.get("group") === "true";
 
   const [pageState, setPageState] = useState<PageState>("loading");
