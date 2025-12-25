@@ -151,7 +151,7 @@ const App = () => (
                 } 
               />
               {/* Public assessment taking page */}
-              <Route path="/assess" element={<TakeAssessment />} />
+              <Route path="/assess/:token" element={<TakeAssessment />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
