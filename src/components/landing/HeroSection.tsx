@@ -94,7 +94,7 @@ export const HeroSection = () => {
           >
             <Link to="/dashboard">
               <Button variant="gold" size="xl" className="group">
-                Start Free Trial
+                Start Now
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
