@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -69,6 +70,7 @@ const PLAN_LIMITS: Record<string, { assessments: number; hrAdmins: number; parti
 export default function Subscription() {
   const navigate = useNavigate();
   const { user, isOrgAdmin, isSuperAdmin, loading: authLoading } = useAuth();
+  const { t } = useLanguage();
   
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [usage, setUsage] = useState<UsageStats | null>(null);
@@ -180,19 +182,19 @@ export default function Subscription() {
 
   const usageItems = [
     {
-      label: "Assessments",
+      label: t.orgDashboard.assessments,
       icon: FileText,
       current: usage?.assessments || 0,
       limit: organization?.assessment_limit || limits.assessments,
     },
     {
-      label: "HR Admins",
+      label: t.orgDashboard.hrAdmins,
       icon: Users,
       current: usage?.hrAdmins || 0,
       limit: organization?.max_hr_admins || limits.hrAdmins,
     },
     {
-      label: "Participants",
+      label: t.hrDashboard.totalParticipants,
       icon: FolderOpen,
       current: usage?.participants || 0,
       limit: limits.participants,
@@ -209,10 +211,10 @@ export default function Subscription() {
             animate={{ opacity: 1, y: 0 }}
             className="text-2xl font-display font-bold text-foreground mb-1"
           >
-            Subscription & Usage
+            {t.subscription.title}
           </motion.h1>
           <p className="text-muted-foreground">
-            Manage your plan and monitor usage limits
+            {t.subscription.description}
           </p>
         </div>
 
@@ -227,10 +229,10 @@ export default function Subscription() {
               <div>
                 <CardTitle className="flex items-center gap-3">
                   <CreditCard className="w-5 h-5" />
-                  Current Plan
+                  {t.subscription.currentPlan}
                 </CardTitle>
                 <CardDescription>
-                  Your organization's subscription details
+                  {t.subscription.yourSubscription}
                 </CardDescription>
               </div>
               <Badge className={planDetails.color}>
@@ -259,19 +261,19 @@ export default function Subscription() {
                 <div className="space-y-4">
                   <div className="p-4 rounded-lg bg-muted/50 space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Organization</span>
+                      <span className="text-sm text-muted-foreground">{t.subscription.organization}</span>
                       <span className="font-medium">{organization?.name}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Status</span>
+                      <span className="text-sm text-muted-foreground">{t.subscription.status}</span>
                       <Badge variant={organization?.is_active ? "default" : "destructive"}>
-                        {organization?.is_active ? "Active" : "Inactive"}
+                        {organization?.is_active ? t.subscription.active : t.subscription.inactive}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
-                        Billing Cycle Start
+                        {t.subscription.billingCycleStart}
                       </span>
                       <span className="font-medium">{formatDate(organization?.billing_cycle_start || null)}</span>
                     </div>
@@ -279,8 +281,8 @@ export default function Subscription() {
                   
                   {plan !== "enterprise" && (
                     <Button className="w-full" variant="outline">
-                      <ArrowUpRight className="w-4 h-4 mr-2" />
-                      Upgrade Plan
+                      <ArrowUpRight className="w-4 h-4 me-2" />
+                      {t.subscription.upgradePlan}
                     </Button>
                   )}
                 </div>
@@ -297,9 +299,9 @@ export default function Subscription() {
         >
           <Card>
             <CardHeader>
-              <CardTitle>Usage Overview</CardTitle>
+              <CardTitle>{t.subscription.usageOverview}</CardTitle>
               <CardDescription>
-                Track your current usage against plan limits
+                {t.subscription.trackUsage}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -316,7 +318,7 @@ export default function Subscription() {
                           <span className="font-medium">{item.label}</span>
                         </div>
                         <span className={`text-sm font-medium ${isUnlimited ? "text-muted-foreground" : getUsageColor(percentage)}`}>
-                          {isUnlimited ? "Unlimited" : `${item.current} / ${item.limit}`}
+                          {isUnlimited ? t.orgDashboard.unlimited : `${item.current} / ${item.limit}`}
                         </span>
                       </div>
                       {!isUnlimited && (
@@ -326,13 +328,13 @@ export default function Subscription() {
                             className="h-2"
                           />
                           <p className="text-xs text-muted-foreground text-right">
-                            {percentage.toFixed(0)}% used
+                            {percentage.toFixed(0)}% {t.subscription.used}
                           </p>
                         </div>
                       )}
                       {isUnlimited && (
                         <p className="text-xs text-muted-foreground">
-                          {item.current} currently in use
+                          {item.current} {t.subscription.currentlyInUse}
                         </p>
                       )}
                     </div>
@@ -351,9 +353,9 @@ export default function Subscription() {
         >
           <Card>
             <CardHeader>
-              <CardTitle>Available Plans</CardTitle>
+              <CardTitle>{t.subscription.availablePlans}</CardTitle>
               <CardDescription>
-                Compare plans and find the right fit for your organization
+                {t.subscription.comparePlans}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -375,25 +377,25 @@ export default function Subscription() {
                         <div className="flex items-center justify-between">
                           <Badge className={details.color}>{details.name}</Badge>
                           {isCurrentPlan && (
-                            <Badge variant="outline" className="text-xs">Current</Badge>
+                            <Badge variant="outline" className="text-xs">{t.subscription.current}</Badge>
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">{details.description}</p>
                         <div className="space-y-1 text-sm">
                           <p>
                             <span className="font-medium">
-                              {planLimits.assessments === -1 ? "Unlimited" : planLimits.assessments}
-                            </span> assessments
+                              {planLimits.assessments === -1 ? t.orgDashboard.unlimited : planLimits.assessments}
+                            </span> {t.subscription.assessments}
                           </p>
                           <p>
                             <span className="font-medium">
-                              {planLimits.hrAdmins === -1 ? "Unlimited" : planLimits.hrAdmins}
-                            </span> HR admins
+                              {planLimits.hrAdmins === -1 ? t.orgDashboard.unlimited : planLimits.hrAdmins}
+                            </span> {t.subscription.hrAdmins}
                           </p>
                           <p>
                             <span className="font-medium">
-                              {planLimits.participants === -1 ? "Unlimited" : planLimits.participants}
-                            </span> participants
+                              {planLimits.participants === -1 ? t.orgDashboard.unlimited : planLimits.participants}
+                            </span> {t.subscription.participants}
                           </p>
                         </div>
                       </div>

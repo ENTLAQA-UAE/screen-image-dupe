@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,6 +30,7 @@ const signupSchema = z.object({
 export default function Auth() {
   const navigate = useNavigate();
   const { user, loading, signIn, signUp, isSuperAdmin } = useAuth();
+  const { t } = useLanguage();
   const { toast } = useToast();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -80,9 +82,9 @@ export default function Auth() {
     if (error) {
       toast({
         variant: "destructive",
-        title: "Login failed",
+        title: t.auth.loginFailed,
         description: error.message === 'Invalid login credentials' 
-          ? "Invalid email or password. Please try again."
+          ? t.auth.invalidCredentials
           : error.message,
       });
     }
@@ -116,20 +118,20 @@ export default function Auth() {
       if (error.message.includes('already registered')) {
         toast({
           variant: "destructive",
-          title: "Account exists",
-          description: "An account with this email already exists. Please login instead.",
+          title: t.auth.accountExists,
+          description: t.auth.emailAlreadyRegistered,
         });
       } else {
         toast({
           variant: "destructive",
-          title: "Signup failed",
+          title: t.auth.signupFailed,
           description: error.message,
         });
       }
     } else {
       toast({
-        title: "Account created",
-        description: "Please check your email to verify your account.",
+        title: t.auth.accountCreated,
+        description: t.auth.checkEmail,
       });
     }
   };
@@ -158,28 +160,28 @@ export default function Auth() {
             </h1>
           </div>
           <p className="text-primary-foreground/80">
-            Enterprise Assessment Platform
+            {t.auth.enterprisePlatform}
           </p>
         </div>
 
         <Card className="shadow-xl border-0">
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-2xl font-display text-center">Welcome</CardTitle>
+            <CardTitle className="text-2xl font-display text-center">{t.auth.welcome}</CardTitle>
             <CardDescription className="text-center">
-              Sign in to your account or create a new one
+              {t.auth.signInDescription}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsTrigger value="login">{t.auth.login}</TabsTrigger>
+                <TabsTrigger value="signup">{t.auth.signUp}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
+                    <Label htmlFor="login-email">{t.auth.email}</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -197,7 +199,7 @@ export default function Auth() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="login-password">Password</Label>
+                    <Label htmlFor="login-password">{t.auth.password}</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -222,7 +224,7 @@ export default function Auth() {
                   </div>
 
                   <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? "Signing in..." : "Sign In"}
+                    {isSubmitting ? t.auth.signingIn : t.auth.signIn}
                   </Button>
                 </form>
               </TabsContent>
@@ -230,7 +232,7 @@ export default function Auth() {
               <TabsContent value="signup">
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name">Full Name</Label>
+                    <Label htmlFor="signup-name">{t.auth.fullName}</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -248,7 +250,7 @@ export default function Auth() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email">{t.auth.email}</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -266,7 +268,7 @@ export default function Auth() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label htmlFor="signup-password">{t.auth.password}</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -291,7 +293,7 @@ export default function Auth() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="signup-confirm">Confirm Password</Label>
+                    <Label htmlFor="signup-confirm">{t.auth.confirmPassword}</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -316,7 +318,7 @@ export default function Auth() {
                   </div>
 
                   <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? "Creating account..." : "Create Account"}
+                    {isSubmitting ? t.auth.creatingAccount : t.auth.createAccount}
                   </Button>
                 </form>
               </TabsContent>
@@ -325,7 +327,7 @@ export default function Auth() {
         </Card>
 
         <p className="text-center text-sm text-primary-foreground/60 mt-6">
-          By signing in, you agree to our Terms of Service and Privacy Policy.
+          {t.auth.termsAgreement}
         </p>
       </motion.div>
     </div>
