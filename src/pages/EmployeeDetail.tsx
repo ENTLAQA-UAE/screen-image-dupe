@@ -298,20 +298,25 @@ const EmployeeDetail = () => {
     return format(new Date(dateString), "MMM d, yyyy 'at' h:mm a");
   };
 
-  const handleExportPDF = (assessment: AssessmentHistory) => {
+  const handleExportPDF = async (assessment: AssessmentHistory) => {
     if (!employee) return;
-    generateParticipantPDF({
-      participantName: employee.full_name,
-      participantEmail: employee.email,
-      groupName: assessment.group_name,
-      assessmentTitle: assessment.assessment_title,
-      assessmentType: assessment.assessment_type,
-      completedAt: assessment.completed_at,
-      scoreSummary: assessment.score_summary,
-      aiReport: assessment.ai_report_text,
-      organizationName: employee.organization_name,
-    });
-    toast.success("PDF exported successfully");
+    try {
+      await generateParticipantPDF({
+        participantName: employee.full_name,
+        participantEmail: employee.email,
+        groupName: assessment.group_name,
+        assessmentTitle: assessment.assessment_title,
+        assessmentType: assessment.assessment_type,
+        completedAt: assessment.completed_at,
+        scoreSummary: assessment.score_summary,
+        aiReport: assessment.ai_report_text,
+        organizationName: employee.organization_name,
+      });
+      toast.success("PDF exported successfully");
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast.error("Failed to export PDF");
+    }
   };
 
   const generateTalentSnapshot = async () => {

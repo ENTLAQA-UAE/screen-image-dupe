@@ -1221,21 +1221,28 @@ export default function TakeAssessment() {
                     variant="outline" 
                     size="lg" 
                     className="transition-smooth"
-                    onClick={() => {
-                      generateParticipantPDF({
-                        participantName,
-                        participantEmail,
-                        employeeCode: completedData?.participant?.employee_code,
-                        department: completedData?.participant?.department,
-                        groupName,
-                        assessmentTitle,
-                        assessmentType,
-                        completedAt,
-                        scoreSummary: scoreSummary || null,
-                        aiReport: aiReport || null,
-                        organizationName: orgName,
-                        language: isArabic ? 'ar' : 'en',
-                      });
+                    onClick={async () => {
+                      try {
+                        await generateParticipantPDF({
+                          participantName,
+                          participantEmail,
+                          employeeCode: completedData?.participant?.employee_code,
+                          department: completedData?.participant?.department,
+                          groupName,
+                          assessmentTitle,
+                          assessmentType,
+                          completedAt,
+                          scoreSummary: scoreSummary || null,
+                          aiReport: aiReport || null,
+                          organizationName: orgName,
+                          organizationLogo: orgLogo,
+                          language: isArabic ? 'ar' : 'en',
+                        });
+                        toast.success(isArabic ? "تم تصدير التقرير بنجاح" : "PDF exported successfully");
+                      } catch (error) {
+                        console.error("Error exporting PDF:", error);
+                        toast.error(isArabic ? "فشل تصدير التقرير" : "Failed to export PDF");
+                      }
                     }}
                   >
                     <Download className={`w-4 h-4 ${isArabic ? "ml-2" : "mr-2"}`} />
