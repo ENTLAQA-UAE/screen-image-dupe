@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ interface HRAdmin {
 export default function UserManagement() {
   const navigate = useNavigate();
   const { user, isOrgAdmin, isSuperAdmin, loading: authLoading } = useAuth();
+  const { t } = useLanguage();
   
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [organizationName, setOrganizationName] = useState<string>("");
@@ -267,63 +269,63 @@ export default function UserManagement() {
               animate={{ opacity: 1, y: 0 }}
               className="text-2xl font-display font-bold text-foreground mb-1"
             >
-              User Management
+              {t.userManagement.title}
             </motion.h1>
             <p className="text-muted-foreground">
-              Invite and manage HR Admin users for {organizationName}
+              {t.userManagement.description} {organizationName}
             </p>
           </div>
           <div className="flex items-center gap-4">
             <Badge variant="secondary" className="text-base px-4 py-2">
-              <Users className="w-4 h-4 mr-2" />
-              {hrAdmins.length} / {maxHrAdmins} HR Admins
+              <Users className="w-4 h-4 me-2" />
+              {hrAdmins.length} / {maxHrAdmins} {t.orgDashboard.hrAdmins}
             </Badge>
             <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
               <DialogTrigger asChild>
                 <Button disabled={hrAdmins.length >= maxHrAdmins}>
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Invite HR Admin
+                  <UserPlus className="w-4 h-4 me-2" />
+                  {t.userManagement.inviteHRAdmin}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Invite HR Admin</DialogTitle>
+                  <DialogTitle>{t.userManagement.inviteHRAdmin}</DialogTitle>
                   <DialogDescription>
-                    Send an invitation to add a new HR Admin to your organization.
+                    {t.userManagement.sendInvitation}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="full-name">Full Name</Label>
+                    <Label htmlFor="full-name">{t.userManagement.fullName}</Label>
                     <Input
                       id="full-name"
                       value={inviteFullName}
                       onChange={(e) => setInviteFullName(e.target.value)}
-                      placeholder="Enter full name"
+                      placeholder={t.userManagement.enterFullName}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
+                    <Label htmlFor="email">{t.userManagement.emailAddress}</Label>
                     <Input
                       id="email"
                       type="email"
                       value={inviteEmail}
                       onChange={(e) => setInviteEmail(e.target.value)}
-                      placeholder="Enter email address"
+                      placeholder={t.userManagement.enterEmail}
                     />
                   </div>
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
-                    Cancel
+                    {t.userManagement.cancel}
                   </Button>
                   <Button 
                     onClick={handleInviteUser} 
                     disabled={inviting || !inviteEmail || !inviteFullName}
                   >
-                    {inviting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                    <Mail className="w-4 h-4 mr-2" />
-                    Send Invitation
+                    {inviting && <Loader2 className="w-4 h-4 animate-spin me-2" />}
+                    <Mail className="w-4 h-4 me-2" />
+                    {t.userManagement.sendInvite}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -337,8 +339,7 @@ export default function UserManagement() {
             <CardContent className="py-4">
               <p className="text-warning-foreground flex items-center gap-2">
                 <Shield className="w-5 h-5" />
-                You have reached the maximum number of HR Admins ({maxHrAdmins}) for your plan.
-                Contact support to upgrade.
+                {t.userManagement.limitReached} ({maxHrAdmins}) {t.userManagement.contactSupport}
               </p>
             </CardContent>
           </Card>
@@ -353,10 +354,10 @@ export default function UserManagement() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="w-5 h-5" />
-                HR Admin Users
+                {t.userManagement.hrAdminUsers}
               </CardTitle>
               <CardDescription>
-                Users with HR Admin access can manage assessments, groups, and view participant results.
+                {t.userManagement.hrAdminDesc}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -364,23 +365,23 @@ export default function UserManagement() {
                 <div className="text-center py-12">
                   <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-foreground mb-2">
-                    No HR Admins yet
+                    {t.userManagement.noHRAdmins}
                   </h3>
                   <p className="text-muted-foreground mb-4">
-                    Invite your first HR Admin to help manage assessments.
+                    {t.userManagement.inviteFirst}
                   </p>
                   <Button onClick={() => setInviteDialogOpen(true)}>
-                    <UserPlus className="w-4 h-4 mr-2" />
-                    Invite HR Admin
+                    <UserPlus className="w-4 h-4 me-2" />
+                    {t.userManagement.inviteHRAdmin}
                   </Button>
                 </div>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Added</TableHead>
+                      <TableHead>{t.userManagement.user}</TableHead>
+                      <TableHead>{t.userManagement.role}</TableHead>
+                      <TableHead>{t.userManagement.added}</TableHead>
                       <TableHead className="w-20"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -431,19 +432,18 @@ export default function UserManagement() {
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Remove HR Admin</AlertDialogTitle>
+                                <AlertDialogTitle>{t.userManagement.removeHRAdmin}</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Are you sure you want to remove {admin.full_name || "this user"} as an HR Admin?
-                                  They will lose access to manage assessments and view results.
+                                  {t.userManagement.removeConfirm} {admin.full_name || t.common.noData} {t.userManagement.removeWarning}
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogCancel>{t.userManagement.cancel}</AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() => handleRemoveUser(admin.id)}
                                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                 >
-                                  Remove
+                                  {t.userManagement.remove}
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
