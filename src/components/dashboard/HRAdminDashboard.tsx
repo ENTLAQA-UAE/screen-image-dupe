@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useLanguage } from "@/i18n/LanguageContext";
 import {
   Plus,
   FileText,
@@ -82,6 +83,7 @@ const getIconColor = (type: string) => {
 
 export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats>({
     activeGroups: 0,
@@ -260,25 +262,25 @@ export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardP
 
   const quickActions = [
     { 
-      label: "New Assessment", 
+      label: t.hrDashboard.newAssessment, 
       icon: Plus, 
       href: "/assessments/new",
       color: "bg-primary text-primary-foreground hover:bg-primary/90" 
     },
     { 
-      label: "Create Group", 
+      label: t.hrDashboard.createGroup, 
       icon: FolderKanban, 
       href: "/assessment-groups",
       color: "bg-accent/10 text-accent hover:bg-accent/20" 
     },
     { 
-      label: "Add Participants", 
+      label: t.hrDashboard.addParticipants, 
       icon: UserPlus, 
       href: "/participants",
       color: "bg-highlight/10 text-highlight hover:bg-highlight/20" 
     },
     { 
-      label: "View Results", 
+      label: t.hrDashboard.viewResults, 
       icon: ClipboardList, 
       href: "/employees",
       color: "bg-success/10 text-success hover:bg-success/20" 
@@ -295,10 +297,10 @@ export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardP
             animate={{ opacity: 1, y: 0 }}
             className="text-2xl font-display font-bold text-foreground mb-1"
           >
-            Welcome back, {userName}
+            {t.dashboard.welcome}, {userName}
           </motion.h1>
           <p className="text-muted-foreground">
-            Here's your assessment activity overview
+            {t.hrDashboard.activityOverview}
           </p>
         </div>
       </div>
@@ -339,7 +341,7 @@ export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardP
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.activeGroups}</p>
-              <p className="text-xs text-muted-foreground">Active Groups</p>
+              <p className="text-xs text-muted-foreground">{t.hrDashboard.activeGroups}</p>
             </div>
           </div>
         </Card>
@@ -350,7 +352,7 @@ export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardP
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.pendingAssessments}</p>
-              <p className="text-xs text-muted-foreground">Pending</p>
+              <p className="text-xs text-muted-foreground">{t.hrDashboard.pending}</p>
             </div>
           </div>
         </Card>
@@ -361,7 +363,7 @@ export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardP
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.completedToday}</p>
-              <p className="text-xs text-muted-foreground">Completed Today</p>
+              <p className="text-xs text-muted-foreground">{t.hrDashboard.completedToday}</p>
             </div>
           </div>
         </Card>
@@ -372,7 +374,7 @@ export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardP
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.totalParticipants}</p>
-              <p className="text-xs text-muted-foreground">Total Participants</p>
+              <p className="text-xs text-muted-foreground">{t.hrDashboard.totalParticipants}</p>
             </div>
           </div>
         </Card>
@@ -383,7 +385,7 @@ export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardP
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.completionRate}%</p>
-              <p className="text-xs text-muted-foreground">Completion Rate</p>
+              <p className="text-xs text-muted-foreground">{t.hrDashboard.completionRate}</p>
             </div>
           </div>
         </Card>
@@ -401,24 +403,24 @@ export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardP
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <AlertCircle className="w-5 h-5 text-warning" />
-                  Needs Attention
+                  {t.hrDashboard.needsAttention}
                 </CardTitle>
                 <Button 
                   variant="ghost" 
                   size="sm"
                   onClick={() => navigate('/assessment-groups')}
                 >
-                  View All
-                  <ArrowRight className="w-4 h-4 ml-1" />
+                  {t.common.view}
+                  <ArrowRight className="w-4 h-4 ms-1" />
                 </Button>
               </div>
-              <CardDescription>Groups ending soon or with low completion</CardDescription>
+              <CardDescription>{t.hrDashboard.groupsEndingSoon}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {urgentGroups.length === 0 ? (
                 <div className="text-center py-8">
                   <CheckCircle2 className="w-10 h-10 text-success mx-auto mb-2" />
-                  <p className="text-muted-foreground">All groups are on track!</p>
+                  <p className="text-muted-foreground">{t.hrDashboard.allOnTrack}</p>
                 </div>
               ) : (
                 urgentGroups.map((group) => {
@@ -448,7 +450,7 @@ export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardP
                       </div>
                       {daysLeft !== null && daysLeft <= 7 && (
                         <Badge variant={daysLeft <= 2 ? "destructive" : "secondary"} className="shrink-0">
-                          {daysLeft <= 0 ? 'Ended' : `${daysLeft}d left`}
+                          {daysLeft <= 0 ? t.hrDashboard.ended : `${daysLeft} ${t.hrDashboard.daysLeft}`}
                         </Badge>
                       )}
                     </div>
@@ -470,24 +472,24 @@ export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardP
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Play className="w-5 h-5 text-accent" />
-                  Recent Activity
+                  {t.hrDashboard.recentActivity}
                 </CardTitle>
                 <Button 
                   variant="ghost" 
                   size="sm"
                   onClick={() => navigate('/participants')}
                 >
-                  View All
-                  <ArrowRight className="w-4 h-4 ml-1" />
+                  {t.common.view}
+                  <ArrowRight className="w-4 h-4 ms-1" />
                 </Button>
               </div>
-              <CardDescription>Latest assessment completions</CardDescription>
+              <CardDescription>{t.hrDashboard.latestCompletions}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {recentActivity.length === 0 ? (
                 <div className="text-center py-8">
                   <Clock className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground">No recent activity</p>
+                  <p className="text-muted-foreground">{t.hrDashboard.noRecentActivity}</p>
                 </div>
               ) : (
                 recentActivity.map((activity) => (
@@ -501,7 +503,7 @@ export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardP
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{activity.participant_name}</p>
                       <p className="text-sm text-muted-foreground truncate">
-                        Completed • {activity.group_name}
+                        {t.groupReport.completed} • {activity.group_name}
                       </p>
                     </div>
                     <span className="text-xs text-muted-foreground whitespace-nowrap">
