@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -105,6 +106,7 @@ const getTypeIcon = (type: string) => {
 const Reports = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, isSuperAdmin } = useAuth();
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
@@ -419,35 +421,35 @@ const Reports = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-2xl font-display font-bold text-foreground mb-1"
             >
-              Reports & Analytics
+              {t.reports.title}
             </motion.h1>
             <p className="text-muted-foreground">
-              Comprehensive insights for {orgName}
+              {t.reports.description} - {orgName}
             </p>
           </div>
           <Button 
             variant="outline"
             onClick={() => exportToCsv({
               filename: 'assessment_results',
-              headers: ['Employee Code', 'Full Name', 'Email', 'Department', 'Job Title', 'Group', 'Assessment', 'Type', 'Score %', 'Completed At'],
+              headers: [t.participants.employeeCode, t.participants.name, t.participants.email, t.participants.department, t.participants.jobTitle, t.participants.group, 'Assessment', t.assessments.type, t.participants.score, t.participants.completedAt],
               data: allResults,
               columnMap: {
-                'Employee Code': 'employee_code',
-                'Full Name': 'full_name',
-                'Email': 'email',
-                'Department': 'department',
-                'Job Title': 'job_title',
-                'Group': 'group_name',
+                [t.participants.employeeCode]: 'employee_code',
+                [t.participants.name]: 'full_name',
+                [t.participants.email]: 'email',
+                [t.participants.department]: 'department',
+                [t.participants.jobTitle]: 'job_title',
+                [t.participants.group]: 'group_name',
                 'Assessment': 'assessment_title',
-                'Type': 'assessment_type',
-                'Score %': 'score_percentage',
-                'Completed At': 'completed_at',
+                [t.assessments.type]: 'assessment_type',
+                [t.participants.score]: 'score_percentage',
+                [t.participants.completedAt]: 'completed_at',
               }
             })}
             disabled={allResults.length === 0}
           >
             <FileSpreadsheet className="w-4 h-4 mr-2" />
-            Export Results CSV
+            {t.reports.exportExcel}
           </Button>
         </div>
 
@@ -459,7 +461,7 @@ const Reports = () => {
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Assessments</p>
+                      <p className="text-sm text-muted-foreground">{t.dashboard.totalAssessments}</p>
                       <p className="text-3xl font-bold">{stats.totalAssessments}</p>
                     </div>
                     <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -475,7 +477,7 @@ const Reports = () => {
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Completion Rate</p>
+                      <p className="text-sm text-muted-foreground">{t.dashboard.completionRate}</p>
                       <p className="text-3xl font-bold">{stats.averageCompletionRate}%</p>
                     </div>
                     <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
@@ -483,7 +485,7 @@ const Reports = () => {
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
-                    {stats.completedParticipants} of {stats.totalParticipants} participants
+                    {stats.completedParticipants} {t.common.of} {stats.totalParticipants} {t.nav.participants.toLowerCase()}
                   </p>
                 </CardContent>
               </Card>
@@ -494,7 +496,7 @@ const Reports = () => {
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Active Groups</p>
+                      <p className="text-sm text-muted-foreground">{t.dashboard.activeGroups}</p>
                       <p className="text-3xl font-bold">{stats.activeGroups}</p>
                     </div>
                     <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
@@ -510,7 +512,7 @@ const Reports = () => {
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Avg Score</p>
+                      <p className="text-sm text-muted-foreground">{t.employees.averageScore}</p>
                       <p className="text-3xl font-bold">{stats.averageScore !== null ? `${stats.averageScore}%` : "-"}</p>
                     </div>
                     <div className="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">

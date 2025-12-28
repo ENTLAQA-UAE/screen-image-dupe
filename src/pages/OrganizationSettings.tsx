@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -60,6 +61,7 @@ const PLAN_LIMITS: Record<string, { assessments: number; assessmentGroups: numbe
 export default function OrganizationSettings() {
   const navigate = useNavigate();
   const { user, isOrgAdmin, isSuperAdmin } = useAuth();
+  const { t } = useLanguage();
   
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [orgUsers, setOrgUsers] = useState<OrgUser[]>([]);
@@ -348,9 +350,9 @@ export default function OrganizationSettings() {
     <DashboardLayout activeItem="settings">
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Organization Settings</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t.settings.title}</h1>
           <p className="text-muted-foreground">
-            Manage your organization's branding, users, and subscription
+            {t.settings.description}
           </p>
         </div>
 
@@ -358,30 +360,30 @@ export default function OrganizationSettings() {
           <TabsList>
             <TabsTrigger value="branding" className="gap-2">
               <Building2 className="h-4 w-4" />
-              Branding
+              {t.settings.branding}
             </TabsTrigger>
             <TabsTrigger value="users" className="gap-2">
               <Users className="h-4 w-4" />
-              Users
+              {t.settings.users}
             </TabsTrigger>
             <TabsTrigger value="usage" className="gap-2">
               <BarChart3 className="h-4 w-4" />
-              Usage
+              {t.settings.usage}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="branding" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Organization Profile</CardTitle>
+                <CardTitle>{t.settings.organizationProfile}</CardTitle>
                 <CardDescription>
-                  Customize how your organization appears to employees
+                  {t.settings.customizeAppearance}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Logo */}
                 <div className="space-y-3">
-                  <Label>Organization Logo</Label>
+                  <Label>{t.settings.logo}</Label>
                   <div className="flex items-center gap-4">
                     {organization?.logo_url ? (
                       <div className="relative">
@@ -411,7 +413,7 @@ export default function OrganizationSettings() {
                         ) : (
                           <Upload className="h-4 w-4 mr-2" />
                         )}
-                        Upload Logo
+                        {t.settings.uploadLogo}
                         <input
                           type="file"
                           accept="image/*"
@@ -421,7 +423,7 @@ export default function OrganizationSettings() {
                         />
                       </Button>
                       <p className="text-xs text-muted-foreground mt-1">
-                        PNG, JPG up to 2MB
+                        {t.settings.logoHint}
                       </p>
                     </div>
                   </div>
@@ -429,18 +431,18 @@ export default function OrganizationSettings() {
 
                 {/* Name */}
                 <div className="space-y-2">
-                  <Label htmlFor="name">Organization Name</Label>
+                  <Label htmlFor="name">{t.settings.organizationName}</Label>
                   <Input
                     id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter organization name"
+                    placeholder={t.settings.organizationName}
                   />
                 </div>
 
                 {/* Primary Color */}
                 <div className="space-y-2">
-                  <Label htmlFor="color">Primary Brand Color</Label>
+                  <Label htmlFor="color">{t.settings.primaryColor}</Label>
                   <div className="flex gap-3 items-center">
                     <input
                       type="color"
@@ -466,10 +468,10 @@ export default function OrganizationSettings() {
 
                 {/* Primary Language */}
                 <div className="space-y-2">
-                  <Label>Primary Language</Label>
+                  <Label>{t.settings.primaryLanguage}</Label>
                   <Select value={primaryLanguage} onValueChange={setPrimaryLanguage}>
                     <SelectTrigger className="w-64">
-                      <SelectValue placeholder="Select language" />
+                      <SelectValue placeholder={t.common.select} />
                     </SelectTrigger>
                     <SelectContent>
                       {LANGUAGES.map((lang) => (
@@ -483,7 +485,7 @@ export default function OrganizationSettings() {
 
                 <Button onClick={handleSaveBranding} disabled={saving}>
                   {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                  Save Changes
+                  {t.settings.saveChanges}
                 </Button>
               </CardContent>
             </Card>
@@ -493,9 +495,9 @@ export default function OrganizationSettings() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle>Team Members</CardTitle>
+                  <CardTitle>{t.settings.teamMembers}</CardTitle>
                   <CardDescription>
-                    Manage users who can access and manage assessments
+                    {t.settings.manageUsers}
                   </CardDescription>
                 </div>
                 <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
