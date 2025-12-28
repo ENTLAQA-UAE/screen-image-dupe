@@ -28,6 +28,7 @@ import {
   Brain,
   Sparkles,
   Download,
+  RefreshCw,
 } from "lucide-react";
 import { generateGroupPDF, generateParticipantPDF } from "@/lib/pdfGenerator";
 import {
@@ -50,6 +51,7 @@ interface GroupData {
   start_date: string | null;
   end_date: string | null;
   is_active: boolean | null;
+  organization_id: string;
   assessment: {
     id: string;
     title: string;
@@ -58,11 +60,18 @@ interface GroupData {
   } | null;
 }
 
+interface OrganizationData {
+  id: string;
+  name: string;
+  primary_language: string | null;
+}
+
 interface ParticipantData {
   id: string;
   full_name: string | null;
   email: string | null;
   employee_code: string | null;
+  department: string | null;
   status: string | null;
   started_at: string | null;
   completed_at: string | null;
@@ -98,9 +107,12 @@ const GroupReport = () => {
 
   const [loading, setLoading] = useState(true);
   const [group, setGroup] = useState<GroupData | null>(null);
+  const [organization, setOrganization] = useState<OrganizationData | null>(null);
   const [participants, setParticipants] = useState<ParticipantData[]>([]);
   const [stats, setStats] = useState<GroupStats | null>(null);
   const [selectedParticipant, setSelectedParticipant] = useState<ParticipantData | null>(null);
+  const [groupNarrative, setGroupNarrative] = useState<string | null>(null);
+  const [narrativeLoading, setNarrativeLoading] = useState(false);
 
   useEffect(() => {
     if (groupId && user) {
@@ -115,7 +127,7 @@ const GroupReport = () => {
       const { data: groupData, error: groupError } = await supabase
         .from("assessment_groups")
         .select(`
-          id, name, start_date, end_date, is_active,
+          id, name, start_date, end_date, is_active, organization_id,
           assessment:assessments(id, title, type, is_graded)
         `)
         .eq("id", groupId)
@@ -129,6 +141,17 @@ const GroupReport = () => {
       }
 
       setGroup(groupData as GroupData);
+
+      // Fetch organization details
+      const { data: orgData } = await supabase
+        .from("organizations")
+        .select("id, name, primary_language")
+        .eq("id", groupData.organization_id)
+        .maybeSingle();
+
+      if (orgData) {
+        setOrganization(orgData);
+      }
 
       // Fetch participants
       const { data: participantsData, error: participantsError } = await supabase
@@ -149,6 +172,35 @@ const GroupReport = () => {
       toast.error("Failed to load group data");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateNarrative = async () => {
+    if (!groupId || narrativeLoading) return;
+    
+    setNarrativeLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-group-narrative", {
+        body: { groupId }
+      });
+
+      if (error) throw error;
+
+      if (data?.narrative) {
+        setGroupNarrative(data.narrative);
+        toast.success("AI narrative generated");
+      }
+    } catch (error: any) {
+      console.error("Error generating narrative:", error);
+      if (error?.message?.includes("429")) {
+        toast.error("Rate limit exceeded. Please try again later.");
+      } else if (error?.message?.includes("402")) {
+        toast.error("AI credits exhausted. Please add credits.");
+      } else {
+        toast.error("Failed to generate narrative");
+      }
+    } finally {
+      setNarrativeLoading(false);
     }
   };
 
@@ -243,13 +295,14 @@ const GroupReport = () => {
 
   const handleExportGroupPDF = () => {
     if (!group || !stats) return;
+    const lang = (organization?.primary_language || 'en') as 'en' | 'ar';
     generateGroupPDF({
       groupName: group.name,
       assessmentTitle: group.assessment?.title || "Unknown",
       assessmentType: group.assessment?.type || "unknown",
       startDate: group.start_date,
       endDate: group.end_date,
-      organizationName: "Organization",
+      organizationName: organization?.name || "Organization",
       stats: {
         totalParticipants: stats.totalParticipants,
         completed: stats.completed,
@@ -267,22 +320,28 @@ const GroupReport = () => {
         score: p.score_summary?.percentage ?? null,
         completedAt: p.completed_at,
       })),
+      language: lang,
+      aiNarrative: groupNarrative || undefined,
     });
     toast.success("PDF exported successfully");
   };
 
   const handleExportParticipantPDF = (participant: ParticipantData) => {
     if (!group) return;
+    const lang = (organization?.primary_language || 'en') as 'en' | 'ar';
     generateParticipantPDF({
       participantName: participant.full_name || "",
       participantEmail: participant.email || "",
+      employeeCode: participant.employee_code || undefined,
+      department: participant.department || undefined,
       groupName: group.name,
       assessmentTitle: group.assessment?.title || "Unknown",
       assessmentType: group.assessment?.type || "unknown",
       completedAt: participant.completed_at,
       scoreSummary: participant.score_summary,
       aiReport: participant.ai_report_text,
-      organizationName: "Organization",
+      organizationName: organization?.name || "Organization",
+      language: lang,
     });
     toast.success("PDF exported successfully");
   };
@@ -545,6 +604,65 @@ const GroupReport = () => {
               )}
             </div>
 
+            {/* AI Group Narrative */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    AI Analysis & Insights
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={generateNarrative}
+                    disabled={narrativeLoading || stats.completed === 0}
+                  >
+                    {narrativeLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : groupNarrative ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Regenerate
+                      </>
+                    ) : (
+                      <>
+                        <Brain className="w-4 h-4 mr-2" />
+                        Generate Analysis
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <CardDescription>
+                  AI-powered analysis of group performance and recommendations
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {groupNarrative ? (
+                  <div className="prose prose-sm max-w-none bg-gradient-to-br from-primary/5 to-accent/5 p-5 rounded-xl border border-primary/10">
+                    <p className="whitespace-pre-wrap text-foreground leading-relaxed">
+                      {groupNarrative}
+                    </p>
+                  </div>
+                ) : stats.completed === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Brain className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>No completed assessments yet.</p>
+                    <p className="text-sm">AI analysis will be available once participants complete the assessment.</p>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Sparkles className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>Click "Generate Analysis" to create an AI-powered report</p>
+                    <p className="text-sm mt-1">This will analyze all {stats.completed} completed assessments</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Score Range Summary */}
             {stats.averageScore !== null && (
               <Card>
@@ -744,6 +862,19 @@ const GroupReport = () => {
             {!selectedParticipant?.score_summary && !selectedParticipant?.ai_report_text && (
               <div className="text-center py-8 text-muted-foreground">
                 No detailed results available
+              </div>
+            )}
+
+            {/* Export PDF Button */}
+            {selectedParticipant && (
+              <div className="pt-4 border-t">
+                <Button 
+                  onClick={() => handleExportParticipantPDF(selectedParticipant)}
+                  className="w-full"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download PDF Report
+                </Button>
               </div>
             )}
           </div>
