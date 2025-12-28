@@ -298,57 +298,69 @@ const GroupReport = () => {
     return format(new Date(dateString), "MMM d, yyyy HH:mm");
   };
 
-  const handleExportGroupPDF = () => {
+  const handleExportGroupPDF = async () => {
     if (!group || !stats) return;
     const lang = (organization?.primary_language || 'en') as 'en' | 'ar';
-    generateGroupPDF({
-      groupName: group.name,
-      assessmentTitle: group.assessment?.title || "Unknown",
-      assessmentType: group.assessment?.type || "unknown",
-      startDate: group.start_date,
-      endDate: group.end_date,
-      organizationName: organization?.name || "Organization",
-      stats: {
-        totalParticipants: stats.totalParticipants,
-        completed: stats.completed,
-        inProgress: stats.inProgress,
-        invited: stats.invited,
-        completionRate: stats.completionRate,
-        averageScore: stats.averageScore,
-        highestScore: stats.highestScore,
-        lowestScore: stats.lowestScore,
-      },
-      participants: participants.map((p) => ({
-        name: p.full_name || "",
-        email: p.email || "",
-        status: p.status || "invited",
-        score: p.score_summary?.percentage ?? null,
-        completedAt: p.completed_at,
-      })),
-      language: lang,
-      aiNarrative: groupNarrative || undefined,
-    });
-    toast.success("PDF exported successfully");
+    try {
+      await generateGroupPDF({
+        groupName: group.name,
+        assessmentTitle: group.assessment?.title || "Unknown",
+        assessmentType: group.assessment?.type || "unknown",
+        startDate: group.start_date,
+        endDate: group.end_date,
+        organizationName: organization?.name || "Organization",
+        organizationLogo: organization?.logo_url || undefined,
+        stats: {
+          totalParticipants: stats.totalParticipants,
+          completed: stats.completed,
+          inProgress: stats.inProgress,
+          invited: stats.invited,
+          completionRate: stats.completionRate,
+          averageScore: stats.averageScore,
+          highestScore: stats.highestScore,
+          lowestScore: stats.lowestScore,
+        },
+        participants: participants.map((p) => ({
+          name: p.full_name || "",
+          email: p.email || "",
+          status: p.status || "invited",
+          score: p.score_summary?.percentage ?? null,
+          completedAt: p.completed_at,
+        })),
+        language: lang,
+        aiNarrative: groupNarrative || undefined,
+      });
+      toast.success("PDF exported successfully");
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast.error("Failed to export PDF");
+    }
   };
 
-  const handleExportParticipantPDF = (participant: ParticipantData) => {
+  const handleExportParticipantPDF = async (participant: ParticipantData) => {
     if (!group) return;
     const lang = (organization?.primary_language || 'en') as 'en' | 'ar';
-    generateParticipantPDF({
-      participantName: participant.full_name || "",
-      participantEmail: participant.email || "",
-      employeeCode: participant.employee_code || undefined,
-      department: participant.department || undefined,
-      groupName: group.name,
-      assessmentTitle: group.assessment?.title || "Unknown",
-      assessmentType: group.assessment?.type || "unknown",
-      completedAt: participant.completed_at,
-      scoreSummary: participant.score_summary,
-      aiReport: participant.ai_report_text,
-      organizationName: organization?.name || "Organization",
-      language: lang,
-    });
-    toast.success("PDF exported successfully");
+    try {
+      await generateParticipantPDF({
+        participantName: participant.full_name || "",
+        participantEmail: participant.email || "",
+        employeeCode: participant.employee_code || undefined,
+        department: participant.department || undefined,
+        groupName: group.name,
+        assessmentTitle: group.assessment?.title || "Unknown",
+        assessmentType: group.assessment?.type || "unknown",
+        completedAt: participant.completed_at,
+        scoreSummary: participant.score_summary,
+        aiReport: participant.ai_report_text,
+        organizationName: organization?.name || "Organization",
+        organizationLogo: organization?.logo_url || undefined,
+        language: lang,
+      });
+      toast.success("PDF exported successfully");
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast.error("Failed to export PDF");
+    }
   };
 
   const handleExportResultsCsv = () => {
