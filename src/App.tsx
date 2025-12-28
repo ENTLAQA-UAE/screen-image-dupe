@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Assessments from "./pages/Assessments";
 import AssessmentBuilder from "./pages/AssessmentBuilder";
+import AssessmentPreview from "./pages/AssessmentPreview";
 import AssessmentGroups from "./pages/AssessmentGroups";
 import GroupReport from "./pages/GroupReport";
 import Reports from "./pages/Reports";
@@ -59,6 +60,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <AssessmentBuilder />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/assessments/:assessmentId/preview" 
+                element={
+                  <ProtectedRoute>
+                    <AssessmentPreview />
                   </ProtectedRoute>
                 } 
               />

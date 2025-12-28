@@ -412,13 +412,17 @@ const Assessments = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => navigate(`/assessments/${assessment.id}/preview`)}>
+                          <Eye className="w-4 h-4 mr-2" />
+                          Preview
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => openEditDialog(assessment)}>
                           <Edit className="w-4 h-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Eye className="w-4 h-4 mr-2" />
-                          View Questions
+                        <DropdownMenuItem onClick={() => navigate(`/assessments/new?edit=${assessment.id}`)}>
+                          <FileText className="w-4 h-4 mr-2" />
+                          Edit Questions
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={() => openDeleteDialog(assessment)}
