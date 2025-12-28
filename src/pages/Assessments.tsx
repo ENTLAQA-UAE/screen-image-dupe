@@ -281,6 +281,23 @@ const Assessments = () => {
     }
   };
 
+  const handleStatusChange = async (assessmentId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('assessments')
+        .update({ status: newStatus })
+        .eq('id', assessmentId);
+
+      if (error) throw error;
+
+      toast.success(`Assessment status changed to ${newStatus}`);
+      fetchAssessments();
+    } catch (error: any) {
+      console.error('Error updating status:', error);
+      toast.error(error.message || 'Failed to update status');
+    }
+  };
+
   const openEditDialog = (assessment: Assessment) => {
     setSelectedAssessment(assessment);
     setFormData({
@@ -447,6 +464,25 @@ const Assessments = () => {
                           <FileText className="w-4 h-4 mr-2" />
                           Edit Questions
                         </DropdownMenuItem>
+                        {/* Status change options */}
+                        {assessment.status !== 'active' && (
+                          <DropdownMenuItem onClick={() => handleStatusChange(assessment.id, 'active')}>
+                            <Play className="w-4 h-4 mr-2" />
+                            Set Active
+                          </DropdownMenuItem>
+                        )}
+                        {assessment.status !== 'draft' && (
+                          <DropdownMenuItem onClick={() => handleStatusChange(assessment.id, 'draft')}>
+                            <Clock className="w-4 h-4 mr-2" />
+                            Set Draft
+                          </DropdownMenuItem>
+                        )}
+                        {assessment.status !== 'archived' && (
+                          <DropdownMenuItem onClick={() => handleStatusChange(assessment.id, 'archived')}>
+                            <CheckCircle2 className="w-4 h-4 mr-2" />
+                            Archive
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem 
                           onClick={() => openDeleteDialog(assessment)}
                           className="text-destructive"
