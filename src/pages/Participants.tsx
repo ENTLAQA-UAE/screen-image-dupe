@@ -43,6 +43,7 @@ import {
   Upload,
   Download,
   AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 import { CsvImportDialog } from "@/components/participants/CsvImportDialog";
 import { useCsvExport } from "@/hooks/useCsvExport";
@@ -338,6 +339,37 @@ const Participants = () => {
     }
   };
 
+  const resendInvitationLink = async (participant: Participant) => {
+    if (!participant.email) {
+      toast.error('Participant has no email address');
+      return;
+    }
+
+    // Generate a new access token
+    const newToken = crypto.randomUUID();
+    
+    try {
+      const { error } = await supabase
+        .from('participants')
+        .update({ 
+          access_token: newToken,
+          status: participant.status === 'completed' ? 'invited' : participant.status // Reset if completed
+        })
+        .eq('id', participant.id);
+
+      if (error) throw error;
+
+      const link = `${window.location.origin}/assess/${newToken}`;
+      await navigator.clipboard.writeText(link);
+      
+      toast.success('New invitation link generated and copied to clipboard');
+      fetchParticipants();
+    } catch (error: any) {
+      console.error('Error resending invitation:', error);
+      toast.error(error.message || 'Failed to resend invitation');
+    }
+  };
+
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '-';
     return format(new Date(dateString), 'MMM d, yyyy HH:mm');
@@ -575,6 +607,14 @@ const Participants = () => {
                               <LinkIcon className="w-4 h-4 mr-2" />
                               Copy Access Link
                             </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => resendInvitationLink(participant)}
+                              disabled={!participant.email}
+                            >
+                              <RefreshCw className="w-4 h-4 mr-2" />
+                              Resend Invitation Link
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => openEditDialog(participant)}>
                               <Edit className="w-4 h-4 mr-2" />
                               Edit
