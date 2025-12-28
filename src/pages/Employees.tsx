@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +38,7 @@ interface Employee {
 const Employees = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, isSuperAdmin } = useAuth();
+  const { t } = useLanguage();
 
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -211,15 +213,15 @@ const Employees = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-2xl font-display font-bold text-foreground mb-1"
             >
-              Employee Profiles
+              {t.employees.title}
             </motion.h1>
             <p className="text-muted-foreground">
-              View all employees and their assessment history
+              {t.employees.description}
             </p>
           </div>
           <Badge variant="secondary" className="text-base px-4 py-2">
             <Users className="w-4 h-4 mr-2" />
-            {employees.length} Employees
+            {employees.length} {t.employees.title}
           </Badge>
         </div>
 
@@ -228,7 +230,7 @@ const Employees = () => {
           <div className="relative flex-1 max-w-md">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search by name, email, code..."
+              placeholder={t.employees.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"

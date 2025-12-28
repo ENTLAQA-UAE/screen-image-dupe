@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -92,6 +93,7 @@ const statusIcons: Record<string, React.ElementType> = {
 const Participants = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, isSuperAdmin } = useAuth();
+  const { t } = useLanguage();
   const { usage, limits, canCreate, refresh: refreshLimits } = useSubscriptionLimits();
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -414,11 +416,11 @@ const Participants = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-2xl font-display font-bold text-foreground mb-1"
             >
-              Participants{" "}
+              {t.participants.title}{" "}
               <LimitBadge currentUsage={usage.participants} limit={limits.participants} />
             </motion.h1>
             <p className="text-muted-foreground">
-              View and manage assessment participants across all groups.
+              {t.participants.description}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -428,30 +430,30 @@ const Participants = () => {
               disabled={!canCreate("participants")}
             >
               <Upload className="w-4 h-4 mr-2" />
-              Import CSV
+              {t.participants.import}
             </Button>
             <Button 
               variant="outline" 
               onClick={() => exportToCsv({
                 filename: 'participants',
-                headers: ['Employee Code', 'Full Name', 'Email', 'Department', 'Job Title', 'Group', 'Status', 'Started At', 'Completed At'],
+                headers: [t.participants.employeeCode, t.participants.name, t.participants.email, t.participants.department, t.participants.jobTitle, t.participants.group, t.participants.status, 'Started At', t.participants.completedAt],
                 data: filteredParticipants,
                 columnMap: {
-                  'Employee Code': 'employee_code',
-                  'Full Name': 'full_name',
-                  'Email': 'email',
-                  'Department': 'department',
-                  'Job Title': 'job_title',
-                  'Group': 'group.name',
-                  'Status': 'status',
+                  [t.participants.employeeCode]: 'employee_code',
+                  [t.participants.name]: 'full_name',
+                  [t.participants.email]: 'email',
+                  [t.participants.department]: 'department',
+                  [t.participants.jobTitle]: 'job_title',
+                  [t.participants.group]: 'group.name',
+                  [t.participants.status]: 'status',
                   'Started At': 'started_at',
-                  'Completed At': 'completed_at',
+                  [t.participants.completedAt]: 'completed_at',
                 }
               })}
               disabled={filteredParticipants.length === 0}
             >
               <Download className="w-4 h-4 mr-2" />
-              Export CSV
+              {t.participants.export}
             </Button>
             <Button 
               variant="hero" 
@@ -460,7 +462,7 @@ const Participants = () => {
             >
               {!canCreate("participants") && <AlertTriangle className="w-4 h-4" />}
               <Plus className="w-4 h-4" />
-              Add Participant
+              {t.participants.add}
             </Button>
           </div>
         </div>
@@ -470,7 +472,7 @@ const Participants = () => {
           <div className="relative w-80">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search participants..."
+              placeholder={t.participants.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"

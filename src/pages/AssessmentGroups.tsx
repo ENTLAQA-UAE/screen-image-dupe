@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/popover";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -113,6 +114,7 @@ const getIconColor = (type: string) => {
 const AssessmentGroups = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, isSuperAdmin } = useAuth();
+  const { t } = useLanguage();
   const { usage, limits, canCreate, refresh: refreshLimits } = useSubscriptionLimits();
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [groups, setGroups] = useState<AssessmentGroup[]>([]);
@@ -408,11 +410,11 @@ const AssessmentGroups = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-2xl font-display font-bold text-foreground mb-1"
             >
-              Assessment Groups{" "}
+              {t.groups.title}{" "}
               <LimitBadge currentUsage={usage.groups} limit={limits.groups} />
             </motion.h1>
             <p className="text-muted-foreground">
-              Manage groups of participants for your assessments.
+              {t.groups.description}
             </p>
           </div>
           <Button 
@@ -422,7 +424,7 @@ const AssessmentGroups = () => {
           >
             {!canCreate("groups") && <AlertTriangle className="w-4 h-4" />}
             <Plus className="w-4 h-4" />
-            Create Group
+            {t.groups.createGroup}
           </Button>
         </div>
 
