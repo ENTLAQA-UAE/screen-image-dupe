@@ -1,40 +1,40 @@
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Eye, EyeOff, Lock, Mail, User, Building2, Sparkles, Shield, BarChart3, Brain } from "lucide-react";
-import { z } from "zod";
-import { useNavigate } from "react-router-dom";
-
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/i18n/LanguageContext";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { z } from 'zod';
+import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/i18n/LanguageContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+import { Eye, EyeOff, Lock, Mail, User, Building2, Sparkles, Shield, BarChart3 } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().trim().email({ message: "Invalid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 });
 
-const signupSchema = z
-  .object({
-    fullName: z.string().trim().min(2, { message: "Name must be at least 2 characters" }).max(100),
-    email: z.string().trim().email({ message: "Invalid email address" }).max(255),
-    password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(72),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  });
+const signupSchema = z.object({
+  fullName: z.string().trim().min(2, { message: "Name must be at least 2 characters" }).max(100),
+  email: z.string().trim().email({ message: "Invalid email address" }).max(255),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(72),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
 
 const features = [
   { icon: Brain, text: "AI-Powered Assessments" },
   { icon: Shield, text: "Enterprise Security" },
   { icon: BarChart3, text: "Advanced Analytics" },
 ];
+
+// Import Brain icon
+import { Brain } from 'lucide-react';
 
 export default function Auth() {
   const navigate = useNavigate();
