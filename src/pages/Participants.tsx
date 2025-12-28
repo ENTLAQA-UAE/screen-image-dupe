@@ -20,10 +20,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { LimitWarning, LimitBadge } from "@/components/LimitWarning";
 import { 
   Plus, 
   Search,
@@ -40,6 +42,7 @@ import {
   User,
   Upload,
   Download,
+  AlertTriangle,
 } from "lucide-react";
 import { CsvImportDialog } from "@/components/participants/CsvImportDialog";
 import { useCsvExport } from "@/hooks/useCsvExport";
@@ -88,7 +91,7 @@ const statusIcons: Record<string, React.ElementType> = {
 const Participants = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, isSuperAdmin } = useAuth();
-  
+  const { usage, limits, canCreate, refresh: refreshLimits } = useSubscriptionLimits();
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [groups, setGroups] = useState<AssessmentGroup[]>([]);
@@ -209,6 +212,12 @@ const Participants = () => {
       return;
     }
 
+    // Check subscription limit
+    if (!canCreate("participants")) {
+      toast.error('You have reached your participant limit. Please upgrade your plan.');
+      return;
+    }
+
     setSaving(true);
     try {
       const { error } = await supabase
@@ -228,6 +237,7 @@ const Participants = () => {
       setIsCreateOpen(false);
       resetForm();
       fetchParticipants();
+      refreshLimits(); // Refresh usage counts
     } catch (error: any) {
       console.error('Error creating participant:', error);
       toast.error(error.message || 'Failed to add participant');
@@ -357,6 +367,13 @@ const Participants = () => {
   return (
     <DashboardLayout activeItem="Participants">
       <div className="p-8">
+        {/* Limit Warning */}
+        <LimitWarning 
+          resourceType="participants" 
+          currentUsage={usage.participants} 
+          limit={limits.participants}
+        />
+
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -365,14 +382,19 @@ const Participants = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-2xl font-display font-bold text-foreground mb-1"
             >
-              Participants
+              Participants{" "}
+              <LimitBadge currentUsage={usage.participants} limit={limits.participants} />
             </motion.h1>
             <p className="text-muted-foreground">
               View and manage assessment participants across all groups.
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsImportOpen(true)}
+              disabled={!canCreate("participants")}
+            >
               <Upload className="w-4 h-4 mr-2" />
               Import CSV
             </Button>
@@ -399,7 +421,12 @@ const Participants = () => {
               <Download className="w-4 h-4 mr-2" />
               Export CSV
             </Button>
-            <Button variant="hero" onClick={() => setIsCreateOpen(true)}>
+            <Button 
+              variant="hero" 
+              onClick={() => setIsCreateOpen(true)}
+              disabled={!canCreate("participants")}
+            >
+              {!canCreate("participants") && <AlertTriangle className="w-4 h-4" />}
               <Plus className="w-4 h-4" />
               Add Participant
             </Button>

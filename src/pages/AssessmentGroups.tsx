@@ -27,10 +27,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { LimitWarning, LimitBadge } from "@/components/LimitWarning";
 import { cn } from "@/lib/utils";
 import { 
   Plus, 
@@ -51,7 +53,8 @@ import {
   CalendarIcon,
   UserPlus,
   Link as LinkIcon,
-  BarChart3
+  BarChart3,
+  AlertTriangle
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -110,7 +113,7 @@ const getIconColor = (type: string) => {
 const AssessmentGroups = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, isSuperAdmin } = useAuth();
-  
+  const { usage, limits, canCreate, refresh: refreshLimits } = useSubscriptionLimits();
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [groups, setGroups] = useState<AssessmentGroup[]>([]);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
@@ -236,6 +239,12 @@ const AssessmentGroups = () => {
       return;
     }
 
+    // Check subscription limit
+    if (!canCreate("groups")) {
+      toast.error('You have reached your assessment group limit. Please upgrade your plan.');
+      return;
+    }
+
     setSaving(true);
     try {
       const { error } = await supabase
@@ -255,6 +264,7 @@ const AssessmentGroups = () => {
       setIsCreateOpen(false);
       resetForm();
       fetchGroups();
+      refreshLimits(); // Refresh usage counts
     } catch (error: any) {
       console.error('Error creating group:', error);
       toast.error(error.message || 'Failed to create assessment group');
@@ -383,6 +393,13 @@ const AssessmentGroups = () => {
   return (
     <DashboardLayout activeItem="Assessment Groups">
       <div className="p-8">
+        {/* Limit Warning */}
+        <LimitWarning 
+          resourceType="groups" 
+          currentUsage={usage.groups} 
+          limit={limits.groups}
+        />
+
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -391,13 +408,19 @@ const AssessmentGroups = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-2xl font-display font-bold text-foreground mb-1"
             >
-              Assessment Groups
+              Assessment Groups{" "}
+              <LimitBadge currentUsage={usage.groups} limit={limits.groups} />
             </motion.h1>
             <p className="text-muted-foreground">
               Manage groups of participants for your assessments.
             </p>
           </div>
-          <Button variant="hero" onClick={() => setIsCreateOpen(true)}>
+          <Button 
+            variant="hero" 
+            onClick={() => setIsCreateOpen(true)}
+            disabled={!canCreate("groups")}
+          >
+            {!canCreate("groups") && <AlertTriangle className="w-4 h-4" />}
             <Plus className="w-4 h-4" />
             Create Group
           </Button>

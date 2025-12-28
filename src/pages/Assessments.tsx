@@ -20,10 +20,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { LimitWarning, LimitBadge } from "@/components/LimitWarning";
 import { 
   Plus, 
   Search,
@@ -39,7 +41,8 @@ import {
   Loader2,
   Clock,
   CheckCircle2,
-  Play
+  Play,
+  AlertTriangle
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -91,7 +94,7 @@ const getIconColor = (type: string) => {
 const Assessments = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, isSuperAdmin } = useAuth();
-  
+  const { usage, limits, loading: limitsLoading, canCreate, refresh: refreshLimits } = useSubscriptionLimits();
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -184,6 +187,12 @@ const Assessments = () => {
       return;
     }
 
+    // Check subscription limit
+    if (!canCreate("assessments")) {
+      toast.error('You have reached your assessment limit. Please upgrade your plan.');
+      return;
+    }
+
     setSaving(true);
     try {
       const { error } = await supabase
@@ -205,6 +214,7 @@ const Assessments = () => {
       setIsCreateOpen(false);
       resetForm();
       fetchAssessments();
+      refreshLimits(); // Refresh usage counts
     } catch (error: any) {
       console.error('Error creating assessment:', error);
       toast.error(error.message || 'Failed to create assessment');
@@ -323,6 +333,13 @@ const Assessments = () => {
   return (
     <DashboardLayout activeItem="Assessments">
       <div className="p-8">
+        {/* Limit Warning */}
+        <LimitWarning 
+          resourceType="assessments" 
+          currentUsage={usage.assessments} 
+          limit={limits.assessments}
+        />
+
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -332,12 +349,18 @@ const Assessments = () => {
               className="text-2xl font-display font-bold text-foreground mb-1"
             >
               Assessments
+              <LimitBadge currentUsage={usage.assessments} limit={limits.assessments} />
             </motion.h1>
             <p className="text-muted-foreground">
               Create and manage your assessment templates.
             </p>
           </div>
-          <Button variant="hero" onClick={() => navigate('/assessments/new')}>
+          <Button 
+            variant="hero" 
+            onClick={() => navigate('/assessments/new')}
+            disabled={!canCreate("assessments")}
+          >
+            {!canCreate("assessments") && <AlertTriangle className="w-4 h-4" />}
             <Plus className="w-4 h-4" />
             Create Assessment
           </Button>
