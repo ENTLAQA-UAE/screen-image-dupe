@@ -250,15 +250,31 @@ export default function TakeAssessment() {
   const [timerActive, setTimerActive] = useState(false);
   const [shownWarnings, setShownWarnings] = useState<Set<number>>(new Set());
 
+  // State for error pages with branding
+  const [errorOrganization, setErrorOrganization] = useState<{
+    name: string;
+    logoUrl: string | null;
+    primaryColor: string;
+    language?: string;
+  } | null>(null);
+  const [errorAssessment, setErrorAssessment] = useState<{
+    title: string;
+    language: string;
+  } | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
+
   // Submission results
   const [submissionResults, setSubmissionResults] = useState<any>(null);
 
-  // Language detection
+  // Language detection - also check error state data
   const isArabic = useMemo(() => {
     return assessmentData?.assessment?.language === "ar" || 
            assessmentData?.organization?.language === "ar" ||
-           completedData?.assessment?.language === "ar";
-  }, [assessmentData, completedData]);
+           completedData?.assessment?.language === "ar" ||
+           completedData?.organization?.language === "ar" ||
+           errorOrganization?.language === "ar" ||
+           errorAssessment?.language === "ar";
+  }, [assessmentData, completedData, errorOrganization, errorAssessment]);
 
   const t = useMemo(() => translations[isArabic ? "ar" : "en"], [isArabic]);
 
@@ -319,6 +335,14 @@ export default function TakeAssessment() {
       const data = await res.json();
 
       if (!res.ok) {
+        // Store branding data for error pages
+        if (data.organization) {
+          setErrorOrganization(data.organization);
+        }
+        if (data.assessment) {
+          setErrorAssessment(data.assessment);
+        }
+        
         if (data.status === "not_started") {
           setPageState("not_started");
           setStartDate(data.startDate);
@@ -326,6 +350,7 @@ export default function TakeAssessment() {
         }
         if (data.status === "expired") {
           setPageState("expired");
+          setEndDate(data.endDate);
           return;
         }
         if (data.status === "closed") {
@@ -562,41 +587,147 @@ export default function TakeAssessment() {
     </div>
   );
 
-  const renderNotStarted = () => (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4" dir={isArabic ? "rtl" : "ltr"}>
-      <Card className="max-w-md w-full text-center shadow-elegant">
-        <CardContent className="pt-8 pb-8">
-          <div className="w-16 h-16 rounded-full bg-highlight/10 flex items-center justify-center mx-auto mb-4">
-            <Clock className="w-8 h-8 text-highlight" />
-          </div>
-          <h1 className="text-2xl font-bold mb-2 font-display">{t.notYetOpen}</h1>
-          <p className="text-muted-foreground">
-            {t.notYetOpenDesc}{" "}
-            {startDate ? new Date(startDate).toLocaleDateString(isArabic ? "ar-SA" : "en-US", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            }) : t.soon}.
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  const renderNotStarted = () => {
+    const orgData = errorOrganization;
+    const assessmentTitle = errorAssessment?.title;
+    
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4" dir={isArabic ? "rtl" : "ltr"}>
+        <Card className="max-w-md w-full text-center shadow-elegant overflow-hidden">
+          {orgData && (
+            <div 
+              className="p-4 border-b"
+              style={{ 
+                background: orgData.primaryColor ? `${orgData.primaryColor}10` : undefined,
+                borderColor: orgData.primaryColor ? `${orgData.primaryColor}30` : undefined
+              }}
+            >
+              {orgData.logoUrl ? (
+                <img src={orgData.logoUrl} alt={orgData.name} className="h-10 mx-auto object-contain" />
+              ) : (
+                <div className="flex items-center justify-center gap-2">
+                  <Building2 className="w-5 h-5" style={{ color: orgData.primaryColor }} />
+                  <span className="font-semibold">{orgData.name}</span>
+                </div>
+              )}
+            </div>
+          )}
+          <CardContent className="pt-8 pb-8">
+            <div className="w-16 h-16 rounded-full bg-highlight/10 flex items-center justify-center mx-auto mb-4">
+              <Clock className="w-8 h-8 text-highlight" />
+            </div>
+            <h1 className="text-2xl font-bold mb-2 font-display">{t.notYetOpen}</h1>
+            {assessmentTitle && (
+              <p className="text-sm text-muted-foreground mb-3">{assessmentTitle}</p>
+            )}
+            <p className="text-muted-foreground">
+              {t.notYetOpenDesc}{" "}
+              <span className="font-semibold">
+                {startDate ? new Date(startDate).toLocaleDateString(isArabic ? "ar-SA" : "en-US", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }) : t.soon}
+              </span>
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
 
-  const renderExpired = () => (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4" dir={isArabic ? "rtl" : "ltr"}>
-      <Card className="max-w-md w-full text-center shadow-elegant">
-        <CardContent className="pt-8 pb-8">
-          <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
-            <AlertTriangle className="w-8 h-8 text-destructive" />
-          </div>
-          <h1 className="text-2xl font-bold mb-2 font-display">{t.assessmentEnded}</h1>
-          <p className="text-muted-foreground">{t.assessmentEndedDesc}</p>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  const renderExpired = () => {
+    const orgData = errorOrganization;
+    const assessmentTitle = errorAssessment?.title;
+    
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4" dir={isArabic ? "rtl" : "ltr"}>
+        <Card className="max-w-md w-full text-center shadow-elegant overflow-hidden">
+          {orgData && (
+            <div 
+              className="p-4 border-b"
+              style={{ 
+                background: orgData.primaryColor ? `${orgData.primaryColor}10` : undefined,
+                borderColor: orgData.primaryColor ? `${orgData.primaryColor}30` : undefined
+              }}
+            >
+              {orgData.logoUrl ? (
+                <img src={orgData.logoUrl} alt={orgData.name} className="h-10 mx-auto object-contain" />
+              ) : (
+                <div className="flex items-center justify-center gap-2">
+                  <Building2 className="w-5 h-5" style={{ color: orgData.primaryColor }} />
+                  <span className="font-semibold">{orgData.name}</span>
+                </div>
+              )}
+            </div>
+          )}
+          <CardContent className="pt-8 pb-8">
+            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="w-8 h-8 text-destructive" />
+            </div>
+            <h1 className="text-2xl font-bold mb-2 font-display">{t.assessmentEnded}</h1>
+            {assessmentTitle && (
+              <p className="text-sm text-muted-foreground mb-3">{assessmentTitle}</p>
+            )}
+            <p className="text-muted-foreground">{t.assessmentEndedDesc}</p>
+            {endDate && (
+              <p className="text-xs text-muted-foreground mt-3">
+                {isArabic ? "انتهى في" : "Ended on"}{" "}
+                {new Date(endDate).toLocaleDateString(isArabic ? "ar-SA" : "en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderClosed = () => {
+    const orgData = errorOrganization;
+    const assessmentTitle = errorAssessment?.title;
+    
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4" dir={isArabic ? "rtl" : "ltr"}>
+        <Card className="max-w-md w-full text-center shadow-elegant overflow-hidden">
+          {orgData && (
+            <div 
+              className="p-4 border-b"
+              style={{ 
+                background: orgData.primaryColor ? `${orgData.primaryColor}10` : undefined,
+                borderColor: orgData.primaryColor ? `${orgData.primaryColor}30` : undefined
+              }}
+            >
+              {orgData.logoUrl ? (
+                <img src={orgData.logoUrl} alt={orgData.name} className="h-10 mx-auto object-contain" />
+              ) : (
+                <div className="flex items-center justify-center gap-2">
+                  <Building2 className="w-5 h-5" style={{ color: orgData.primaryColor }} />
+                  <span className="font-semibold">{orgData.name}</span>
+                </div>
+              )}
+            </div>
+          )}
+          <CardContent className="pt-8 pb-8">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+              <XCircle className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h1 className="text-2xl font-bold mb-2 font-display">{t.assessmentClosed}</h1>
+            {assessmentTitle && (
+              <p className="text-sm text-muted-foreground mb-3">{assessmentTitle}</p>
+            )}
+            <p className="text-muted-foreground">{t.assessmentClosedDesc}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
 
   const renderRegister = () => (
     <div 
@@ -1124,7 +1255,7 @@ export default function TakeAssessment() {
     case "error": return renderError();
     case "not_started": return renderNotStarted();
     case "expired": return renderExpired();
-    case "closed": return renderExpired();
+    case "closed": return renderClosed();
     case "register": return renderRegister();
     case "intro": return renderIntro();
     case "questions": return renderQuestions();
