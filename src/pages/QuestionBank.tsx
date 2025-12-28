@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -76,6 +77,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 
 export default function QuestionBank() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [questions, setQuestions] = useState<QuestionBankItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
@@ -266,13 +268,13 @@ export default function QuestionBank() {
               <Library className="w-6 h-6 text-accent-foreground" />
             </div>
             <div>
-              <h1 className="text-2xl font-display font-bold text-foreground">Question Bank</h1>
-              <p className="text-muted-foreground">Manage your reusable assessment questions</p>
+              <h1 className="text-2xl font-display font-bold text-foreground">{t.questionBank.title}</h1>
+              <p className="text-muted-foreground">{t.questionBank.description}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="text-sm">
-              {questions.length} Questions
+              {questions.length} {t.builder.questions}
             </Badge>
           </div>
         </div>
@@ -284,7 +286,7 @@ export default function QuestionBank() {
               <div className="relative flex-1 min-w-64">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Search questions..."
+                  placeholder={t.questionBank.search}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -293,15 +295,15 @@ export default function QuestionBank() {
               
               <Select value={filterType} onValueChange={setFilterType}>
                 <SelectTrigger className="w-48">
-                  <SelectValue placeholder="All Types" />
+                  <SelectValue placeholder={t.questionBank.filterByType} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="cognitive">Cognitive</SelectItem>
-                  <SelectItem value="personality">Personality</SelectItem>
-                  <SelectItem value="behavioral">Behavioral</SelectItem>
-                  <SelectItem value="situational">Situational</SelectItem>
-                  <SelectItem value="language">Language</SelectItem>
+                  <SelectItem value="all">{t.common.all}</SelectItem>
+                  <SelectItem value="cognitive">{t.assessments.cognitive}</SelectItem>
+                  <SelectItem value="personality">{t.assessments.personality}</SelectItem>
+                  <SelectItem value="behavioral">{t.assessments.behavioral}</SelectItem>
+                  <SelectItem value="situational">{t.assessments.situational}</SelectItem>
+                  <SelectItem value="language">{t.assessments.languageAssessment}</SelectItem>
                   <SelectItem value="generic_quiz">Generic Quiz</SelectItem>
                   <SelectItem value="generic_profile">Generic Profile</SelectItem>
                 </SelectContent>
@@ -309,24 +311,24 @@ export default function QuestionBank() {
 
               <Select value={filterDifficulty} onValueChange={setFilterDifficulty}>
                 <SelectTrigger className="w-36">
-                  <SelectValue placeholder="Difficulty" />
+                  <SelectValue placeholder={t.questionBank.filterByDifficulty} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Levels</SelectItem>
-                  <SelectItem value="easy">Easy</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="hard">Hard</SelectItem>
+                  <SelectItem value="all">{t.common.all}</SelectItem>
+                  <SelectItem value="easy">{t.questionBank.easy}</SelectItem>
+                  <SelectItem value="medium">{t.questionBank.medium}</SelectItem>
+                  <SelectItem value="hard">{t.questionBank.hard}</SelectItem>
                 </SelectContent>
               </Select>
 
               <Select value={filterLanguage} onValueChange={setFilterLanguage}>
                 <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Language" />
+                  <SelectValue placeholder={t.assessments.language} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="all">{t.common.all}</SelectItem>
                   <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="ar">Arabic</SelectItem>
+                  <SelectItem value="ar">العربية</SelectItem>
                 </SelectContent>
               </Select>
 

@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -94,6 +95,7 @@ const getIconColor = (type: string) => {
 const Assessments = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, isSuperAdmin } = useAuth();
+  const { t } = useLanguage();
   const { usage, limits, loading: limitsLoading, canCreate, refresh: refreshLimits } = useSubscriptionLimits();
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
@@ -365,11 +367,11 @@ const Assessments = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-2xl font-display font-bold text-foreground mb-1"
             >
-              Assessments
+              {t.assessments.title}
               <LimitBadge currentUsage={usage.assessments} limit={limits.assessments} />
             </motion.h1>
             <p className="text-muted-foreground">
-              Create and manage your assessment templates.
+              {t.assessments.description}
             </p>
           </div>
           <Button 
@@ -379,7 +381,7 @@ const Assessments = () => {
           >
             {!canCreate("assessments") && <AlertTriangle className="w-4 h-4" />}
             <Plus className="w-4 h-4" />
-            Create Assessment
+            {t.assessments.createNew}
           </Button>
         </div>
 
@@ -388,7 +390,7 @@ const Assessments = () => {
           <div className="relative w-80">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search assessments..."
+              placeholder={t.assessments.search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -409,15 +411,15 @@ const Assessments = () => {
           <div className="rounded-2xl border border-border bg-card p-12 text-center">
             <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">
-              {searchQuery ? 'No assessments found' : 'No assessments yet'}
+              {searchQuery ? t.assessments.noAssessments : t.assessments.noAssessments}
             </h3>
             <p className="text-muted-foreground mb-4">
-              {searchQuery ? 'Try a different search term.' : 'Create your first assessment to get started.'}
+              {searchQuery ? t.common.noData : t.assessments.createFirst}
             </p>
             {!searchQuery && (
               <Button variant="hero" onClick={() => navigate('/assessments/new')}>
                 <Plus className="w-4 h-4 mr-2" />
-                Create Assessment
+                {t.assessments.createNew}
               </Button>
             )}
           </div>
@@ -454,33 +456,33 @@ const Assessments = () => {
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => navigate(`/assessments/${assessment.id}/preview`)}>
                           <Eye className="w-4 h-4 mr-2" />
-                          Preview
+                          {t.assessments.preview}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => openEditDialog(assessment)}>
                           <Edit className="w-4 h-4 mr-2" />
-                          Edit
+                          {t.assessments.edit}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate(`/assessments/new?edit=${assessment.id}`)}>
                           <FileText className="w-4 h-4 mr-2" />
-                          Edit Questions
+                          {t.builder.questions}
                         </DropdownMenuItem>
                         {/* Status change options */}
                         {assessment.status !== 'active' && (
                           <DropdownMenuItem onClick={() => handleStatusChange(assessment.id, 'active')}>
                             <Play className="w-4 h-4 mr-2" />
-                            Set Active
+                            {t.assessments.active}
                           </DropdownMenuItem>
                         )}
                         {assessment.status !== 'draft' && (
                           <DropdownMenuItem onClick={() => handleStatusChange(assessment.id, 'draft')}>
                             <Clock className="w-4 h-4 mr-2" />
-                            Set Draft
+                            {t.assessments.draft}
                           </DropdownMenuItem>
                         )}
                         {assessment.status !== 'archived' && (
                           <DropdownMenuItem onClick={() => handleStatusChange(assessment.id, 'archived')}>
                             <CheckCircle2 className="w-4 h-4 mr-2" />
-                            Archive
+                            {t.assessments.archived}
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem 
@@ -488,7 +490,7 @@ const Assessments = () => {
                           className="text-destructive"
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
-                          Delete
+                          {t.assessments.delete}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
