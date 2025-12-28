@@ -2,6 +2,7 @@ import { ReactNode, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useOrganizationBranding } from "@/contexts/OrganizationBrandingContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 import { 
@@ -55,6 +56,7 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
   const navigate = useNavigate();
   const { user, signOut, isOrgAdmin, isHrAdmin } = useAuth();
   const { t, isRTL, dir } = useLanguage();
+  const { branding } = useOrganizationBranding();
 
   // Determine which nav items to show based on role
   const navItems = useMemo(() => {
@@ -116,14 +118,26 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
     <div className="min-h-screen bg-background" dir={dir}>
       {/* Sidebar */}
       <aside className={`w-64 h-screen bg-sidebar fixed top-0 border-sidebar-border flex flex-col ${isRTL ? 'right-0 border-l' : 'left-0 border-r'}`}>
-        {/* Logo */}
+        {/* Logo & Organization Branding */}
         <div className="p-6 border-b border-sidebar-border">
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-9 h-9 gradient-accent rounded-lg flex items-center justify-center shadow-glow">
-              <span className="text-accent-foreground font-display font-bold">J</span>
-            </div>
+            {branding?.logo_url ? (
+              <img 
+                src={branding.logo_url} 
+                alt={branding.name || "Organization"} 
+                className="w-9 h-9 rounded-lg object-contain"
+              />
+            ) : (
+              <div className="w-9 h-9 gradient-accent rounded-lg flex items-center justify-center shadow-glow">
+                <span className="text-accent-foreground font-display font-bold">
+                  {branding?.name?.charAt(0) || "J"}
+                </span>
+              </div>
+            )}
             <div className="flex flex-col">
-              <span className="font-display font-bold text-sidebar-foreground">Jadarat</span>
+              <span className="font-display font-bold text-sidebar-foreground truncate max-w-[140px]">
+                {branding?.name || "Jadarat"}
+              </span>
               <span className="text-[10px] text-sidebar-foreground/60 -mt-0.5 tracking-wider">ASSESS</span>
             </div>
           </Link>

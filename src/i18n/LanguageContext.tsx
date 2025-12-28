@@ -80,6 +80,16 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     setLanguageState(lang);
   }, []);
 
+  // Clear language preference when user logs out (detected by user becoming null)
+  useEffect(() => {
+    if (!user) {
+      // User logged out - clear the stored language preference
+      localStorage.removeItem("jadarat-language");
+      // Reset to English as default
+      setLanguageState("en");
+    }
+  }, [user]);
+
   const value = useMemo(() => ({
     language,
     setLanguage,
