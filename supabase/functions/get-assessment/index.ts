@@ -187,6 +187,7 @@ serve(async (req) => {
       assessmentGroup: {
         id: assessmentGroup.id,
         name: assessmentGroup.name,
+        organizationId: assessmentGroup.organization_id,
       },
       assessment: {
         id: assessment.id,
@@ -207,6 +208,7 @@ serve(async (req) => {
         options: q.options,
       })),
       organization: organization ? {
+        id: assessmentGroup.organization_id,
         name: organization.name,
         logoUrl: organization.logo_url,
         primaryColor: organization.primary_color,
