@@ -6,10 +6,12 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { HRAdminDashboard } from "@/components/dashboard/HRAdminDashboard";
 import { OrgAdminDashboard } from "@/components/dashboard/OrgAdminDashboard";
 import { Loader2 } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user, roles, loading: authLoading, isSuperAdmin, isOrgAdmin, isHrAdmin } = useAuth();
+  const { t } = useLanguage();
   
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [organizationName, setOrganizationName] = useState<string>("");
@@ -84,8 +86,8 @@ const Dashboard = () => {
     return (
       <DashboardLayout activeItem="Dashboard">
         <div className="text-center py-20">
-          <p className="text-muted-foreground">You are not assigned to any organization yet.</p>
-          <p className="text-sm text-muted-foreground mt-2">Please contact your administrator.</p>
+          <p className="text-muted-foreground">{t.common.noData}</p>
+          <p className="text-sm text-muted-foreground mt-2">{t.common.loading}</p>
         </div>
       </DashboardLayout>
     );

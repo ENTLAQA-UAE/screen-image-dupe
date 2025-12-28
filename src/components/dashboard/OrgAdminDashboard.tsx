@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useLanguage } from "@/i18n/LanguageContext";
 import {
   Building2,
   Users,
@@ -46,6 +47,7 @@ const PLAN_COLORS: Record<string, string> = {
 
 export function OrgAdminDashboard({ organizationId, organizationName, userName }: OrgAdminDashboardProps) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<OrgStats>({
     totalAssessments: 0,
@@ -130,20 +132,20 @@ export function OrgAdminDashboard({ organizationId, organizationName, userName }
 
   const quickActions = [
     { 
-      label: "Organization Settings", 
-      description: "Branding & configuration",
+      label: t.orgDashboard.organizationSettings, 
+      description: t.orgDashboard.brandingConfig,
       icon: Building2, 
       href: "/settings",
     },
     { 
-      label: "User Management", 
-      description: "Manage HR Admins",
+      label: t.orgDashboard.userManagement, 
+      description: t.orgDashboard.manageHRAdmins,
       icon: Users, 
       href: "/user-management",
     },
     { 
-      label: "Subscription", 
-      description: "Plan & usage",
+      label: t.orgDashboard.subscription, 
+      description: t.orgDashboard.planUsage,
       icon: CreditCard, 
       href: "/subscription",
     },
@@ -151,13 +153,13 @@ export function OrgAdminDashboard({ organizationId, organizationName, userName }
 
   const usageItems = [
     {
-      label: "Assessments",
+      label: t.orgDashboard.assessments,
       current: stats.totalAssessments,
       max: stats.assessmentLimit,
       icon: FileText,
     },
     {
-      label: "HR Admins",
+      label: t.orgDashboard.hrAdmins,
       current: stats.totalHRAdmins,
       max: stats.maxHRAdmins,
       icon: Shield,
@@ -174,14 +176,14 @@ export function OrgAdminDashboard({ organizationId, organizationName, userName }
             animate={{ opacity: 1, y: 0 }}
             className="text-2xl font-display font-bold text-foreground mb-1"
           >
-            Welcome back, {userName}
+            {t.dashboard.welcome}, {userName}
           </motion.h1>
           <p className="text-muted-foreground">
-            Organization admin dashboard for {organizationName}
+            {t.orgDashboard.adminDashboard} {organizationName}
           </p>
         </div>
         <Badge className={PLAN_COLORS[stats.plan] || PLAN_COLORS.free}>
-          {stats.plan.charAt(0).toUpperCase() + stats.plan.slice(1)} Plan
+          {stats.plan.charAt(0).toUpperCase() + stats.plan.slice(1)} {t.orgDashboard.plan}
         </Badge>
       </div>
 
@@ -195,7 +197,7 @@ export function OrgAdminDashboard({ organizationId, organizationName, userName }
             <CardContent className="py-4 flex items-center gap-3">
               <Shield className="w-5 h-5 text-destructive" />
               <p className="text-destructive font-medium">
-                Your organization is currently inactive. Please contact support to reactivate.
+                {t.orgDashboard.orgInactive}
               </p>
             </CardContent>
           </Card>
@@ -212,7 +214,7 @@ export function OrgAdminDashboard({ organizationId, organizationName, userName }
         <Card className="p-5">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Total Assessments</p>
+              <p className="text-sm text-muted-foreground">{t.orgDashboard.totalAssessments}</p>
               <p className="text-3xl font-bold mt-1">{stats.totalAssessments}</p>
             </div>
             <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center">
@@ -220,13 +222,13 @@ export function OrgAdminDashboard({ organizationId, organizationName, userName }
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-2">
-            {stats.assessmentLimit === -1 ? 'Unlimited' : `of ${stats.assessmentLimit} limit`}
+            {stats.assessmentLimit === -1 ? t.orgDashboard.unlimited : `${t.orgDashboard.ofLimit} ${stats.assessmentLimit} ${t.orgDashboard.limit}`}
           </p>
         </Card>
         <Card className="p-5">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">HR Admins</p>
+              <p className="text-sm text-muted-foreground">{t.orgDashboard.hrAdmins}</p>
               <p className="text-3xl font-bold mt-1">{stats.totalHRAdmins}</p>
             </div>
             <div className="w-10 h-10 rounded-lg bg-highlight/10 flex items-center justify-center">
@@ -234,13 +236,13 @@ export function OrgAdminDashboard({ organizationId, organizationName, userName }
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-2">
-            {stats.maxHRAdmins === -1 ? 'Unlimited' : `of ${stats.maxHRAdmins} limit`}
+            {stats.maxHRAdmins === -1 ? t.orgDashboard.unlimited : `${t.orgDashboard.ofLimit} ${stats.maxHRAdmins} ${t.orgDashboard.limit}`}
           </p>
         </Card>
         <Card className="p-5">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Total Participants</p>
+              <p className="text-sm text-muted-foreground">{t.orgDashboard.totalParticipants}</p>
               <p className="text-3xl font-bold mt-1">{stats.totalParticipants}</p>
             </div>
             <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
@@ -248,13 +250,13 @@ export function OrgAdminDashboard({ organizationId, organizationName, userName }
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-2">
-            All time
+            {t.orgDashboard.allTime}
           </p>
         </Card>
         <Card className="p-5">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Completion Rate</p>
+              <p className="text-sm text-muted-foreground">{t.orgDashboard.completionRate}</p>
               <p className="text-3xl font-bold mt-1">{stats.completionRate}%</p>
             </div>
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -262,7 +264,7 @@ export function OrgAdminDashboard({ organizationId, organizationName, userName }
             </div>
           </div>
           <p className="text-xs text-muted-foreground mt-2">
-            Assessment completion
+            {t.orgDashboard.assessmentCompletion}
           </p>
         </Card>
       </motion.div>
@@ -278,9 +280,9 @@ export function OrgAdminDashboard({ organizationId, organizationName, userName }
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Settings className="w-5 h-5" />
-                Quick Actions
+                {t.orgDashboard.quickActions}
               </CardTitle>
-              <CardDescription>Manage your organization</CardDescription>
+              <CardDescription>{t.orgDashboard.manageOrganization}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {quickActions.map((action) => (
@@ -315,17 +317,17 @@ export function OrgAdminDashboard({ organizationId, organizationName, userName }
                 <div>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <TrendingUp className="w-5 h-5" />
-                    Usage Overview
+                    {t.orgDashboard.usageOverview}
                   </CardTitle>
-                  <CardDescription>Current plan usage</CardDescription>
+                  <CardDescription>{t.orgDashboard.currentPlanUsage}</CardDescription>
                 </div>
                 <Button 
                   variant="ghost" 
                   size="sm"
                   onClick={() => navigate('/subscription')}
                 >
-                  Details
-                  <ArrowRight className="w-4 h-4 ml-1" />
+                  {t.orgDashboard.details}
+                  <ArrowRight className="w-4 h-4 ms-1" />
                 </Button>
               </div>
             </CardHeader>
@@ -343,7 +345,7 @@ export function OrgAdminDashboard({ organizationId, organizationName, userName }
                         <span className="font-medium">{item.label}</span>
                       </div>
                       <span className={`text-sm font-medium ${isNearLimit ? 'text-warning' : 'text-muted-foreground'}`}>
-                        {isUnlimited ? `${item.current} (Unlimited)` : `${item.current} / ${item.max}`}
+                        {isUnlimited ? `${item.current} (${t.orgDashboard.unlimited})` : `${item.current} / ${item.max}`}
                       </span>
                     </div>
                     {!isUnlimited && (
@@ -359,7 +361,7 @@ export function OrgAdminDashboard({ organizationId, organizationName, userName }
               <div className="pt-4 border-t">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium">Current Plan</p>
+                    <p className="font-medium">{t.orgDashboard.currentPlan}</p>
                     <p className="text-sm text-muted-foreground">
                       {stats.plan.charAt(0).toUpperCase() + stats.plan.slice(1)}
                     </p>
@@ -370,8 +372,8 @@ export function OrgAdminDashboard({ organizationId, organizationName, userName }
                       size="sm"
                       onClick={() => navigate('/subscription')}
                     >
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Upgrade
+                      <UserPlus className="w-4 h-4 me-2" />
+                      {t.orgDashboard.upgrade}
                     </Button>
                   )}
                 </div>

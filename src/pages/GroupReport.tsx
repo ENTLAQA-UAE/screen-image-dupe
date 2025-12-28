@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCsvExport } from "@/hooks/useCsvExport";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -107,6 +108,7 @@ const GroupReport = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { exportToCsv } = useCsvExport();
+  const { t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [group, setGroup] = useState<GroupData | null>(null);
