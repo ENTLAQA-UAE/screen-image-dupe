@@ -88,17 +88,57 @@ export function CsvImportDialog({
     try {
       // Check for duplicate employee codes in the same group
       if (groupId) {
-        const { data: existing } = await supabase
+        const employeeCodes = result.success.map(p => p.employee_code);
+        const { data: existingCodes } = await supabase
           .from('participants')
           .select('employee_code')
           .eq('group_id', groupId)
-          .in('employee_code', result.success.map(p => p.employee_code));
+          .in('employee_code', employeeCodes);
 
-        if (existing && existing.length > 0) {
-          const duplicates = existing.map(e => e.employee_code).join(', ');
+        if (existingCodes && existingCodes.length > 0) {
+          const duplicates = existingCodes.map(e => e.employee_code).join(', ');
           toast.error(`Duplicate employee codes in group: ${duplicates}`);
           setSaving(false);
           return;
+        }
+
+        // Check for duplicate emails in the same group
+        const emails = result.success.filter(p => p.email).map(p => p.email.toLowerCase());
+        if (emails.length > 0) {
+          const { data: existingEmails } = await supabase
+            .from('participants')
+            .select('email')
+            .eq('group_id', groupId)
+            .in('email', emails);
+
+          if (existingEmails && existingEmails.length > 0) {
+            const duplicates = existingEmails.map(e => e.email).join(', ');
+            toast.error(`Duplicate emails in group: ${duplicates}`);
+            setSaving(false);
+            return;
+          }
+        }
+      }
+
+      // Check for duplicates within the CSV itself
+      const seenCodes = new Set<string>();
+      const seenEmails = new Set<string>();
+      for (const p of result.success) {
+        if (seenCodes.has(p.employee_code)) {
+          toast.error(`Duplicate employee code in CSV: ${p.employee_code}`);
+          setSaving(false);
+          return;
+        }
+        seenCodes.add(p.employee_code);
+
+        if (p.email) {
+          const lowerEmail = p.email.toLowerCase();
+          if (seenEmails.has(lowerEmail)) {
+            toast.error(`Duplicate email in CSV: ${p.email}`);
+            setSaving(false);
+            return;
+          }
+          seenEmails.add(lowerEmail);
         }
       }
 
@@ -109,14 +149,22 @@ export function CsvImportDialog({
           group_id: groupId || null,
           employee_code: p.employee_code,
           full_name: p.full_name,
-          email: p.email || null,
+          email: p.email ? p.email.toLowerCase() : null,
           department: p.department || null,
           job_title: p.job_title || null,
           status: 'invited',
         }))
       );
 
-      if (error) throw error;
+      if (error) {
+        // Handle unique constraint violation
+        if (error.code === '23505') {
+          toast.error('Some participants already exist in this group');
+          setSaving(false);
+          return;
+        }
+        throw error;
+      }
 
       toast.success(`Successfully imported ${result.success.length} participants`);
       onSuccess();

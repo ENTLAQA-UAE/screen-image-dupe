@@ -363,21 +363,41 @@ export default function TakeAssessment() {
 
     try {
       // Check if employee code already took this assessment
-      const { data: existing, error: checkError } = await supabase
+      const { data: existingByCode, error: codeCheckError } = await supabase
         .from("participants")
         .select("id, status")
         .eq("group_id", assessmentData.assessmentGroup.id)
-        .eq("employee_code", regForm.employee_code)
+        .eq("employee_code", regForm.employee_code.trim())
         .maybeSingle();
 
-      if (checkError) {
-        console.error("Check error:", checkError);
+      if (codeCheckError) {
+        console.error("Check error:", codeCheckError);
       }
 
-      if (existing) {
+      if (existingByCode) {
         const errorMsg = isArabic 
           ? "رقم الموظف هذا قد أخذ هذا التقييم بالفعل" 
           : "This employee code has already taken this assessment";
+        toast.error(errorMsg);
+        return;
+      }
+
+      // Check if email already took this assessment
+      const { data: existingByEmail, error: emailCheckError } = await supabase
+        .from("participants")
+        .select("id, status")
+        .eq("group_id", assessmentData.assessmentGroup.id)
+        .eq("email", regForm.email.trim().toLowerCase())
+        .maybeSingle();
+
+      if (emailCheckError) {
+        console.error("Email check error:", emailCheckError);
+      }
+
+      if (existingByEmail) {
+        const errorMsg = isArabic 
+          ? "هذا البريد الإلكتروني قد أخذ هذا التقييم بالفعل" 
+          : "This email has already taken this assessment";
         toast.error(errorMsg);
         return;
       }
@@ -387,18 +407,28 @@ export default function TakeAssessment() {
         .insert({
           group_id: assessmentData.assessmentGroup.id,
           organization_id: assessmentData.assessmentGroup.organizationId,
-          full_name: regForm.full_name,
-          email: regForm.email,
-          department: regForm.department || null,
-          job_title: regForm.job_title || null,
-          employee_code: regForm.employee_code,
+          full_name: regForm.full_name.trim(),
+          email: regForm.email.trim().toLowerCase(),
+          department: regForm.department?.trim() || null,
+          job_title: regForm.job_title?.trim() || null,
+          employee_code: regForm.employee_code.trim(),
           status: "started",
           started_at: new Date().toISOString(),
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Handle unique constraint violation
+        if (error.code === '23505') {
+          const errorMsg = isArabic 
+            ? "لقد قمت بأخذ هذا التقييم بالفعل" 
+            : "You have already taken this assessment";
+          toast.error(errorMsg);
+          return;
+        }
+        throw error;
+      }
 
       setParticipantId(data.id);
       setPageState("intro");
