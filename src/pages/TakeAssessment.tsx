@@ -23,6 +23,7 @@ import {
   Timer,
   Building2,
 } from "lucide-react";
+import { generateParticipantPDF } from "@/lib/pdfGenerator";
 
 // Bilingual translations
 const translations = {
@@ -949,7 +950,31 @@ export default function TakeAssessment() {
 
               {(results?.allowPdfDownload || completedData?.allowPdfDownload) && (
                 <div className="text-center pt-4">
-                  <Button variant="outline" size="lg" className="transition-smooth">
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    className="transition-smooth"
+                    onClick={() => {
+                      const participantName = completedData?.participant?.full_name || submissionResults?.results?.participantName || "Anonymous";
+                      const participantEmail = submissionResults?.results?.participantEmail || regForm.email || "";
+                      const assessmentTitle = completedData?.assessment?.title || assessmentData?.assessment?.title || "Assessment";
+                      const assessmentType = completedData?.assessment?.type || assessmentData?.assessment?.type || "general";
+                      const orgName = assessmentData?.organization?.name || "Organization";
+                      const groupName = assessmentData?.assessmentGroup?.name || "Group";
+                      
+                      generateParticipantPDF({
+                        participantName,
+                        participantEmail,
+                        groupName,
+                        assessmentTitle,
+                        assessmentType,
+                        completedAt: new Date().toISOString(),
+                        scoreSummary: scoreSummary || null,
+                        aiReport: aiReport || null,
+                        organizationName: orgName,
+                      });
+                    }}
+                  >
                     <Download className={`w-4 h-4 ${isArabic ? "ml-2" : "mr-2"}`} />
                     {t.downloadPdf}
                   </Button>

@@ -199,6 +199,8 @@ serve(async (req) => {
         config: {
           showResultsToEmployee: assessment.config?.showResultsToEmployee || false,
           aiFeedbackEnabled: assessment.config?.aiFeedbackEnabled || false,
+          timeLimit: assessment.config?.timeLimit || null,
+          allowEmployeePdfDownload: assessment.config?.allowEmployeePdfDownload || false,
         },
       },
       questions: questions.map((q: any) => ({
