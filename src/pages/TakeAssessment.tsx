@@ -187,8 +187,12 @@ interface CompletedData {
   participant?: {
     id: string;
     full_name: string;
+    email: string;
+    employee_code?: string;
+    department?: string;
     score_summary: any;
     ai_report_text: string | null;
+    completed_at: string | null;
   };
   assessment?: {
     id: string;
@@ -197,6 +201,17 @@ interface CompletedData {
     language: string;
     is_graded: boolean;
   };
+  assessmentGroup?: {
+    id: string;
+    name: string;
+  };
+  organization?: {
+    id: string;
+    name: string;
+    logoUrl: string | null;
+    primaryColor: string;
+    language: string;
+  } | null;
   allowPdfDownload?: boolean;
 }
 
@@ -924,50 +939,104 @@ export default function TakeAssessment() {
     </div>
   );
 
-  const renderCompleted = () => (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4" dir={isArabic ? "rtl" : "ltr"}>
-      <Card className="max-w-md w-full text-center shadow-elegant">
-        <CardContent className="pt-10 pb-10">
-          <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="w-10 h-10 text-success" />
-          </div>
-          <h1 className="text-3xl font-bold mb-3 font-display">{t.thankYou}</h1>
-          <p className="text-muted-foreground">{t.submittedSuccess}</p>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  const renderCompleted = () => {
+    const orgData = completedData?.organization || assessmentData?.organization;
+    const orgLogo = orgData?.logoUrl;
+    const orgName = orgData?.name;
+    
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4" dir={isArabic ? "rtl" : "ltr"}>
+        <Card className="max-w-md w-full text-center shadow-elegant">
+          <CardContent className="pt-10 pb-10">
+            {orgLogo ? (
+              <img src={orgLogo} alt={orgName} className="h-12 mx-auto mb-6 object-contain" />
+            ) : orgName ? (
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <Building2 className="w-5 h-5 text-primary" />
+                <span className="font-semibold">{orgName}</span>
+              </div>
+            ) : null}
+            <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
+              <CheckCircle2 className="w-10 h-10 text-success" />
+            </div>
+            <h1 className="text-3xl font-bold mb-3 font-display">{t.thankYou}</h1>
+            <p className="text-muted-foreground">{t.submittedSuccess}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
 
   const renderResults = () => {
     const results = submissionResults?.results || completedData;
-    const scoreSummary = results?.scoreSummary || completedData?.participant?.score_summary;
+    const scoreSummary = results?.scoreSummary || results?.participant?.score_summary || completedData?.participant?.score_summary;
     const aiReport = results?.aiReport || completedData?.participant?.ai_report_text;
     const isGraded = assessmentData?.assessment?.is_graded ?? completedData?.assessment?.is_graded;
+    const orgData = completedData?.organization || assessmentData?.organization;
+    const orgLogo = orgData?.logoUrl;
+    const orgName = orgData?.name || "Organization";
+    const resultPrimaryColor = orgData?.primaryColor || primaryColor;
+
+    const participantName = completedData?.participant?.full_name || submissionResults?.results?.participantName || regForm.full_name || "Participant";
+    const participantEmail = completedData?.participant?.email || submissionResults?.results?.participantEmail || regForm.email || "";
+    const assessmentTitle = completedData?.assessment?.title || assessmentData?.assessment?.title || "Assessment";
+    const assessmentType = completedData?.assessment?.type || assessmentData?.assessment?.type || "general";
+    const groupName = completedData?.assessmentGroup?.name || assessmentData?.assessmentGroup?.name || "Assessment Group";
+    const completedAt = completedData?.participant?.completed_at || new Date().toISOString();
 
     return (
       <div className="min-h-screen bg-background p-4" dir={isArabic ? "rtl" : "ltr"}>
         <div className="max-w-3xl mx-auto py-8">
-          <Card className="shadow-elegant">
-            <CardHeader className="text-center pb-2">
+          <Card className="shadow-elegant overflow-hidden">
+            {/* Header with branding */}
+            <div 
+              className="p-6 text-center"
+              style={{ 
+                background: `linear-gradient(135deg, ${resultPrimaryColor}15, ${resultPrimaryColor}05)`,
+                borderBottom: `3px solid ${resultPrimaryColor}40`
+              }}
+            >
+              {orgLogo ? (
+                <img src={orgLogo} alt={orgName} className="h-12 mx-auto mb-4 object-contain" />
+              ) : (
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <Building2 className="w-6 h-6" style={{ color: resultPrimaryColor }} />
+                  <span className="font-semibold text-lg">{orgName}</span>
+                </div>
+              )}
               <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
                 <CheckCircle2 className="w-8 h-8 text-success" />
               </div>
-              <CardTitle className="text-2xl font-display">{t.assessmentComplete}</CardTitle>
-              <CardDescription>{t.yourResults}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+              <h1 className="text-2xl font-display font-bold">{t.assessmentComplete}</h1>
+              <p className="text-muted-foreground mt-1">{assessmentTitle}</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                {participantName} • {new Date(completedAt).toLocaleDateString(isArabic ? "ar-SA" : "en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
+
+            <CardContent className="p-6 space-y-6">
               {isGraded && scoreSummary && (
                 <div className="text-center p-8 bg-muted rounded-xl">
                   <div 
                     className="text-6xl font-bold mb-2 font-display" 
-                    style={{ color: primaryColor }}
+                    style={{ color: resultPrimaryColor }}
                   >
                     {scoreSummary.percentage}%
                   </div>
                   <p className="text-muted-foreground text-lg">
                     {scoreSummary.correctCount} {t.of} {scoreSummary.totalPossible} {t.correct}
                   </p>
-                  <div className="mt-4 inline-block px-4 py-2 rounded-full bg-primary/10 text-primary font-semibold">
+                  <div 
+                    className="mt-4 inline-block px-4 py-2 rounded-full font-semibold"
+                    style={{ 
+                      backgroundColor: `${resultPrimaryColor}15`,
+                      color: resultPrimaryColor
+                    }}
+                  >
                     {t.grade}: {scoreSummary.grade}
                   </div>
                 </div>
@@ -981,9 +1050,19 @@ export default function TakeAssessment() {
                       <div key={trait} className="p-4 bg-muted rounded-xl">
                         <div className="flex items-center justify-between mb-2">
                           <span className="capitalize font-medium">{trait}</span>
-                          <span className="text-sm font-semibold text-primary">{score.toFixed(1)}/5</span>
+                          <span className="text-sm font-semibold" style={{ color: resultPrimaryColor }}>
+                            {typeof score === 'number' ? score.toFixed(1) : score}/5
+                          </span>
                         </div>
-                        <Progress value={(score / 5) * 100} className="h-2" />
+                        <div className="h-2 bg-background rounded-full overflow-hidden">
+                          <div 
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ 
+                              width: `${(typeof score === 'number' ? score : parseFloat(score)) / 5 * 100}%`,
+                              backgroundColor: resultPrimaryColor
+                            }}
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -993,36 +1072,38 @@ export default function TakeAssessment() {
               {aiReport && (
                 <div className="border-t pt-6">
                   <h3 className="font-semibold text-lg font-display mb-4">{t.personalizedFeedback}</h3>
-                  <div className="prose prose-sm max-w-none p-4 bg-muted/50 rounded-xl">
-                    <p className="whitespace-pre-wrap leading-relaxed">{aiReport}</p>
+                  <div 
+                    className="prose prose-sm max-w-none p-5 rounded-xl border"
+                    style={{ 
+                      backgroundColor: `${resultPrimaryColor}05`,
+                      borderColor: `${resultPrimaryColor}20`
+                    }}
+                  >
+                    <p className="whitespace-pre-wrap leading-relaxed text-foreground/80">{aiReport}</p>
                   </div>
                 </div>
               )}
 
               {(results?.allowPdfDownload || completedData?.allowPdfDownload) && (
-                <div className="text-center pt-4">
+                <div className="text-center pt-4 border-t">
                   <Button 
                     variant="outline" 
                     size="lg" 
                     className="transition-smooth"
                     onClick={() => {
-                      const participantName = completedData?.participant?.full_name || submissionResults?.results?.participantName || "Anonymous";
-                      const participantEmail = submissionResults?.results?.participantEmail || regForm.email || "";
-                      const assessmentTitle = completedData?.assessment?.title || assessmentData?.assessment?.title || "Assessment";
-                      const assessmentType = completedData?.assessment?.type || assessmentData?.assessment?.type || "general";
-                      const orgName = assessmentData?.organization?.name || "Organization";
-                      const groupName = assessmentData?.assessmentGroup?.name || "Group";
-                      
                       generateParticipantPDF({
                         participantName,
                         participantEmail,
+                        employeeCode: completedData?.participant?.employee_code,
+                        department: completedData?.participant?.department,
                         groupName,
                         assessmentTitle,
                         assessmentType,
-                        completedAt: new Date().toISOString(),
+                        completedAt,
                         scoreSummary: scoreSummary || null,
                         aiReport: aiReport || null,
                         organizationName: orgName,
+                        language: isArabic ? 'ar' : 'en',
                       });
                     }}
                   >
