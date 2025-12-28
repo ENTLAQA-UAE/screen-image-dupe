@@ -132,6 +132,7 @@ interface GroupReport {
     completedAt: string | null;
   }[];
   language?: Language;
+  aiNarrative?: string;
 }
 
 // Helper to detect if text contains Arabic
@@ -521,6 +522,40 @@ export const generateGroupPDF = (report: GroupReport): void => {
   });
 
   y += boxHeight + 20;
+
+  // AI Narrative Section (if available)
+  if (report.aiNarrative) {
+    // Check if we need a new page
+    if (y > 180) {
+      doc.addPage();
+      y = 20;
+    }
+
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    
+    const aiTitle = isRTL ? "تحليل الذكاء الاصطناعي" : "AI Analysis & Insights";
+    if (isRTL) {
+      doc.text(aiTitle, pageWidth - margin, y, { align: 'right' });
+    } else {
+      doc.text(aiTitle, margin, y);
+    }
+    y += 10;
+
+    // AI Narrative box
+    doc.setFillColor(249, 250, 251);
+    const narrativeLines = doc.splitTextToSize(report.aiNarrative, contentWidth - 20);
+    const narrativeHeight = Math.min(narrativeLines.length * 5 + 16, 100);
+    doc.roundedRect(margin, y, contentWidth, narrativeHeight, 3, 3, "F");
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(55, 65, 81);
+
+    y = addWrappedText(doc, report.aiNarrative, margin + 10, y + 8, contentWidth - 20, 5, isRTL);
+    y += 15;
+  }
 
   // Participants Table
   doc.setTextColor(15, 23, 42);
