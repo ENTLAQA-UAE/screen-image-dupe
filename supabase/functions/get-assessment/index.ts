@@ -27,11 +27,9 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    let assessmentGroup;
-    let participant = null;
-    let assessment;
-    let questions;
-    let organization;
+    let assessmentGroup: any;
+    let participant: any = null;
+    let assessment: any;
 
     if (isGroupLink) {
       // Group link: find assessment group by group_link_token
@@ -79,10 +77,36 @@ serve(async (req) => {
       );
     }
 
+    // Fetch organization for branding (needed for all responses including errors)
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("name, logo_url, primary_color, primary_language")
+      .eq("id", assessmentGroup.organization_id)
+      .maybeSingle();
+
+    const organizationData = org ? {
+      id: assessmentGroup.organization_id,
+      name: org.name,
+      logoUrl: org.logo_url,
+      primaryColor: org.primary_color,
+      language: org.primary_language,
+    } : null;
+
+    const assessmentInfo = {
+      title: assessment.title,
+      language: assessment.language,
+    };
+
     // Check if group is active
     if (!assessmentGroup.is_active) {
+      console.log("Assessment group is closed:", assessmentGroup.id);
       return new Response(
-        JSON.stringify({ error: "This assessment is no longer active", status: "closed" }),
+        JSON.stringify({ 
+          error: "This assessment is no longer active", 
+          status: "closed",
+          organization: organizationData,
+          assessment: assessmentInfo,
+        }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -90,31 +114,32 @@ serve(async (req) => {
     // Check date window
     const now = new Date();
     if (assessmentGroup.start_date && new Date(assessmentGroup.start_date) > now) {
+      console.log("Assessment not started yet:", assessmentGroup.id, "starts:", assessmentGroup.start_date);
       return new Response(
         JSON.stringify({ 
           error: "This assessment has not started yet",
           status: "not_started",
-          startDate: assessmentGroup.start_date
+          startDate: assessmentGroup.start_date,
+          organization: organizationData,
+          assessment: assessmentInfo,
         }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     if (assessmentGroup.end_date && new Date(assessmentGroup.end_date) < now) {
+      console.log("Assessment expired:", assessmentGroup.id, "ended:", assessmentGroup.end_date);
       return new Response(
-        JSON.stringify({ error: "This assessment has ended", status: "expired" }),
+        JSON.stringify({ 
+          error: "This assessment has ended", 
+          status: "expired",
+          endDate: assessmentGroup.end_date,
+          organization: organizationData,
+          assessment: assessmentInfo,
+        }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    // Fetch organization for branding (needed for both completed and active)
-    const { data: org } = await supabase
-      .from("organizations")
-      .select("name, logo_url, primary_color, primary_language")
-      .eq("id", assessmentGroup.organization_id)
-      .maybeSingle();
-
-    organization = org;
 
     // Check if participant already completed
     if (participant?.status === "completed") {
@@ -146,13 +171,7 @@ serve(async (req) => {
               id: assessmentGroup.id,
               name: assessmentGroup.name,
             },
-            organization: organization ? {
-              id: assessmentGroup.organization_id,
-              name: organization.name,
-              logoUrl: organization.logo_url,
-              primaryColor: organization.primary_color,
-              language: organization.primary_language,
-            } : null,
+            organization: organizationData,
             allowPdfDownload: config.allowEmployeePdfDownload || false,
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -162,11 +181,7 @@ serve(async (req) => {
           JSON.stringify({ 
             status: "completed", 
             showResults: false,
-            organization: organization ? {
-              name: organization.name,
-              logoUrl: organization.logo_url,
-              primaryColor: organization.primary_color,
-            } : null,
+            organization: organizationData,
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
@@ -188,7 +203,7 @@ serve(async (req) => {
       );
     }
 
-    questions = questionsData || [];
+    const questions = questionsData || [];
 
     // Update participant status to started if not already
     if (participant && participant.status === "invited") {
@@ -226,13 +241,7 @@ serve(async (req) => {
         text: q.text,
         options: q.options,
       })),
-      organization: organization ? {
-        id: assessmentGroup.organization_id,
-        name: organization.name,
-        logoUrl: organization.logo_url,
-        primaryColor: organization.primary_color,
-        language: organization.primary_language,
-      } : null,
+      organization: organizationData,
       participant: participant ? {
         id: participant.id,
         full_name: participant.full_name,
