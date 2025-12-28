@@ -350,7 +350,7 @@ export default function TakeAssessment() {
   };
 
   const handleRegister = async () => {
-    if (!regForm.full_name || !regForm.email) {
+    if (!regForm.employee_code || !regForm.full_name || !regForm.email) {
       toast.error(t.fillRequired);
       return;
     }
@@ -362,6 +362,26 @@ export default function TakeAssessment() {
     }
 
     try {
+      // Check if employee code already took this assessment
+      const { data: existing, error: checkError } = await supabase
+        .from("participants")
+        .select("id, status")
+        .eq("group_id", assessmentData.assessmentGroup.id)
+        .eq("employee_code", regForm.employee_code)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error("Check error:", checkError);
+      }
+
+      if (existing) {
+        const errorMsg = isArabic 
+          ? "رقم الموظف هذا قد أخذ هذا التقييم بالفعل" 
+          : "This employee code has already taken this assessment";
+        toast.error(errorMsg);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("participants")
         .insert({
@@ -371,7 +391,7 @@ export default function TakeAssessment() {
           email: regForm.email,
           department: regForm.department || null,
           job_title: regForm.job_title || null,
-          employee_code: regForm.employee_code || null,
+          employee_code: regForm.employee_code,
           status: "started",
           started_at: new Date().toISOString(),
         })
@@ -552,6 +572,19 @@ export default function TakeAssessment() {
           <CardDescription>{t.provideInfo}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Employee Code - First and Required */}
+          <div className="space-y-2">
+            <Label htmlFor="employee_code" className="flex items-center gap-1">
+              {t.employeeCode} <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="employee_code"
+              value={regForm.employee_code}
+              onChange={(e) => setRegForm({ ...regForm, employee_code: e.target.value })}
+              placeholder={isArabic ? "أدخل رقم الموظف" : "Enter employee code"}
+              className="transition-smooth"
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="full_name" className="flex items-center gap-1">
               {t.fullName} <span className="text-destructive">*</span>
@@ -598,18 +631,6 @@ export default function TakeAssessment() {
                 className="transition-smooth"
               />
             </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="employee_code">
-              {t.employeeCode} <span className="text-muted-foreground text-sm">({t.optional})</span>
-            </Label>
-            <Input
-              id="employee_code"
-              value={regForm.employee_code}
-              onChange={(e) => setRegForm({ ...regForm, employee_code: e.target.value })}
-              placeholder={t.optional}
-              className="transition-smooth"
-            />
           </div>
           <Button className="w-full mt-4 transition-smooth" size="lg" onClick={handleRegister}>
             {t.continue}
