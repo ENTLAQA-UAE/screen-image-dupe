@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Users, UserPlus, Trash2, Mail, Loader2, Shield, Calendar } from "lucide-react";
+import { Users, UserPlus, Trash2, Mail, Loader2, Shield, Calendar, Pencil } from "lucide-react";
 
 interface HRAdmin {
   id: string;
@@ -42,6 +42,12 @@ export default function UserManagement() {
   
   // Delete state
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  
+  // Edit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<HRAdmin | null>(null);
+  const [editFullName, setEditFullName] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isOrgAdmin() && !isSuperAdmin()) {
@@ -239,6 +245,37 @@ export default function UserManagement() {
     }
   };
 
+  const handleOpenEditDialog = (admin: HRAdmin) => {
+    setEditingUser(admin);
+    setEditFullName(admin.full_name || "");
+    setEditDialogOpen(true);
+  };
+
+  const handleUpdateUser = async () => {
+    if (!editingUser || !editFullName.trim()) return;
+    
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ full_name: editFullName.trim() })
+        .eq("id", editingUser.id);
+      
+      if (error) throw error;
+      
+      toast.success("User updated successfully");
+      setEditDialogOpen(false);
+      setEditingUser(null);
+      setEditFullName("");
+      fetchHRAdmins();
+    } catch (error: any) {
+      console.error("Error updating user:", error);
+      toast.error("Failed to update user");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -415,39 +452,49 @@ export default function UserManagement() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                disabled={deletingUserId === admin.id}
-                              >
-                                {deletingUserId === admin.id ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <Trash2 className="w-4 h-4" />
-                                )}
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>{t.userManagement.removeHRAdmin}</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  {t.userManagement.removeConfirm} {admin.full_name || t.common.noData} {t.userManagement.removeWarning}
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>{t.userManagement.cancel}</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleRemoveUser(admin.id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-muted-foreground hover:text-foreground"
+                              onClick={() => handleOpenEditDialog(admin)}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  disabled={deletingUserId === admin.id}
                                 >
-                                  {t.userManagement.remove}
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                                  {deletingUserId === admin.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="w-4 h-4" />
+                                  )}
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>{t.userManagement.removeHRAdmin}</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    {t.userManagement.removeConfirm} {admin.full_name || t.common.noData} {t.userManagement.removeWarning}
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>{t.userManagement.cancel}</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleRemoveUser(admin.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    {t.userManagement.remove}
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -457,6 +504,41 @@ export default function UserManagement() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* Edit User Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t.common.edit} {t.userManagement.user}</DialogTitle>
+              <DialogDescription>
+                {t.userManagement.hrAdminDesc}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-full-name">{t.userManagement.fullName}</Label>
+                <Input
+                  id="edit-full-name"
+                  value={editFullName}
+                  onChange={(e) => setEditFullName(e.target.value)}
+                  placeholder={t.userManagement.enterFullName}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                {t.userManagement.cancel}
+              </Button>
+              <Button 
+                onClick={handleUpdateUser} 
+                disabled={isUpdating || !editFullName.trim()}
+              >
+                {isUpdating && <Loader2 className="w-4 h-4 animate-spin me-2" />}
+                {t.common.save}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

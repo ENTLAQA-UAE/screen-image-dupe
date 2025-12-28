@@ -75,6 +75,9 @@ export default function Subscription() {
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [usage, setUsage] = useState<UsageStats | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Only org admins should see this page (simplified view), not super admins
+  const showSimplifiedView = isOrgAdmin() && !isSuperAdmin();
 
   useEffect(() => {
     if (!authLoading && !isOrgAdmin() && !isSuperAdmin()) {
@@ -345,67 +348,69 @@ export default function Subscription() {
           </Card>
         </motion.div>
 
-        {/* Plan Comparison */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle>{t.subscription.availablePlans}</CardTitle>
-              <CardDescription>
-                {t.subscription.comparePlans}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-4 gap-4">
-                {Object.entries(PLAN_DETAILS).map(([key, details]) => {
-                  const isCurrentPlan = key === plan;
-                  const planLimits = PLAN_LIMITS[key];
-                  
-                  return (
-                    <div
-                      key={key}
-                      className={`p-4 rounded-lg border-2 transition-all ${
-                        isCurrentPlan 
-                          ? "border-primary bg-primary/5" 
-                          : "border-border hover:border-muted-foreground/50"
-                      }`}
-                    >
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <Badge className={details.color}>{details.name}</Badge>
-                          {isCurrentPlan && (
-                            <Badge variant="outline" className="text-xs">{t.subscription.current}</Badge>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground">{details.description}</p>
-                        <div className="space-y-1 text-sm">
-                          <p>
-                            <span className="font-medium">
-                              {planLimits.assessments === -1 ? t.orgDashboard.unlimited : planLimits.assessments}
-                            </span> {t.subscription.assessments}
-                          </p>
-                          <p>
-                            <span className="font-medium">
-                              {planLimits.hrAdmins === -1 ? t.orgDashboard.unlimited : planLimits.hrAdmins}
-                            </span> {t.subscription.hrAdmins}
-                          </p>
-                          <p>
-                            <span className="font-medium">
-                              {planLimits.participants === -1 ? t.orgDashboard.unlimited : planLimits.participants}
-                            </span> {t.subscription.participants}
-                          </p>
+        {/* Plan Comparison - Only for super admins */}
+        {!showSimplifiedView && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>{t.subscription.availablePlans}</CardTitle>
+                <CardDescription>
+                  {t.subscription.comparePlans}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-4 gap-4">
+                  {Object.entries(PLAN_DETAILS).map(([key, details]) => {
+                    const isCurrentPlan = key === plan;
+                    const planLimits = PLAN_LIMITS[key];
+                    
+                    return (
+                      <div
+                        key={key}
+                        className={`p-4 rounded-lg border-2 transition-all ${
+                          isCurrentPlan 
+                            ? "border-primary bg-primary/5" 
+                            : "border-border hover:border-muted-foreground/50"
+                        }`}
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Badge className={details.color}>{details.name}</Badge>
+                            {isCurrentPlan && (
+                              <Badge variant="outline" className="text-xs">{t.subscription.current}</Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">{details.description}</p>
+                          <div className="space-y-1 text-sm">
+                            <p>
+                              <span className="font-medium">
+                                {planLimits.assessments === -1 ? t.orgDashboard.unlimited : planLimits.assessments}
+                              </span> {t.subscription.assessments}
+                            </p>
+                            <p>
+                              <span className="font-medium">
+                                {planLimits.hrAdmins === -1 ? t.orgDashboard.unlimited : planLimits.hrAdmins}
+                              </span> {t.subscription.hrAdmins}
+                            </p>
+                            <p>
+                              <span className="font-medium">
+                                {planLimits.participants === -1 ? t.orgDashboard.unlimited : planLimits.participants}
+                              </span> {t.subscription.participants}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
       </div>
     </DashboardLayout>
   );
