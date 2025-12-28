@@ -151,6 +151,7 @@ interface AssessmentData {
   assessmentGroup: {
     id: string;
     name: string;
+    organizationId: string;
   };
   assessment: {
     id: string;
@@ -167,6 +168,7 @@ interface AssessmentData {
   };
   questions: Question[];
   organization: {
+    id: string;
     name: string;
     logoUrl: string | null;
     primaryColor: string;
@@ -352,12 +354,18 @@ export default function TakeAssessment() {
       return;
     }
 
+    if (!assessmentData?.assessmentGroup?.organizationId) {
+      console.error("Missing organization ID");
+      toast.error(t.registrationFailed);
+      return;
+    }
+
     try {
       const { data, error } = await supabase
         .from("participants")
         .insert({
-          group_id: assessmentData?.assessmentGroup.id,
-          organization_id: assessmentData?.organization ? undefined : undefined,
+          group_id: assessmentData.assessmentGroup.id,
+          organization_id: assessmentData.assessmentGroup.organizationId,
           full_name: regForm.full_name,
           email: regForm.email,
           department: regForm.department || null,
