@@ -37,8 +37,12 @@ import {
   Play,
   Mail,
   Link as LinkIcon,
-  User
+  User,
+  Upload,
+  Download,
 } from "lucide-react";
+import { CsvImportDialog } from "@/components/participants/CsvImportDialog";
+import { useCsvExport } from "@/hooks/useCsvExport";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -97,8 +101,11 @@ const Participants = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
   const [saving, setSaving] = useState(false);
+  
+  const { exportToCsv } = useCsvExport();
   
   // Form state
   const [formData, setFormData] = useState({
@@ -364,10 +371,39 @@ const Participants = () => {
               View and manage assessment participants across all groups.
             </p>
           </div>
-          <Button variant="hero" onClick={() => setIsCreateOpen(true)}>
-            <Plus className="w-4 h-4" />
-            Add Participant
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+              <Upload className="w-4 h-4 mr-2" />
+              Import CSV
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => exportToCsv({
+                filename: 'participants',
+                headers: ['Employee Code', 'Full Name', 'Email', 'Department', 'Job Title', 'Group', 'Status', 'Started At', 'Completed At'],
+                data: filteredParticipants,
+                columnMap: {
+                  'Employee Code': 'employee_code',
+                  'Full Name': 'full_name',
+                  'Email': 'email',
+                  'Department': 'department',
+                  'Job Title': 'job_title',
+                  'Group': 'group.name',
+                  'Status': 'status',
+                  'Started At': 'started_at',
+                  'Completed At': 'completed_at',
+                }
+              })}
+              disabled={filteredParticipants.length === 0}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
+            <Button variant="hero" onClick={() => setIsCreateOpen(true)}>
+              <Plus className="w-4 h-4" />
+              Add Participant
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -704,6 +740,17 @@ const Participants = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* CSV Import Dialog */}
+      {organizationId && (
+        <CsvImportDialog
+          open={isImportOpen}
+          onOpenChange={setIsImportOpen}
+          organizationId={organizationId}
+          groupId={filterGroup !== 'all' ? filterGroup : undefined}
+          onSuccess={fetchParticipants}
+        />
+      )}
     </DashboardLayout>
   );
 };
