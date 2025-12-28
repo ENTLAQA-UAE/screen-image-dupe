@@ -107,17 +107,20 @@ serve(async (req) => {
       );
     }
 
+    // Fetch organization for branding (needed for both completed and active)
+    const { data: org } = await supabase
+      .from("organizations")
+      .select("name, logo_url, primary_color, primary_language")
+      .eq("id", assessmentGroup.organization_id)
+      .maybeSingle();
+
+    organization = org;
+
     // Check if participant already completed
     if (participant?.status === "completed") {
       // Return results if allowed
       const config = assessment.config || {};
       if (config.showResultsToEmployee) {
-        // Fetch responses for this participant
-        const { data: responses } = await supabase
-          .from("responses")
-          .select("*")
-          .eq("participant_id", participant.id);
-
         return new Response(
           JSON.stringify({
             status: "completed",
@@ -125,8 +128,12 @@ serve(async (req) => {
             participant: {
               id: participant.id,
               full_name: participant.full_name,
+              email: participant.email,
+              employee_code: participant.employee_code,
+              department: participant.department,
               score_summary: participant.score_summary,
               ai_report_text: participant.ai_report_text,
+              completed_at: participant.completed_at,
             },
             assessment: {
               id: assessment.id,
@@ -135,13 +142,32 @@ serve(async (req) => {
               language: assessment.language,
               is_graded: assessment.is_graded,
             },
+            assessmentGroup: {
+              id: assessmentGroup.id,
+              name: assessmentGroup.name,
+            },
+            organization: organization ? {
+              id: assessmentGroup.organization_id,
+              name: organization.name,
+              logoUrl: organization.logo_url,
+              primaryColor: organization.primary_color,
+              language: organization.primary_language,
+            } : null,
             allowPdfDownload: config.allowEmployeePdfDownload || false,
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       } else {
         return new Response(
-          JSON.stringify({ status: "completed", showResults: false }),
+          JSON.stringify({ 
+            status: "completed", 
+            showResults: false,
+            organization: organization ? {
+              name: organization.name,
+              logoUrl: organization.logo_url,
+              primaryColor: organization.primary_color,
+            } : null,
+          }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -163,15 +189,6 @@ serve(async (req) => {
     }
 
     questions = questionsData || [];
-
-    // Fetch organization for branding
-    const { data: org } = await supabase
-      .from("organizations")
-      .select("name, logo_url, primary_color, primary_language")
-      .eq("id", assessmentGroup.organization_id)
-      .maybeSingle();
-
-    organization = org;
 
     // Update participant status to started if not already
     if (participant && participant.status === "invited") {
