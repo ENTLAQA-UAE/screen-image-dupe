@@ -173,7 +173,7 @@ serve(async (req) => {
     
     if (config.aiFeedbackEnabled) {
       try {
-        aiReportText = await generateAIReport(assessment, scoreSummary);
+        aiReportText = await generateAIReport(assessment, scoreSummary, participant.full_name);
       } catch (aiError) {
         console.error("AI report generation failed:", aiError);
         // Continue without AI report
@@ -235,7 +235,7 @@ function getGrade(percentage: number): string {
   return "F";
 }
 
-async function generateAIReport(assessment: any, scoreSummary: any): Promise<string> {
+async function generateAIReport(assessment: any, scoreSummary: any, participantName: string | null): Promise<string> {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) {
     throw new Error("LOVABLE_API_KEY not configured");
@@ -243,20 +243,22 @@ async function generateAIReport(assessment: any, scoreSummary: any): Promise<str
 
   const isGraded = assessment.is_graded;
   const language = assessment.language || "en";
+  const name = participantName || "Employee";
 
   let prompt = "";
   if (isGraded) {
-    prompt = `Generate a brief, encouraging feedback report for an employee who completed a ${assessment.type} assessment.
+    prompt = `Generate a brief, encouraging feedback report for ${name} who completed a ${assessment.type} assessment.
 Score: ${scoreSummary.percentage}% (${scoreSummary.correctCount}/${scoreSummary.totalPossible} correct)
 Grade: ${scoreSummary.grade}
 
 Provide:
-1. A summary of their performance
-2. Key strengths observed
-3. Areas for improvement
-4. Encouragement for next steps
+1. A personalized greeting using the employee's name "${name}"
+2. A summary of their performance
+3. Key strengths observed
+4. Areas for improvement
+5. Encouragement for next steps
 
-Keep it professional, constructive, and under 200 words.
+Keep it professional, constructive, and under 200 words. Address the employee by their name throughout.
 ${language === "ar" ? "Write the entire response in Arabic." : ""}`;
   } else {
     const traits = scoreSummary.traits || {};
@@ -264,17 +266,18 @@ ${language === "ar" ? "Write the entire response in Arabic." : ""}`;
       .map(([trait, score]) => `${trait}: ${score}/5`)
       .join(", ");
 
-    prompt = `Generate a personality/behavioral profile summary for an employee.
+    prompt = `Generate a personality/behavioral profile summary for ${name}.
 Assessment type: ${assessment.type}
 Trait scores (out of 5): ${traitList}
 
 Provide:
-1. Overview of their profile
-2. Key strengths
-3. Potential areas for development
-4. How these traits might manifest in the workplace
+1. A personalized greeting using the employee's name "${name}"
+2. Overview of their profile
+3. Key strengths
+4. Potential areas for development
+5. How these traits might manifest in the workplace
 
-Keep it professional, insightful, and under 200 words.
+Keep it professional, insightful, and under 200 words. Address the employee by their name throughout.
 ${language === "ar" ? "Write the entire response in Arabic." : ""}`;
   }
 
