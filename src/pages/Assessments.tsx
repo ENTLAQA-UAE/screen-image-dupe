@@ -73,7 +73,8 @@ const assessmentTypes = [
 
 const statusConfig = {
   draft: { label: 'Draft', color: 'bg-muted text-muted-foreground border-border', icon: Clock },
-  active: { label: 'Active', color: 'bg-success/10 text-success border-success/20', icon: Play },
+  ready: { label: 'Ready', color: 'bg-warning/10 text-warning border-warning/20', icon: AlertTriangle },
+  published: { label: 'Published', color: 'bg-success/10 text-success border-success/20', icon: Play },
   archived: { label: 'Archived', color: 'bg-accent/10 text-accent border-accent/20', icon: CheckCircle2 },
 };
 
@@ -466,23 +467,35 @@ const Assessments = () => {
                           <FileText className="w-4 h-4 mr-2" />
                           {t.builder.questions}
                         </DropdownMenuItem>
-                        {/* Status change options */}
-                        {assessment.status !== 'active' && (
-                          <DropdownMenuItem onClick={() => handleStatusChange(assessment.id, 'active')}>
-                            <Play className="w-4 h-4 mr-2" />
-                            {t.assessments.active}
+                        {/* Status change options - Draft → Ready → Published workflow */}
+                        {assessment.status === 'draft' && (
+                          <DropdownMenuItem onClick={() => handleStatusChange(assessment.id, 'ready')}>
+                            <AlertTriangle className="w-4 h-4 mr-2" />
+                            Mark as Ready
                           </DropdownMenuItem>
                         )}
-                        {assessment.status !== 'draft' && (
-                          <DropdownMenuItem onClick={() => handleStatusChange(assessment.id, 'draft')}>
-                            <Clock className="w-4 h-4 mr-2" />
-                            {t.assessments.draft}
-                          </DropdownMenuItem>
+                        {assessment.status === 'ready' && (
+                          <>
+                            <DropdownMenuItem onClick={() => handleStatusChange(assessment.id, 'published')}>
+                              <Play className="w-4 h-4 mr-2" />
+                              Publish
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(assessment.id, 'draft')}>
+                              <Clock className="w-4 h-4 mr-2" />
+                              Back to Draft
+                            </DropdownMenuItem>
+                          </>
                         )}
-                        {assessment.status !== 'archived' && (
+                        {assessment.status === 'published' && (
                           <DropdownMenuItem onClick={() => handleStatusChange(assessment.id, 'archived')}>
                             <CheckCircle2 className="w-4 h-4 mr-2" />
-                            {t.assessments.archived}
+                            Archive
+                          </DropdownMenuItem>
+                        )}
+                        {assessment.status === 'archived' && (
+                          <DropdownMenuItem onClick={() => handleStatusChange(assessment.id, 'draft')}>
+                            <Clock className="w-4 h-4 mr-2" />
+                            Restore to Draft
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem 
