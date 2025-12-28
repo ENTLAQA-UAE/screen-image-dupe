@@ -350,7 +350,7 @@ const AssessmentGroups = () => {
 
   const copyInviteLink = (group: AssessmentGroup) => {
     if (group.group_link_token) {
-      const link = `${window.location.origin}/join/${group.group_link_token}`;
+      const link = `${window.location.origin}/assess/${group.group_link_token}?group=true`;
       navigator.clipboard.writeText(link);
       toast.success('Invite link copied to clipboard');
     }
