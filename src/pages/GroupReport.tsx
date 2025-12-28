@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useCsvExport } from "@/hooks/useCsvExport";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +30,7 @@ import {
   Sparkles,
   Download,
   RefreshCw,
+  FileSpreadsheet,
 } from "lucide-react";
 import { generateGroupPDF, generateParticipantPDF } from "@/lib/pdfGenerator";
 import {
@@ -104,6 +106,7 @@ const GroupReport = () => {
   const { groupId } = useParams<{ groupId: string }>();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const { exportToCsv } = useCsvExport();
 
   const [loading, setLoading] = useState(true);
   const [group, setGroup] = useState<GroupData | null>(null);
@@ -346,6 +349,81 @@ const GroupReport = () => {
     toast.success("PDF exported successfully");
   };
 
+  const handleExportResultsCsv = () => {
+    if (!group || participants.length === 0) return;
+
+    const isGraded = group.assessment?.is_graded;
+    
+    // Build headers dynamically based on assessment type
+    const baseHeaders = ['Employee Code', 'Full Name', 'Email', 'Department', 'Status', 'Started At', 'Completed At'];
+    const scoreHeaders = isGraded 
+      ? ['Score (%)', 'Correct Answers', 'Total Questions', 'Grade']
+      : ['Traits Summary'];
+    
+    const headers = [...baseHeaders, ...scoreHeaders];
+
+    // Transform participants to include score data
+    const dataWithScores = participants.map(p => {
+      const base = {
+        employee_code: p.employee_code || '',
+        full_name: p.full_name || '',
+        email: p.email || '',
+        department: p.department || '',
+        status: p.status || 'invited',
+        started_at: p.started_at ? format(new Date(p.started_at), 'yyyy-MM-dd HH:mm') : '',
+        completed_at: p.completed_at ? format(new Date(p.completed_at), 'yyyy-MM-dd HH:mm') : '',
+      };
+
+      if (isGraded) {
+        return {
+          ...base,
+          score_percentage: p.score_summary?.percentage ?? '',
+          correct_answers: p.score_summary?.correct ?? '',
+          total_questions: p.score_summary?.total ?? '',
+          grade: p.score_summary?.grade ?? '',
+        };
+      } else {
+        // Format traits as a string summary
+        const traits = p.score_summary?.traits;
+        const traitsSummary = traits 
+          ? Object.entries(traits).map(([k, v]) => `${k}: ${v}`).join('; ')
+          : '';
+        return {
+          ...base,
+          traits_summary: traitsSummary,
+        };
+      }
+    });
+
+    const columnMap: Record<string, string> = {
+      'Employee Code': 'employee_code',
+      'Full Name': 'full_name',
+      'Email': 'email',
+      'Department': 'department',
+      'Status': 'status',
+      'Started At': 'started_at',
+      'Completed At': 'completed_at',
+    };
+
+    if (isGraded) {
+      columnMap['Score (%)'] = 'score_percentage';
+      columnMap['Correct Answers'] = 'correct_answers';
+      columnMap['Total Questions'] = 'total_questions';
+      columnMap['Grade'] = 'grade';
+    } else {
+      columnMap['Traits Summary'] = 'traits_summary';
+    }
+
+    exportToCsv({
+      filename: `${group.name.replace(/\s+/g, '_')}_results`,
+      headers,
+      data: dataWithScores,
+      columnMap,
+    });
+
+    toast.success("Results exported to CSV");
+  };
+
   const statusData = stats
     ? [
         { name: "Completed", value: stats.completed, color: STATUS_COLORS.completed },
@@ -389,6 +467,10 @@ const GroupReport = () => {
               {formatDate(group.start_date)} - {formatDate(group.end_date)}
             </p>
           </div>
+          <Button variant="outline" onClick={handleExportResultsCsv} disabled={participants.length === 0}>
+            <FileSpreadsheet className="w-4 h-4 mr-2" />
+            Export CSV
+          </Button>
           <Button variant="outline" onClick={handleExportGroupPDF}>
             <Download className="w-4 h-4 mr-2" />
             Export PDF
