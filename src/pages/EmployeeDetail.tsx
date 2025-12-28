@@ -37,6 +37,7 @@ import {
   Award,
   BarChart3,
   Sparkles,
+  UserX,
 } from "lucide-react";
 import {
   BarChart,
@@ -125,6 +126,8 @@ const EmployeeDetail = () => {
   const [talentSnapshot, setTalentSnapshot] = useState<string | null>(null);
   const [snapshotLoading, setSnapshotLoading] = useState(false);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [isAnonymizeOpen, setIsAnonymizeOpen] = useState(false);
+  const [anonymizing, setAnonymizing] = useState(false);
 
   useEffect(() => {
     if (email && user) {
@@ -345,6 +348,40 @@ const EmployeeDetail = () => {
     }
   };
 
+  const handleAnonymize = async () => {
+    if (!employee || !organizationId) return;
+
+    setAnonymizing(true);
+    try {
+      const anonymousId = `ANON-${Date.now().toString(36).toUpperCase()}`;
+      const anonymousEmail = `${anonymousId.toLowerCase()}@anonymized.local`;
+
+      const { error } = await supabase
+        .from("participants")
+        .update({
+          full_name: anonymousId,
+          email: anonymousEmail,
+          employee_code: null,
+          department: null,
+          job_title: null,
+          ai_report_text: null,
+        })
+        .eq("organization_id", organizationId)
+        .eq("email", employee.email);
+
+      if (error) throw error;
+
+      toast.success("Employee data anonymized successfully");
+      setIsAnonymizeOpen(false);
+      navigate("/employees");
+    } catch (error: any) {
+      console.error("Error anonymizing employee:", error);
+      toast.error(error.message || "Failed to anonymize employee");
+    } finally {
+      setAnonymizing(false);
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <DashboardLayout activeItem="Employees">
@@ -377,6 +414,14 @@ const EmployeeDetail = () => {
             </motion.h1>
             <p className="text-muted-foreground">{employee.email}</p>
           </div>
+          <Button 
+            variant="outline" 
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={() => setIsAnonymizeOpen(true)}
+          >
+            <UserX className="w-4 h-4 mr-2" />
+            Anonymize
+          </Button>
         </div>
 
         {/* Stats Cards */}
@@ -805,6 +850,43 @@ const EmployeeDetail = () => {
                 Export PDF
               </Button>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Anonymize Dialog */}
+      <Dialog open={isAnonymizeOpen} onOpenChange={setIsAnonymizeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <UserX className="w-5 h-5" />
+              Anonymize Employee Data
+            </DialogTitle>
+            <DialogDescription>
+              This will permanently anonymize all personal data for <strong>{employee?.full_name || employee?.email}</strong>. 
+              Their assessment results will be preserved but all identifying information will be removed.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 text-sm">
+              <p className="font-medium text-destructive mb-2">This action will:</p>
+              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                <li>Replace name with an anonymous identifier</li>
+                <li>Replace email with an anonymized email</li>
+                <li>Remove employee code, department, and job title</li>
+                <li>Delete AI-generated report text</li>
+                <li>Preserve assessment scores and completion data</li>
+              </ul>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsAnonymizeOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleAnonymize} disabled={anonymizing}>
+              {anonymizing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Anonymize Data
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

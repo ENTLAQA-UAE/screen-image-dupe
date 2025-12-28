@@ -11,6 +11,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import {
   Search,
@@ -21,6 +35,9 @@ import {
   Briefcase,
   FileText,
   ChevronRight,
+  MoreHorizontal,
+  UserX,
+  Eye,
 } from "lucide-react";
 
 interface Employee {
@@ -47,6 +64,9 @@ const Employees = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [departments, setDepartments] = useState<string[]>([]);
+  const [isAnonymizeOpen, setIsAnonymizeOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [anonymizing, setAnonymizing] = useState(false);
 
   useEffect(() => {
     if (!authLoading && isSuperAdmin()) {
@@ -192,6 +212,49 @@ const Employees = () => {
 
   const handleViewEmployee = (employee: Employee) => {
     navigate(`/employees/${encodeURIComponent(employee.email)}`);
+  };
+
+  const openAnonymizeDialog = (employee: Employee, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedEmployee(employee);
+    setIsAnonymizeOpen(true);
+  };
+
+  const handleAnonymize = async () => {
+    if (!selectedEmployee || !organizationId) return;
+
+    setAnonymizing(true);
+    try {
+      // Generate anonymous identifiers
+      const anonymousId = `ANON-${Date.now().toString(36).toUpperCase()}`;
+      const anonymousEmail = `${anonymousId.toLowerCase()}@anonymized.local`;
+
+      // Update all participants with this email
+      const { error } = await supabase
+        .from("participants")
+        .update({
+          full_name: anonymousId,
+          email: anonymousEmail,
+          employee_code: null,
+          department: null,
+          job_title: null,
+          ai_report_text: null,
+        })
+        .eq("organization_id", organizationId)
+        .eq("email", selectedEmployee.email);
+
+      if (error) throw error;
+
+      toast.success("Employee data anonymized successfully");
+      setIsAnonymizeOpen(false);
+      setSelectedEmployee(null);
+      fetchEmployees();
+    } catch (error: any) {
+      console.error("Error anonymizing employee:", error);
+      toast.error(error.message || "Failed to anonymize employee");
+    } finally {
+      setAnonymizing(false);
+    }
   };
 
   if (authLoading) {
@@ -341,7 +404,26 @@ const Employees = () => {
                         {formatDate(employee.last_assessment_date)}
                       </TableCell>
                       <TableCell>
-                        <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewEmployee(employee); }}>
+                              <Eye className="w-4 h-4 mr-2" />
+                              View Profile
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={(e) => openAnonymizeDialog(employee, e)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <UserX className="w-4 h-4 mr-2" />
+                              Anonymize Data
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -351,6 +433,43 @@ const Employees = () => {
           </motion.div>
         )}
       </div>
+
+      {/* Anonymize Dialog */}
+      <Dialog open={isAnonymizeOpen} onOpenChange={setIsAnonymizeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <UserX className="w-5 h-5" />
+              Anonymize Employee Data
+            </DialogTitle>
+            <DialogDescription>
+              This will permanently anonymize all personal data for <strong>{selectedEmployee?.full_name || selectedEmployee?.email}</strong>. 
+              Their assessment results will be preserved but all identifying information will be removed.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 text-sm">
+              <p className="font-medium text-destructive mb-2">This action will:</p>
+              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                <li>Replace name with an anonymous identifier</li>
+                <li>Replace email with an anonymized email</li>
+                <li>Remove employee code, department, and job title</li>
+                <li>Delete AI-generated report text</li>
+                <li>Preserve assessment scores and completion data</li>
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAnonymizeOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleAnonymize} disabled={anonymizing}>
+              {anonymizing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Anonymize Data
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
