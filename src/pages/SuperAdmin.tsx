@@ -27,8 +27,10 @@ import {
   BarChart3,
   CreditCard,
   UserCog,
-  Settings
+  Settings,
+  Power,
 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { useNavigate, Link } from 'react-router-dom';
 
 interface Organization {
@@ -39,6 +41,7 @@ interface Organization {
   primary_color: string | null;
   logo_url: string | null;
   created_at: string | null;
+  is_active: boolean | null;
 }
 
 interface OrganizationStats {
@@ -313,6 +316,27 @@ export default function SuperAdmin() {
     }
     
     setIsAssigningAdmin(false);
+  };
+
+  const handleToggleOrgActive = async (orgId: string, currentlyActive: boolean) => {
+    const { error } = await supabase
+      .from('organizations')
+      .update({ is_active: !currentlyActive })
+      .eq('id', orgId);
+    
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to update organization status",
+        description: error.message,
+      });
+    } else {
+      toast({
+        title: currentlyActive ? "Organization deactivated" : "Organization activated",
+        description: `The organization has been ${currentlyActive ? 'deactivated' : 'activated'}.`,
+      });
+      fetchData();
+    }
   };
 
   const handleSignOut = async () => {
@@ -664,6 +688,7 @@ export default function SuperAdmin() {
                         <TableRow>
                           <TableHead>Organization</TableHead>
                           <TableHead>Plan</TableHead>
+                          <TableHead className="text-center">Status</TableHead>
                           <TableHead className="text-center">Assessments</TableHead>
                           <TableHead className="text-center">Participants</TableHead>
                           <TableHead className="text-center">Groups</TableHead>
@@ -673,7 +698,7 @@ export default function SuperAdmin() {
                       </TableHeader>
                       <TableBody>
                         {organizations.map((org) => (
-                          <TableRow key={org.id}>
+                          <TableRow key={org.id} className={org.is_active === false ? 'opacity-60' : ''}>
                             <TableCell>
                               <div className="flex items-center gap-3">
                                 <div 
@@ -697,6 +722,17 @@ export default function SuperAdmin() {
                               <Badge className={planColors[org.plan || 'free']}>
                                 {org.plan || 'free'}
                               </Badge>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <div className="flex items-center justify-center gap-2">
+                                <Switch
+                                  checked={org.is_active !== false}
+                                  onCheckedChange={() => handleToggleOrgActive(org.id, org.is_active !== false)}
+                                />
+                                <span className={`text-xs font-medium ${org.is_active !== false ? 'text-success' : 'text-muted-foreground'}`}>
+                                  {org.is_active !== false ? 'Active' : 'Inactive'}
+                                </span>
+                              </div>
                             </TableCell>
                             <TableCell className="text-center font-medium">
                               {orgStats[org.id]?.assessments || 0}
