@@ -117,28 +117,34 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
   return (
     <div className="min-h-screen bg-background" dir={dir}>
       {/* Sidebar */}
-      <aside className={`w-64 h-screen bg-sidebar fixed top-0 border-sidebar-border flex flex-col ${isRTL ? 'right-0 border-l' : 'left-0 border-r'}`}>
+      <aside 
+        className={`w-64 h-screen fixed top-0 border-sidebar-border flex flex-col ${isRTL ? 'right-0 border-l' : 'left-0 border-r'}`}
+        style={{ 
+          backgroundColor: branding?.primary_color ? branding.primary_color : 'hsl(var(--sidebar-background))',
+          color: branding?.primary_color ? '#ffffff' : undefined,
+        }}
+      >
         {/* Logo & Organization Branding */}
-        <div className="p-6 border-b border-sidebar-border">
+        <div className={`p-6 border-b ${branding?.primary_color ? 'border-white/10' : 'border-sidebar-border'}`}>
           <Link to="/" className="flex items-center gap-3">
             {branding?.logo_url ? (
               <img 
                 src={branding.logo_url} 
                 alt={branding.name || "Organization"} 
-                className="w-9 h-9 rounded-lg object-contain"
+                className="w-9 h-9 rounded-lg object-contain bg-white/10 p-0.5"
               />
             ) : (
-              <div className="w-9 h-9 gradient-accent rounded-lg flex items-center justify-center shadow-glow">
-                <span className="text-accent-foreground font-display font-bold">
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${branding?.primary_color ? 'bg-white/20' : 'gradient-accent shadow-glow'}`}>
+                <span className={`font-display font-bold ${branding?.primary_color ? 'text-white' : 'text-accent-foreground'}`}>
                   {branding?.name?.charAt(0) || "J"}
                 </span>
               </div>
             )}
             <div className="flex flex-col">
-              <span className="font-display font-bold text-sidebar-foreground truncate max-w-[140px]">
+              <span className={`font-display font-bold truncate max-w-[140px] ${branding?.primary_color ? 'text-white' : 'text-sidebar-foreground'}`}>
                 {branding?.name || "Jadarat"}
               </span>
-              <span className="text-[10px] text-sidebar-foreground/60 -mt-0.5 tracking-wider">ASSESS</span>
+              <span className={`text-[10px] -mt-0.5 tracking-wider ${branding?.primary_color ? 'text-white/60' : 'text-sidebar-foreground/60'}`}>ASSESS</span>
             </div>
           </Link>
         </div>
@@ -154,9 +160,13 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
                 key={item.labelKey}
                 to={item.href}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  isActive 
-                    ? "bg-sidebar-accent text-sidebar-primary" 
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                  branding?.primary_color
+                    ? isActive 
+                      ? "bg-white/20 text-white" 
+                      : "text-white/70 hover:bg-white/10 hover:text-white"
+                    : isActive 
+                      ? "bg-sidebar-accent text-sidebar-primary" 
+                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
                 }`}
               >
                 <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -167,21 +177,21 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
         </nav>
 
         {/* User Section */}
-        <div className="p-4 border-t border-sidebar-border">
-          <div className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-sidebar-accent/50 cursor-pointer transition-colors">
-            <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center flex-shrink-0">
-              <span className="text-sidebar-foreground font-semibold text-sm">
+        <div className={`p-4 border-t ${branding?.primary_color ? 'border-white/10' : 'border-sidebar-border'}`}>
+          <div className={`flex items-center gap-3 px-3 py-2 rounded-xl cursor-pointer transition-colors ${branding?.primary_color ? 'hover:bg-white/10' : 'hover:bg-sidebar-accent/50'}`}>
+            <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${branding?.primary_color ? 'bg-white/20' : 'bg-sidebar-accent'}`}>
+              <span className={`font-semibold text-sm ${branding?.primary_color ? 'text-white' : 'text-sidebar-foreground'}`}>
                 {getUserName().charAt(0).toUpperCase()}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-sidebar-foreground truncate">{getUserName()}</p>
-              <p className="text-xs text-sidebar-foreground/60 truncate">{getRoleLabel()}</p>
+              <p className={`text-sm font-medium truncate ${branding?.primary_color ? 'text-white' : 'text-sidebar-foreground'}`}>{getUserName()}</p>
+              <p className={`text-xs truncate ${branding?.primary_color ? 'text-white/60' : 'text-sidebar-foreground/60'}`}>{getRoleLabel()}</p>
             </div>
           </div>
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-4 py-2 mt-2 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+            className={`w-full flex items-center gap-3 px-4 py-2 mt-2 rounded-xl text-sm font-medium transition-colors ${branding?.primary_color ? 'text-white/80 hover:bg-white/10 hover:text-white' : 'text-destructive hover:bg-destructive/10'}`}
           >
             <LogOut className="w-4 h-4 flex-shrink-0" />
             {t.nav.signOut}
