@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { useCsvExport } from "@/hooks/useCsvExport";
 import {
   Users,
   CheckCircle2,
@@ -30,6 +31,7 @@ import {
   Download,
   PieChart,
   Activity,
+  FileSpreadsheet,
 } from "lucide-react";
 import {
   BarChart,
@@ -112,6 +114,9 @@ const Reports = () => {
   const [typeStats, setTypeStats] = useState<AssessmentTypeStats[]>([]);
   const [trendData, setTrendData] = useState<TrendData[]>([]);
   const [topEmployees, setTopEmployees] = useState<EmployeeSummary[]>([]);
+  const [allResults, setAllResults] = useState<any[]>([]);
+
+  const { exportToCsv } = useCsvExport();
 
   useEffect(() => {
     if (!authLoading && isSuperAdmin()) {
@@ -156,6 +161,7 @@ const Reports = () => {
         fetchTypeStats(),
         fetchTrendData(),
         fetchTopEmployees(),
+        fetchAllResults(),
       ]);
     } catch (error) {
       console.error("Error fetching report data:", error);
@@ -365,6 +371,33 @@ const Reports = () => {
     setTopEmployees(sorted);
   };
 
+  const fetchAllResults = async () => {
+    const { data: participants } = await supabase
+      .from("participants")
+      .select(`
+        id, full_name, email, employee_code, department, job_title, status,
+        started_at, completed_at, score_summary,
+        group:assessment_groups(
+          name,
+          assessment:assessments(title, type)
+        )
+      `)
+      .eq("organization_id", organizationId!)
+      .eq("status", "completed");
+
+    if (participants) {
+      setAllResults(participants.map(p => ({
+        ...p,
+        group_name: (p.group as any)?.name || '',
+        assessment_title: (p.group as any)?.assessment?.title || '',
+        assessment_type: (p.group as any)?.assessment?.type || '',
+        score_percentage: p.score_summary && typeof p.score_summary === 'object' && 'percentage' in p.score_summary 
+          ? (p.score_summary as { percentage: number }).percentage 
+          : null,
+      })));
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <DashboardLayout activeItem="Reports">
@@ -392,6 +425,30 @@ const Reports = () => {
               Comprehensive insights for {orgName}
             </p>
           </div>
+          <Button 
+            variant="outline"
+            onClick={() => exportToCsv({
+              filename: 'assessment_results',
+              headers: ['Employee Code', 'Full Name', 'Email', 'Department', 'Job Title', 'Group', 'Assessment', 'Type', 'Score %', 'Completed At'],
+              data: allResults,
+              columnMap: {
+                'Employee Code': 'employee_code',
+                'Full Name': 'full_name',
+                'Email': 'email',
+                'Department': 'department',
+                'Job Title': 'job_title',
+                'Group': 'group_name',
+                'Assessment': 'assessment_title',
+                'Type': 'assessment_type',
+                'Score %': 'score_percentage',
+                'Completed At': 'completed_at',
+              }
+            })}
+            disabled={allResults.length === 0}
+          >
+            <FileSpreadsheet className="w-4 h-4 mr-2" />
+            Export Results CSV
+          </Button>
         </div>
 
         {/* Overview Stats */}
