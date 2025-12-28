@@ -1030,7 +1030,7 @@ export default function SuperAdmin() {
                   Platform Settings
                 </h1>
                 <p className="text-muted-foreground">
-                  Configure platform-wide settings and preferences
+                  Configure platform-wide settings and feature flags
                 </p>
               </div>
 
@@ -1039,12 +1039,46 @@ export default function SuperAdmin() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Settings className="h-5 w-5" />
-                      General Settings
+                      Feature Flags
                     </CardTitle>
-                    <CardDescription>Platform-wide configuration options</CardDescription>
+                    <CardDescription>Enable or disable platform features</CardDescription>
                   </CardHeader>
-                  <CardContent className="text-center py-8 text-muted-foreground">
-                    Settings coming soon...
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between py-3 border-b border-border">
+                      <div>
+                        <p className="font-medium text-sm">AI Feedback Generation</p>
+                        <p className="text-xs text-muted-foreground">Enable AI-generated feedback for assessments</p>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between py-3 border-b border-border">
+                      <div>
+                        <p className="font-medium text-sm">AI Talent Snapshot</p>
+                        <p className="text-xs text-muted-foreground">Generate AI employee talent summaries</p>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between py-3 border-b border-border">
+                      <div>
+                        <p className="font-medium text-sm">Allow PDF Downloads</p>
+                        <p className="text-xs text-muted-foreground">Let employees download their own reports</p>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between py-3 border-b border-border">
+                      <div>
+                        <p className="font-medium text-sm">Question Bank Sharing</p>
+                        <p className="text-xs text-muted-foreground">Allow sharing questions across organizations</p>
+                      </div>
+                      <Switch />
+                    </div>
+                    <div className="flex items-center justify-between py-3">
+                      <div>
+                        <p className="font-medium text-sm">Maintenance Mode</p>
+                        <p className="text-xs text-muted-foreground">Block user access during maintenance</p>
+                      </div>
+                      <Switch />
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -1056,11 +1090,91 @@ export default function SuperAdmin() {
                     </CardTitle>
                     <CardDescription>Authentication and security options</CardDescription>
                   </CardHeader>
-                  <CardContent className="text-center py-8 text-muted-foreground">
-                    Security settings coming soon...
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between py-3 border-b border-border">
+                      <div>
+                        <p className="font-medium text-sm">Require Email Verification</p>
+                        <p className="text-xs text-muted-foreground">Users must verify email before access</p>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between py-3 border-b border-border">
+                      <div>
+                        <p className="font-medium text-sm">Two-Factor Authentication</p>
+                        <p className="text-xs text-muted-foreground">Require 2FA for admin accounts</p>
+                      </div>
+                      <Switch />
+                    </div>
+                    <div className="flex items-center justify-between py-3 border-b border-border">
+                      <div>
+                        <p className="font-medium text-sm">Session Timeout</p>
+                        <p className="text-xs text-muted-foreground">Auto-logout after inactivity</p>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                    <div className="flex items-center justify-between py-3">
+                      <div>
+                        <p className="font-medium text-sm">IP Whitelisting</p>
+                        <p className="text-xs text-muted-foreground">Restrict access to specific IPs</p>
+                      </div>
+                      <Switch />
+                    </div>
                   </CardContent>
                 </Card>
               </div>
+
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5" />
+                    Default Plan Limits
+                  </CardTitle>
+                  <CardDescription>Configure default limits for subscription plans</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Plan</TableHead>
+                        <TableHead className="text-center">Assessments</TableHead>
+                        <TableHead className="text-center">Participants/Month</TableHead>
+                        <TableHead className="text-center">HR Admins</TableHead>
+                        <TableHead className="text-center">AI Credits</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell><Badge className={planColors.free}>Free</Badge></TableCell>
+                        <TableCell className="text-center">5</TableCell>
+                        <TableCell className="text-center">50</TableCell>
+                        <TableCell className="text-center">1</TableCell>
+                        <TableCell className="text-center">10</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell><Badge className={planColors.starter}>Starter</Badge></TableCell>
+                        <TableCell className="text-center">25</TableCell>
+                        <TableCell className="text-center">250</TableCell>
+                        <TableCell className="text-center">3</TableCell>
+                        <TableCell className="text-center">50</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell><Badge className={planColors.professional}>Professional</Badge></TableCell>
+                        <TableCell className="text-center">Unlimited</TableCell>
+                        <TableCell className="text-center">1000</TableCell>
+                        <TableCell className="text-center">10</TableCell>
+                        <TableCell className="text-center">200</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell><Badge className={planColors.enterprise}>Enterprise</Badge></TableCell>
+                        <TableCell className="text-center">Unlimited</TableCell>
+                        <TableCell className="text-center">Unlimited</TableCell>
+                        <TableCell className="text-center">Unlimited</TableCell>
+                        <TableCell className="text-center">Unlimited</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
             </motion.div>
           )}
         </main>

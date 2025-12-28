@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.generate-group-narrative]
 verify_jwt = true
+
+[functions.generate-talent-snapshot]
+verify_jwt = true

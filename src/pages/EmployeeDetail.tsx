@@ -120,6 +120,9 @@ const EmployeeDetail = () => {
   const [assessments, setAssessments] = useState<AssessmentHistory[]>([]);
   const [stats, setStats] = useState<EmployeeStats | null>(null);
   const [selectedReport, setSelectedReport] = useState<AssessmentHistory | null>(null);
+  const [talentSnapshot, setTalentSnapshot] = useState<string | null>(null);
+  const [snapshotLoading, setSnapshotLoading] = useState(false);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
 
   useEffect(() => {
     if (email && user) {
@@ -142,6 +145,8 @@ const EmployeeDetail = () => {
         navigate("/employees");
         return;
       }
+
+      setOrganizationId(profile.organization_id);
 
       // Get organization name
       const { data: org } = await supabase
@@ -304,6 +309,40 @@ const EmployeeDetail = () => {
     toast.success("PDF exported successfully");
   };
 
+  const generateTalentSnapshot = async () => {
+    if (!employee || !organizationId || snapshotLoading) return;
+    
+    setSnapshotLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-talent-snapshot", {
+        body: { 
+          employeeEmail: employee.email,
+          organizationId 
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.snapshot) {
+        setTalentSnapshot(data.snapshot);
+        toast.success("AI Talent Snapshot generated");
+      }
+    } catch (error: any) {
+      console.error("Error generating snapshot:", error);
+      if (error?.message?.includes("429")) {
+        toast.error("Rate limit exceeded. Please try again later.");
+      } else if (error?.message?.includes("402")) {
+        toast.error("AI credits exhausted. Please add credits.");
+      } else if (error?.message?.includes("404")) {
+        toast.error("No completed assessments found for this employee.");
+      } else {
+        toast.error("Failed to generate talent snapshot");
+      }
+    } finally {
+      setSnapshotLoading(false);
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <DashboardLayout activeItem="Employees">
@@ -449,6 +488,88 @@ const EmployeeDetail = () => {
                 <span className="text-muted-foreground">First Assessment:</span>
                 <span className="font-medium">{formatDate(employee.first_seen)}</span>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* AI Talent Snapshot */}
+          <Card className="lg:col-span-1 mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-accent" />
+                AI Talent Snapshot
+              </CardTitle>
+              <CardDescription>
+                AI-generated talent profile based on assessment data
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {talentSnapshot ? (
+                <div className="prose prose-sm dark:prose-invert max-w-none">
+                  <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                    {talentSnapshot.split(/##\s*/).filter(Boolean).map((section, i) => {
+                      const [title, ...content] = section.split('\n');
+                      return (
+                        <div key={i} className="mb-4">
+                          {title && <h4 className="font-semibold text-foreground mb-2">{title.replace(/\*\*/g, '')}</h4>}
+                          <div className="text-muted-foreground">
+                            {content.join('\n').split('\n').map((line, j) => (
+                              <p key={j} className="mb-1">{line.replace(/\*\*/g, '').replace(/^\s*[-•]\s*/, '• ')}</p>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-4 w-full"
+                    onClick={generateTalentSnapshot}
+                    disabled={snapshotLoading}
+                  >
+                    {snapshotLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Regenerating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Regenerate Snapshot
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <Sparkles className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Generate an AI-powered talent profile based on all assessment results
+                  </p>
+                  <Button 
+                    variant="hero" 
+                    onClick={generateTalentSnapshot}
+                    disabled={snapshotLoading || stats?.completed === 0}
+                  >
+                    {snapshotLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Generate Talent Snapshot
+                      </>
+                    )}
+                  </Button>
+                  {stats?.completed === 0 && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Requires at least one completed assessment
+                    </p>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
