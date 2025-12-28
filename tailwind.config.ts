@@ -14,8 +14,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ["Sora", "system-ui", "sans-serif"],
-        body: ["Inter", "system-ui", "sans-serif"],
+        display: ["Sora", "Cairo", "system-ui", "sans-serif"],
+        body: ["Inter", "Noto Sans Arabic", "system-ui", "sans-serif"],
+        arabic: ["Noto Sans Arabic", "Cairo", "system-ui", "sans-serif"],
+        "arabic-display": ["Cairo", "Noto Sans Arabic", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
