@@ -250,9 +250,12 @@ export default function OrganizationSettings() {
       .from("organization-logos")
       .getPublicUrl(filePath);
     
+    // Add cache-busting timestamp to prevent browser caching old logo
+    const logoUrlWithCacheBuster = `${urlData.publicUrl}?t=${Date.now()}`;
+    
     const { error: updateError } = await supabase
       .from("organizations")
-      .update({ logo_url: urlData.publicUrl })
+      .update({ logo_url: logoUrlWithCacheBuster })
       .eq("id", organization.id);
     
     setUploadingLogo(false);
