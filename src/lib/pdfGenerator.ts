@@ -422,31 +422,39 @@ const createGroupReportHTML = (report: GroupReport): string => {
 
 // Generate PDF from HTML using html2canvas
 const generatePDFFromHTML = async (htmlContent: string, fileName: string): Promise<void> => {
-  // Create a visible but off-screen container for better rendering
+  // Create a container that's visible but positioned off-screen for proper rendering
   const container = document.createElement('div');
-  container.style.position = 'fixed';
-  container.style.left = '0';
-  container.style.top = '0';
-  container.style.width = '595px';
-  container.style.zIndex = '-9999';
-  container.style.opacity = '0';
-  container.style.pointerEvents = 'none';
+  container.style.cssText = `
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 595px;
+    background: white;
+    z-index: 99999;
+    visibility: hidden;
+  `;
   container.innerHTML = htmlContent;
   document.body.appendChild(container);
 
-  // Wait for fonts and images to load
-  await new Promise(resolve => setTimeout(resolve, 800));
+  // Wait for DOM to update and fonts/images to load
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  // Make visible briefly for html2canvas
+  container.style.visibility = 'visible';
 
   try {
-    const element = container.firstElementChild as HTMLElement;
+    const element = container.querySelector('div') as HTMLElement;
     
     if (!element) {
       throw new Error('Failed to create PDF content element');
     }
 
-    // Force layout calculation
-    element.offsetHeight;
+    // Force layout recalculation
+    void element.offsetHeight;
     
+    // Wait a bit more for rendering
+    await new Promise(resolve => setTimeout(resolve, 300));
+
     const canvas = await html2canvas(element, {
       scale: 2,
       useCORS: true,
@@ -454,22 +462,19 @@ const generatePDFFromHTML = async (htmlContent: string, fileName: string): Promi
       backgroundColor: '#ffffff',
       logging: false,
       width: 595,
+      height: element.scrollHeight,
       windowWidth: 595,
-      onclone: (clonedDoc) => {
-        // Ensure the cloned document has proper styles
-        const clonedElement = clonedDoc.body.firstElementChild as HTMLElement;
-        if (clonedElement) {
-          clonedElement.style.width = '595px';
-          clonedElement.style.minHeight = '842px';
-        }
-      }
+      windowHeight: element.scrollHeight,
     });
 
-    if (canvas.width === 0 || canvas.height === 0) {
-      throw new Error('Failed to render PDF content');
+    // Hide container immediately after capture
+    container.style.visibility = 'hidden';
+
+    if (!canvas || canvas.width === 0 || canvas.height === 0) {
+      throw new Error('html2canvas failed to render content');
     }
 
-    const imgData = canvas.toDataURL('image/png');
+    const imgData = canvas.toDataURL('image/png', 1.0);
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -478,53 +483,28 @@ const generatePDFFromHTML = async (htmlContent: string, fileName: string): Promi
 
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = canvas.width;
-    const imgHeight = canvas.height;
     
-    // Calculate scaling to fit content on page
-    const scale = 2; // html2canvas scale
-    const contentWidth = imgWidth / scale;
-    const contentHeight = imgHeight / scale;
+    // Calculate dimensions
+    const imgWidth = pdfWidth;
+    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
     
-    // Convert pixels to mm (assuming 96 DPI: 1 inch = 25.4mm, 96 pixels = 25.4mm)
-    const pxToMm = 25.4 / 96;
-    const scaledWidth = contentWidth * pxToMm;
-    const scaledHeight = contentHeight * pxToMm;
-    
-    // Fit to page width while maintaining aspect ratio
-    const ratio = Math.min(pdfWidth / scaledWidth, 1);
-    const finalWidth = scaledWidth * ratio;
-    const finalHeight = scaledHeight * ratio;
-    
-    // Center horizontally
-    const imgX = (pdfWidth - finalWidth) / 2;
-    const imgY = 0;
+    // Handle multi-page if content is taller than one page
+    let heightLeft = imgHeight;
+    let position = 0;
+    let pageCount = 0;
 
-    // Handle multi-page content
-    if (finalHeight > pdfHeight) {
-      const pageHeight = pdfHeight;
-      let remainingHeight = finalHeight;
-      let yOffset = 0;
-      
-      while (remainingHeight > 0) {
-        if (yOffset > 0) {
-          pdf.addPage();
-        }
-        
-        pdf.addImage(
-          imgData, 
-          'PNG', 
-          imgX, 
-          -yOffset, 
-          finalWidth, 
-          finalHeight
-        );
-        
-        yOffset += pageHeight;
-        remainingHeight -= pageHeight;
+    while (heightLeft > 0) {
+      if (pageCount > 0) {
+        pdf.addPage();
       }
-    } else {
-      pdf.addImage(imgData, 'PNG', imgX, imgY, finalWidth, finalHeight);
+      
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+      position -= pdfHeight;
+      pageCount++;
+      
+      // Safety limit
+      if (pageCount > 20) break;
     }
     
     pdf.save(fileName);
