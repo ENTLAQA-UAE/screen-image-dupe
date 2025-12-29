@@ -422,19 +422,30 @@ const createGroupReportHTML = (report: GroupReport): string => {
 
 // Generate PDF from HTML using html2canvas
 const generatePDFFromHTML = async (htmlContent: string, fileName: string): Promise<void> => {
-  // Create a hidden container
+  // Create a visible but off-screen container for better rendering
   const container = document.createElement('div');
-  container.style.position = 'absolute';
-  container.style.left = '-9999px';
+  container.style.position = 'fixed';
+  container.style.left = '0';
   container.style.top = '0';
+  container.style.width = '595px';
+  container.style.zIndex = '-9999';
+  container.style.opacity = '0';
+  container.style.pointerEvents = 'none';
   container.innerHTML = htmlContent;
   document.body.appendChild(container);
 
   // Wait for fonts and images to load
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise(resolve => setTimeout(resolve, 800));
 
   try {
     const element = container.firstElementChild as HTMLElement;
+    
+    if (!element) {
+      throw new Error('Failed to create PDF content element');
+    }
+
+    // Force layout calculation
+    element.offsetHeight;
     
     const canvas = await html2canvas(element, {
       scale: 2,
@@ -442,7 +453,21 @@ const generatePDFFromHTML = async (htmlContent: string, fileName: string): Promi
       allowTaint: true,
       backgroundColor: '#ffffff',
       logging: false,
+      width: 595,
+      windowWidth: 595,
+      onclone: (clonedDoc) => {
+        // Ensure the cloned document has proper styles
+        const clonedElement = clonedDoc.body.firstElementChild as HTMLElement;
+        if (clonedElement) {
+          clonedElement.style.width = '595px';
+          clonedElement.style.minHeight = '842px';
+        }
+      }
     });
+
+    if (canvas.width === 0 || canvas.height === 0) {
+      throw new Error('Failed to render PDF content');
+    }
 
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({
@@ -455,14 +480,61 @@ const generatePDFFromHTML = async (htmlContent: string, fileName: string): Promi
     const pdfHeight = pdf.internal.pageSize.getHeight();
     const imgWidth = canvas.width;
     const imgHeight = canvas.height;
-    const ratio = Math.min(pdfWidth / (imgWidth / 2), pdfHeight / (imgHeight / 2));
-    const imgX = (pdfWidth - (imgWidth / 2) * ratio) / 2;
+    
+    // Calculate scaling to fit content on page
+    const scale = 2; // html2canvas scale
+    const contentWidth = imgWidth / scale;
+    const contentHeight = imgHeight / scale;
+    
+    // Convert pixels to mm (assuming 96 DPI: 1 inch = 25.4mm, 96 pixels = 25.4mm)
+    const pxToMm = 25.4 / 96;
+    const scaledWidth = contentWidth * pxToMm;
+    const scaledHeight = contentHeight * pxToMm;
+    
+    // Fit to page width while maintaining aspect ratio
+    const ratio = Math.min(pdfWidth / scaledWidth, 1);
+    const finalWidth = scaledWidth * ratio;
+    const finalHeight = scaledHeight * ratio;
+    
+    // Center horizontally
+    const imgX = (pdfWidth - finalWidth) / 2;
     const imgY = 0;
 
-    pdf.addImage(imgData, 'PNG', imgX, imgY, (imgWidth / 2) * ratio, (imgHeight / 2) * ratio);
+    // Handle multi-page content
+    if (finalHeight > pdfHeight) {
+      const pageHeight = pdfHeight;
+      let remainingHeight = finalHeight;
+      let yOffset = 0;
+      
+      while (remainingHeight > 0) {
+        if (yOffset > 0) {
+          pdf.addPage();
+        }
+        
+        pdf.addImage(
+          imgData, 
+          'PNG', 
+          imgX, 
+          -yOffset, 
+          finalWidth, 
+          finalHeight
+        );
+        
+        yOffset += pageHeight;
+        remainingHeight -= pageHeight;
+      }
+    } else {
+      pdf.addImage(imgData, 'PNG', imgX, imgY, finalWidth, finalHeight);
+    }
+    
     pdf.save(fileName);
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
   } finally {
-    document.body.removeChild(container);
+    if (container.parentNode) {
+      document.body.removeChild(container);
+    }
   }
 };
 

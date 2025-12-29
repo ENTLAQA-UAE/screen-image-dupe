@@ -67,6 +67,7 @@ interface OrganizationData {
   id: string;
   name: string;
   primary_language: string | null;
+  logo_url: string | null;
 }
 
 interface ParticipantData {
@@ -150,7 +151,7 @@ const GroupReport = () => {
       // Fetch organization details
       const { data: orgData } = await supabase
         .from("organizations")
-        .select("id, name, primary_language")
+        .select("id, name, primary_language, logo_url")
         .eq("id", groupData.organization_id)
         .maybeSingle();
 
