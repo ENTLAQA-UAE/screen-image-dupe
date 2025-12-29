@@ -176,25 +176,52 @@ export default function UserManagement() {
       if (!data.user) {
         throw new Error("Failed to create user");
       }
+
+      const newUserId = data.user.id;
       
-      // Add hr_admin role
+      // Wait a moment for the trigger to create the profile
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Ensure profile exists and has correct organization_id
+      const { data: existingProfile } = await supabase
+        .from("profiles")
+        .select("id, organization_id")
+        .eq("id", newUserId)
+        .maybeSingle();
+      
+      if (!existingProfile) {
+        // Profile wasn't created by trigger, create it manually
+        const { error: profileError } = await supabase.from("profiles").insert({
+          id: newUserId,
+          full_name: inviteFullName,
+          organization_id: organizationId,
+        });
+        
+        if (profileError) {
+          console.error("Profile creation error:", profileError);
+          throw new Error("Failed to create user profile");
+        }
+      } else if (!existingProfile.organization_id) {
+        // Profile exists but without org, update it
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update({ organization_id: organizationId, full_name: inviteFullName })
+          .eq("id", newUserId);
+        
+        if (updateError) {
+          console.error("Profile update error:", updateError);
+        }
+      }
+      
+      // Now add hr_admin role (after profile is linked to org)
       const { error: roleError } = await supabase.from("user_roles").insert({
-        user_id: data.user.id,
+        user_id: newUserId,
         role: "hr_admin",
       });
       
-      if (roleError) throw roleError;
-      
-      // Create profile for the user
-      const { error: profileError } = await supabase.from("profiles").insert({
-        id: data.user.id,
-        full_name: inviteFullName,
-        organization_id: organizationId,
-      });
-      
-      if (profileError) {
-        console.error("Profile creation error:", profileError);
-        // Profile might already be created by trigger, continue
+      if (roleError) {
+        console.error("Role assignment error:", roleError);
+        throw new Error("Failed to assign HR Admin role. Please try again.");
       }
       
       setInviteDialogOpen(false);
