@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useOrganizationBranding } from "@/contexts/OrganizationBrandingContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { NotificationCenter } from "@/components/dashboard/NotificationCenter";
 import { Button } from "@/components/ui/button";
 import { 
   BarChart3, 
@@ -227,10 +228,7 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
           </div>
           <div className="flex items-center gap-3">
             <LanguageSwitcher />
-            <Button variant="ghost" size="icon" className="relative hover:bg-accent/10 transition-colors">
-              <Bell className="w-5 h-5 text-muted-foreground" />
-              <span className={`absolute top-2 w-2 h-2 rounded-full bg-highlight animate-pulse ${isRTL ? 'left-2' : 'right-2'}`} />
-            </Button>
+            <NotificationCenter />
           </div>
         </header>
 
