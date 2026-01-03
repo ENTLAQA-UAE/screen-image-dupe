@@ -115,6 +115,50 @@ export type Database = {
           },
         ]
       }
+      competencies: {
+        Row: {
+          created_at: string
+          description: string | null
+          description_ar: string | null
+          id: string
+          is_active: boolean
+          name: string
+          name_ar: string | null
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          description_ar?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          name_ar?: string | null
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          description_ar?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          name_ar?: string | null
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "competencies_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string

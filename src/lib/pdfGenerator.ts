@@ -1,5 +1,4 @@
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 import { format } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
 
@@ -140,14 +139,248 @@ interface GroupReport {
   aiNarrative?: string;
 }
 
-// Create HTML content for PDF generation (supports Arabic with proper fonts)
-const createParticipantReportHTML = (report: ParticipantReport): string => {
+// Helper to reverse Arabic text for proper PDF rendering (jsPDF doesn't support RTL natively)
+const processArabicText = (text: string): string => {
+  if (!text) return text;
+  // Split by lines and process each
+  return text.split('\n').map(line => {
+    // Check if line contains Arabic characters
+    const hasArabic = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(line);
+    if (hasArabic) {
+      // Reverse the text for RTL display in PDF
+      return line.split('').reverse().join('');
+    }
+    return line;
+  }).join('\n');
+};
+
+// Generate PDF using jsPDF directly (no html2canvas for better Arabic support)
+const generatePDFDirectly = (
+  title: string,
+  sections: Array<{ label: string; value: string }>,
+  stats?: { label: string; value: string | number }[],
+  aiText?: string,
+  isRTL?: boolean,
+  t?: typeof translations.en
+): jsPDF => {
+  const pdf = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  });
+
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const margin = 20;
+  const contentWidth = pageWidth - (margin * 2);
+  let yPos = margin;
+
+  // Colors
+  const primaryColor: [number, number, number] = [99, 102, 241]; // Indigo
+  const textColor: [number, number, number] = [15, 23, 42];
+  const mutedColor: [number, number, number] = [100, 116, 139];
+  const bgColor: [number, number, number] = [248, 250, 252];
+
+  // Helper for text alignment
+  const getX = (text: string, align: 'left' | 'right' | 'center' = 'left'): number => {
+    if (align === 'center') return pageWidth / 2;
+    if (align === 'right' || isRTL) return pageWidth - margin;
+    return margin;
+  };
+
+  // Header background
+  pdf.setFillColor(15, 23, 42);
+  pdf.rect(0, 0, pageWidth, 40, 'F');
+
+  // Title
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFontSize(20);
+  pdf.setFont('helvetica', 'bold');
+  const titleText = isRTL ? processArabicText(title) : title;
+  pdf.text(titleText, pageWidth / 2, 25, { align: 'center' });
+
+  yPos = 55;
+
+  // Section: Info fields
+  if (sections.length > 0) {
+    pdf.setFontSize(14);
+    pdf.setTextColor(...primaryColor);
+    pdf.setFont('helvetica', 'bold');
+    const infoTitle = isRTL ? processArabicText(t?.participantInformation || 'Information') : (t?.participantInformation || 'Information');
+    pdf.text(infoTitle, isRTL ? pageWidth - margin : margin, yPos, { align: isRTL ? 'right' : 'left' });
+    
+    // Underline
+    pdf.setDrawColor(...primaryColor);
+    pdf.setLineWidth(0.5);
+    pdf.line(margin, yPos + 2, pageWidth - margin, yPos + 2);
+    
+    yPos += 12;
+
+    // Info grid
+    pdf.setFontSize(10);
+    const colWidth = contentWidth / 2;
+    
+    sections.forEach((section, index) => {
+      const col = index % 2;
+      const xBase = margin + (col * colWidth);
+      
+      if (index % 2 === 0 && index > 0) {
+        yPos += 18;
+      }
+      
+      // Check for page break
+      if (yPos > pageHeight - 40) {
+        pdf.addPage();
+        yPos = margin;
+      }
+
+      // Background box
+      pdf.setFillColor(...bgColor);
+      const boxX = isRTL ? pageWidth - margin - colWidth + 5 - (col * colWidth) : xBase;
+      pdf.roundedRect(boxX, yPos - 4, colWidth - 10, 16, 2, 2, 'F');
+
+      // Label
+      pdf.setTextColor(...mutedColor);
+      pdf.setFont('helvetica', 'normal');
+      const labelText = isRTL ? processArabicText(section.label) : section.label;
+      const labelX = isRTL ? pageWidth - margin - 5 - (col * colWidth) : xBase + 5;
+      pdf.text(labelText, labelX, yPos, { align: isRTL ? 'right' : 'left' });
+
+      // Value
+      pdf.setTextColor(...textColor);
+      pdf.setFont('helvetica', 'bold');
+      const valueText = isRTL ? processArabicText(section.value) : section.value;
+      pdf.text(valueText, labelX, yPos + 6, { align: isRTL ? 'right' : 'left' });
+    });
+
+    yPos += 25;
+  }
+
+  // Stats section
+  if (stats && stats.length > 0) {
+    // Check for page break
+    if (yPos > pageHeight - 60) {
+      pdf.addPage();
+      yPos = margin;
+    }
+
+    pdf.setFontSize(14);
+    pdf.setTextColor(...primaryColor);
+    pdf.setFont('helvetica', 'bold');
+    const statsTitle = isRTL ? processArabicText(t?.results || 'Results') : (t?.results || 'Results');
+    pdf.text(statsTitle, isRTL ? pageWidth - margin : margin, yPos, { align: isRTL ? 'right' : 'left' });
+    
+    pdf.setDrawColor(...primaryColor);
+    pdf.line(margin, yPos + 2, pageWidth - margin, yPos + 2);
+    
+    yPos += 15;
+
+    // Stats boxes
+    const statWidth = contentWidth / Math.min(stats.length, 4);
+    stats.slice(0, 4).forEach((stat, index) => {
+      const xBase = margin + (index * statWidth);
+      
+      // Box with gradient-like effect
+      pdf.setFillColor(240, 245, 255);
+      const boxX = isRTL ? pageWidth - margin - statWidth - (index * statWidth) : xBase;
+      pdf.roundedRect(boxX + 2, yPos, statWidth - 4, 30, 3, 3, 'F');
+
+      // Value
+      pdf.setFontSize(24);
+      pdf.setTextColor(...primaryColor);
+      pdf.setFont('helvetica', 'bold');
+      const valueStr = String(stat.value);
+      const valueX = boxX + statWidth / 2;
+      pdf.text(valueStr, valueX, yPos + 15, { align: 'center' });
+
+      // Label
+      pdf.setFontSize(9);
+      pdf.setTextColor(...mutedColor);
+      pdf.setFont('helvetica', 'normal');
+      const statLabel = isRTL ? processArabicText(stat.label) : stat.label;
+      pdf.text(statLabel, valueX, yPos + 24, { align: 'center' });
+    });
+
+    yPos += 40;
+  }
+
+  // AI Report section
+  if (aiText) {
+    // Check for page break
+    if (yPos > pageHeight - 80) {
+      pdf.addPage();
+      yPos = margin;
+    }
+
+    pdf.setFontSize(14);
+    pdf.setTextColor(...primaryColor);
+    pdf.setFont('helvetica', 'bold');
+    const aiTitle = isRTL ? processArabicText(t?.aiGeneratedFeedback || 'AI Feedback') : (t?.aiGeneratedFeedback || 'AI Feedback');
+    pdf.text(aiTitle, isRTL ? pageWidth - margin : margin, yPos, { align: isRTL ? 'right' : 'left' });
+    
+    pdf.setDrawColor(...primaryColor);
+    pdf.line(margin, yPos + 2, pageWidth - margin, yPos + 2);
+    
+    yPos += 10;
+
+    // AI text box
+    pdf.setFillColor(245, 243, 255);
+    pdf.setDrawColor(199, 210, 254);
+    
+    // Process and wrap text
+    pdf.setFontSize(10);
+    pdf.setTextColor(...textColor);
+    pdf.setFont('helvetica', 'normal');
+    
+    const processedAiText = isRTL ? processArabicText(aiText) : aiText;
+    const lines = pdf.splitTextToSize(processedAiText, contentWidth - 20);
+    const textHeight = lines.length * 5 + 15;
+    
+    // Draw background
+    pdf.roundedRect(margin, yPos, contentWidth, Math.min(textHeight, pageHeight - yPos - 30), 3, 3, 'FD');
+    
+    yPos += 8;
+    
+    // Draw text with pagination
+    lines.forEach((line: string, index: number) => {
+      if (yPos > pageHeight - 25) {
+        pdf.addPage();
+        yPos = margin + 8;
+        // Redraw box on new page
+        const remainingLines = lines.length - index;
+        const remainingHeight = remainingLines * 5 + 10;
+        pdf.setFillColor(245, 243, 255);
+        pdf.setDrawColor(199, 210, 254);
+        pdf.roundedRect(margin, margin, contentWidth, Math.min(remainingHeight, pageHeight - margin - 30), 3, 3, 'FD');
+      }
+      
+      const textX = isRTL ? pageWidth - margin - 10 : margin + 10;
+      pdf.text(line, textX, yPos, { align: isRTL ? 'right' : 'left' });
+      yPos += 5;
+    });
+  }
+
+  // Footer on all pages
+  const totalPages = pdf.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    pdf.setPage(i);
+    pdf.setFontSize(9);
+    pdf.setTextColor(...mutedColor);
+    const footerText = isRTL 
+      ? processArabicText(`${t?.page || 'Page'} ${i} ${t?.of || 'of'} ${totalPages}`)
+      : `${t?.page || 'Page'} ${i} ${t?.of || 'of'} ${totalPages}`;
+    pdf.text(footerText, pageWidth / 2, pageHeight - 10, { align: 'center' });
+  }
+
+  return pdf;
+};
+
+export const generateParticipantPDF = async (report: ParticipantReport): Promise<void> => {
   const lang = report.language || 'en';
   const t = translations[lang];
   const isRTL = lang === 'ar';
   const dateLocale = lang === 'ar' ? ar : enUS;
-  const fontFamily = isRTL ? "'Segoe UI', 'Arial', 'Tahoma', sans-serif" : "'Segoe UI', 'Helvetica', 'Arial', sans-serif";
-  
+
   const completedDate = report.completedAt 
     ? format(new Date(report.completedAt), "PPP p", { locale: dateLocale })
     : "-";
@@ -155,383 +388,178 @@ const createParticipantReportHTML = (report: ParticipantReport): string => {
   const typeLabel = (t as any)[report.assessmentType.toLowerCase()] || 
     report.assessmentType.charAt(0).toUpperCase() + report.assessmentType.slice(1);
 
-  let resultsHTML = '';
+  const sections = [
+    { label: t.name, value: report.participantName || t.anonymous },
+    { label: t.email, value: report.participantEmail || "-" },
+    ...(report.employeeCode ? [{ label: t.employeeCode, value: report.employeeCode }] : []),
+    ...(report.department ? [{ label: t.department, value: report.department }] : []),
+    { label: t.assessment, value: report.assessmentTitle },
+    { label: t.type, value: typeLabel },
+    { label: t.group, value: report.groupName },
+    { label: t.completed, value: completedDate },
+  ];
+
+  let stats: { label: string; value: string | number }[] = [];
   
   if (report.scoreSummary) {
     if (report.scoreSummary.percentage !== undefined) {
-      // Graded assessment
-      resultsHTML = `
-        <div style="background: linear-gradient(135deg, #22c55e15, #22c55e05); border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
-          <div style="font-size: 48px; font-weight: bold; color: #16a34a; margin-bottom: 8px;">${report.scoreSummary.percentage}%</div>
-          <div style="color: #64748b; font-size: 14px;">${report.scoreSummary.correctCount || 0} ${t.of} ${report.scoreSummary.totalPossible || 0} ${t.correct}</div>
-          ${report.scoreSummary.grade ? `<div style="margin-top: 12px; display: inline-block; padding: 6px 16px; background: #22c55e20; border-radius: 20px; color: #16a34a; font-weight: 600;">${t.grade}: ${report.scoreSummary.grade}</div>` : ''}
-        </div>
-      `;
+      stats = [
+        { label: t.score, value: `${report.scoreSummary.percentage}%` },
+        { label: t.correct, value: `${report.scoreSummary.correctCount || 0}/${report.scoreSummary.totalPossible || 0}` },
+        ...(report.scoreSummary.grade ? [{ label: t.grade, value: report.scoreSummary.grade }] : []),
+      ];
     } else if (report.scoreSummary.traits) {
-      // Trait-based assessment
-      const traitsHTML = Object.entries(report.scoreSummary.traits).map(([trait, score]) => {
-        const percentage = (score / 5) * 100;
-        const traitLabel = trait.charAt(0).toUpperCase() + trait.slice(1);
-        return `
-          <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px; flex-direction: ${isRTL ? 'row-reverse' : 'row'};">
-            <div style="width: 50px; text-align: center; font-weight: 600; color: #6366f1; background: #6366f115; padding: 8px; border-radius: 8px;">${score.toFixed(1)}</div>
-            <div style="flex: 1;">
-              <div style="background: #e2e8f0; border-radius: 8px; height: 12px; overflow: hidden;">
-                <div style="background: #6366f1; height: 100%; width: ${percentage}%; border-radius: 8px;"></div>
-              </div>
-            </div>
-            <div style="width: 120px; text-align: ${isRTL ? 'right' : 'left'}; font-weight: 500;">${traitLabel}</div>
-          </div>
-        `;
-      }).join('');
-      
-      resultsHTML = `
-        <div style="margin-bottom: 24px;">
-          <h3 style="font-size: 16px; font-weight: 600; color: #0f172a; margin-bottom: 16px;">${t.traitAnalysis}</h3>
-          ${traitsHTML}
-        </div>
-      `;
+      stats = Object.entries(report.scoreSummary.traits).map(([trait, score]) => ({
+        label: trait.charAt(0).toUpperCase() + trait.slice(1),
+        value: score.toFixed(1),
+      }));
     }
   }
 
-  const aiReportHTML = report.aiReport ? `
-    <div style="margin-top: 24px; border-top: 1px solid #e2e8f0; padding-top: 24px;">
-      <h3 style="font-size: 16px; font-weight: 600; color: #0f172a; margin-bottom: 12px;">${t.aiGeneratedFeedback}</h3>
-      <div style="background: linear-gradient(135deg, #6366f108, #8b5cf608); border: 1px solid #6366f120; border-radius: 12px; padding: 20px;">
-        <p style="color: #374151; line-height: 1.8; white-space: pre-wrap; margin: 0; font-size: 13px;">${report.aiReport}</p>
-      </div>
-    </div>
-  ` : '';
+  const pdf = generatePDFDirectly(
+    t.assessmentReport,
+    sections,
+    stats,
+    report.aiReport || undefined,
+    isRTL,
+    t
+  );
 
-  return `
-    <!DOCTYPE html>
-    <html lang="${lang}" dir="${isRTL ? 'rtl' : 'ltr'}">
-    <head>
-      <meta charset="UTF-8">
-      <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: ${fontFamily}; background: white; }
-      </style>
-    </head>
-    <body>
-      <div style="width: 595px; min-height: 842px; padding: 0; background: white;">
-        <!-- Header -->
-        <div style="background: #0f172a; padding: 32px; text-align: center;">
-          ${report.organizationLogo ? `<img src="${report.organizationLogo}" alt="${report.organizationName}" style="height: 48px; margin-bottom: 16px; object-fit: contain;" />` : ''}
-          <h1 style="color: white; font-size: 24px; font-weight: bold; margin-bottom: 8px;">${t.assessmentReport}</h1>
-          <p style="color: #94a3b8; font-size: 14px;">${report.organizationName}</p>
-        </div>
-
-        <!-- Content -->
-        <div style="padding: 32px;">
-          <!-- Participant Info -->
-          <h2 style="font-size: 18px; font-weight: 600; color: #0f172a; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #6366f1;">${t.participantInformation}</h2>
-          
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 32px;">
-            <div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px;">
-              <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">${t.name}</div>
-              <div style="color: #0f172a; font-weight: 500;">${report.participantName || t.anonymous}</div>
-            </div>
-            <div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px;">
-              <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">${t.email}</div>
-              <div style="color: #0f172a; font-weight: 500; word-break: break-all;">${report.participantEmail || "-"}</div>
-            </div>
-            ${report.employeeCode ? `
-            <div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px;">
-              <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">${t.employeeCode}</div>
-              <div style="color: #0f172a; font-weight: 500;">${report.employeeCode}</div>
-            </div>
-            ` : ''}
-            ${report.department ? `
-            <div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px;">
-              <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">${t.department}</div>
-              <div style="color: #0f172a; font-weight: 500;">${report.department}</div>
-            </div>
-            ` : ''}
-            <div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px;">
-              <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">${t.assessment}</div>
-              <div style="color: #0f172a; font-weight: 500;">${report.assessmentTitle}</div>
-            </div>
-            <div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px;">
-              <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">${t.type}</div>
-              <div style="color: #0f172a; font-weight: 500;">${typeLabel}</div>
-            </div>
-            <div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px;">
-              <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">${t.group}</div>
-              <div style="color: #0f172a; font-weight: 500;">${report.groupName}</div>
-            </div>
-            <div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px;">
-              <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">${t.completed}</div>
-              <div style="color: #0f172a; font-weight: 500;">${completedDate}</div>
-            </div>
-          </div>
-
-          <!-- Results -->
-          <h2 style="font-size: 18px; font-weight: 600; color: #0f172a; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #6366f1;">${t.results}</h2>
-          ${resultsHTML}
-
-          <!-- AI Report -->
-          ${aiReportHTML}
-        </div>
-
-        <!-- Footer -->
-        <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 32px; border-top: 1px solid #e2e8f0; text-align: center; color: #94a3b8; font-size: 11px;">
-          ${t.generatedOn} ${format(new Date(), "PPP", { locale: dateLocale })}
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
+  const fileName = `${report.participantName || "participant"}_${report.assessmentTitle}_report.pdf`
+    .replace(/[^a-zA-Z0-9_-]/g, "_")
+    .toLowerCase();
+  
+  pdf.save(fileName);
 };
 
-// Create HTML content for Group Report
-const createGroupReportHTML = (report: GroupReport): string => {
+export const generateGroupPDF = async (report: GroupReport): Promise<void> => {
   const lang = report.language || 'en';
   const t = translations[lang];
   const isRTL = lang === 'ar';
   const dateLocale = lang === 'ar' ? ar : enUS;
-  const fontFamily = isRTL ? "'Segoe UI', 'Arial', 'Tahoma', sans-serif" : "'Segoe UI', 'Helvetica', 'Arial', sans-serif";
-  
+
   const typeLabel = (t as any)[report.assessmentType.toLowerCase()] || 
     report.assessmentType.charAt(0).toUpperCase() + report.assessmentType.slice(1);
 
   const periodText = `${report.startDate ? format(new Date(report.startDate), "PP", { locale: dateLocale }) : "-"} ${t.to} ${report.endDate ? format(new Date(report.endDate), "PP", { locale: dateLocale }) : "-"}`;
 
-  const statsHTML = `
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px;">
-      <div style="background: linear-gradient(135deg, #6366f115, #6366f105); border: 1px solid #6366f120; border-radius: 12px; padding: 20px; text-align: center;">
-        <div style="font-size: 32px; font-weight: bold; color: #6366f1;">${report.stats.totalParticipants}</div>
-        <div style="color: #64748b; font-size: 12px; margin-top: 4px;">${t.total}</div>
-      </div>
-      <div style="background: linear-gradient(135deg, #22c55e15, #22c55e05); border: 1px solid #22c55e20; border-radius: 12px; padding: 20px; text-align: center;">
-        <div style="font-size: 32px; font-weight: bold; color: #16a34a;">${report.stats.completionRate}%</div>
-        <div style="color: #64748b; font-size: 12px; margin-top: 4px;">${t.completionRate}</div>
-      </div>
-      <div style="background: linear-gradient(135deg, #f59e0b15, #f59e0b05); border: 1px solid #f59e0b20; border-radius: 12px; padding: 20px; text-align: center;">
-        <div style="font-size: 32px; font-weight: bold; color: #d97706;">${report.stats.averageScore !== null ? report.stats.averageScore + '%' : '-'}</div>
-        <div style="color: #64748b; font-size: 12px; margin-top: 4px;">${t.avgScore}</div>
-      </div>
-      <div style="background: linear-gradient(135deg, #8b5cf615, #8b5cf605); border: 1px solid #8b5cf620; border-radius: 12px; padding: 20px; text-align: center;">
-        <div style="font-size: 32px; font-weight: bold; color: #7c3aed;">${report.stats.highestScore !== null ? report.stats.highestScore + '%' : '-'}</div>
-        <div style="color: #64748b; font-size: 12px; margin-top: 4px;">${t.highest}</div>
-      </div>
-    </div>
-  `;
+  const sections = [
+    { label: t.group, value: report.groupName },
+    { label: t.assessment, value: report.assessmentTitle },
+    { label: t.type, value: typeLabel },
+    { label: t.period, value: periodText },
+  ];
 
-  const participantsTableHTML = report.participants.length > 0 ? `
-    <h2 style="font-size: 18px; font-weight: 600; color: #0f172a; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #6366f1;">${t.participants}</h2>
-    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-      <thead>
-        <tr style="background: #f8fafc;">
-          <th style="padding: 12px; text-align: ${isRTL ? 'right' : 'left'}; border-bottom: 1px solid #e2e8f0; color: #64748b;">${t.name}</th>
-          <th style="padding: 12px; text-align: center; border-bottom: 1px solid #e2e8f0; color: #64748b;">${t.status}</th>
-          <th style="padding: 12px; text-align: center; border-bottom: 1px solid #e2e8f0; color: #64748b;">${t.score}</th>
-          <th style="padding: 12px; text-align: ${isRTL ? 'left' : 'right'}; border-bottom: 1px solid #e2e8f0; color: #64748b;">${t.completed}</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${report.participants.slice(0, 15).map((p, i) => `
-          <tr style="background: ${i % 2 === 0 ? 'white' : '#fafafa'};">
-            <td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9;">${p.name || t.anonymous}</td>
-            <td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; text-align: center;">
-              <span style="padding: 4px 8px; border-radius: 12px; font-size: 11px; background: ${p.status === 'completed' ? '#dcfce7' : p.status === 'started' ? '#fef3c7' : '#f1f5f9'}; color: ${p.status === 'completed' ? '#16a34a' : p.status === 'started' ? '#d97706' : '#64748b'};">
-                ${(t as any)[p.status] || p.status}
-              </span>
-            </td>
-            <td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; text-align: center; font-weight: ${p.score !== null ? '600' : 'normal'}; color: ${p.score !== null ? '#6366f1' : '#94a3b8'};">
-              ${p.score !== null ? p.score + '%' : '-'}
-            </td>
-            <td style="padding: 10px 12px; border-bottom: 1px solid #f1f5f9; text-align: ${isRTL ? 'left' : 'right'}; color: #64748b;">
-              ${p.completedAt ? format(new Date(p.completedAt), "PP", { locale: dateLocale }) : '-'}
-            </td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-    ${report.participants.length > 15 ? `<p style="text-align: center; color: #94a3b8; font-size: 12px; margin-top: 12px;">+ ${report.participants.length - 15} ${t.andMore}</p>` : ''}
-  ` : '';
+  const stats = [
+    { label: t.total, value: report.stats.totalParticipants },
+    { label: t.completionRate, value: `${report.stats.completionRate}%` },
+    { label: t.avgScore, value: report.stats.averageScore !== null ? `${report.stats.averageScore}%` : '-' },
+    { label: t.highest, value: report.stats.highestScore !== null ? `${report.stats.highestScore}%` : '-' },
+  ];
 
-  const aiNarrativeHTML = report.aiNarrative ? `
-    <div style="margin-top: 32px; page-break-inside: avoid;">
-      <h2 style="font-size: 18px; font-weight: 600; color: #0f172a; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #6366f1;">${t.aiGeneratedFeedback}</h2>
-      <div style="background: linear-gradient(135deg, #6366f108, #8b5cf608); border: 1px solid #6366f120; border-radius: 12px; padding: 20px;">
-        <p style="color: #374151; line-height: 1.8; white-space: pre-wrap; margin: 0; font-size: 13px;">${report.aiNarrative}</p>
-      </div>
-    </div>
-  ` : '';
+  const pdf = generatePDFDirectly(
+    t.groupAssessmentReport,
+    sections,
+    stats,
+    report.aiNarrative || undefined,
+    isRTL,
+    t
+  );
 
-  return `
-    <!DOCTYPE html>
-    <html lang="${lang}" dir="${isRTL ? 'rtl' : 'ltr'}">
-    <head>
-      <meta charset="UTF-8">
-      <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: ${fontFamily}; background: white; }
-      </style>
-    </head>
-    <body>
-      <div style="width: 595px; min-height: 842px; padding: 0; background: white;">
-        <!-- Header -->
-        <div style="background: #0f172a; padding: 32px; text-align: center;">
-          ${report.organizationLogo ? `<img src="${report.organizationLogo}" alt="${report.organizationName}" style="height: 48px; margin-bottom: 16px; object-fit: contain;" />` : ''}
-          <h1 style="color: white; font-size: 24px; font-weight: bold; margin-bottom: 8px;">${t.groupAssessmentReport}</h1>
-          <p style="color: #94a3b8; font-size: 14px;">${report.groupName} • ${report.organizationName}</p>
-        </div>
-
-        <!-- Content -->
-        <div style="padding: 32px;">
-          <!-- Assessment Details -->
-          <h2 style="font-size: 18px; font-weight: 600; color: #0f172a; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #6366f1;">${t.assessmentDetails}</h2>
-          
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 32px;">
-            <div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px;">
-              <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">${t.assessment}</div>
-              <div style="color: #0f172a; font-weight: 500;">${report.assessmentTitle}</div>
-            </div>
-            <div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px;">
-              <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">${t.type}</div>
-              <div style="color: #0f172a; font-weight: 500;">${typeLabel}</div>
-            </div>
-            <div style="background: #f8fafc; padding: 12px 16px; border-radius: 8px;">
-              <div style="color: #64748b; font-size: 12px; margin-bottom: 4px;">${t.period}</div>
-              <div style="color: #0f172a; font-weight: 500; font-size: 12px;">${periodText}</div>
-            </div>
-          </div>
-
-          <!-- Statistics -->
-          <h2 style="font-size: 18px; font-weight: 600; color: #0f172a; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #6366f1;">${t.statisticsOverview}</h2>
-          ${statsHTML}
-
-          <!-- Participants Table -->
-          ${participantsTableHTML}
-
-          <!-- AI Narrative -->
-          ${aiNarrativeHTML}
-        </div>
-
-        <!-- Footer -->
-        <div style="padding: 16px 32px; border-top: 1px solid #e2e8f0; text-align: center; color: #94a3b8; font-size: 11px;">
-          ${t.generatedOn} ${format(new Date(), "PPP", { locale: dateLocale })}
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-};
-
-// Generate PDF from HTML using html2canvas
-const generatePDFFromHTML = async (htmlContent: string, fileName: string): Promise<void> => {
-  // Create a container that's visible but positioned off-screen for proper rendering
-  const container = document.createElement('div');
-  container.style.cssText = `
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 595px;
-    background: white;
-    z-index: 99999;
-    visibility: hidden;
-  `;
-  container.innerHTML = htmlContent;
-  document.body.appendChild(container);
-
-  // Wait for DOM to update and fonts/images to load
-  await new Promise(resolve => setTimeout(resolve, 100));
-  
-  // Make visible briefly for html2canvas
-  container.style.visibility = 'visible';
-
-  try {
-    const element = container.querySelector('div') as HTMLElement;
+  // Add participants table on a new page if there are participants
+  if (report.participants.length > 0) {
+    pdf.addPage();
     
-    if (!element) {
-      throw new Error('Failed to create PDF content element');
-    }
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const margin = 20;
+    let yPos = margin;
 
-    // Force layout recalculation
-    void element.offsetHeight;
+    // Title
+    pdf.setFontSize(14);
+    pdf.setTextColor(99, 102, 241);
+    pdf.setFont('helvetica', 'bold');
+    const participantsTitle = isRTL ? processArabicText(t.participants) : t.participants;
+    pdf.text(participantsTitle, isRTL ? pageWidth - margin : margin, yPos, { align: isRTL ? 'right' : 'left' });
     
-    // Wait a bit more for rendering
-    await new Promise(resolve => setTimeout(resolve, 300));
+    pdf.setDrawColor(99, 102, 241);
+    pdf.line(margin, yPos + 2, pageWidth - margin, yPos + 2);
+    
+    yPos += 15;
 
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      width: 595,
-      height: element.scrollHeight,
-      windowWidth: 595,
-      windowHeight: element.scrollHeight,
+    // Table header
+    pdf.setFillColor(248, 250, 252);
+    pdf.rect(margin, yPos - 5, pageWidth - margin * 2, 10, 'F');
+    
+    pdf.setFontSize(9);
+    pdf.setTextColor(100, 116, 139);
+    pdf.setFont('helvetica', 'bold');
+    
+    const colWidths = [60, 35, 30, 45];
+    const headers = [t.name, t.status, t.score, t.completed];
+    
+    let xPos = isRTL ? pageWidth - margin - colWidths[0] : margin;
+    headers.forEach((header, i) => {
+      const headerText = isRTL ? processArabicText(header) : header;
+      pdf.text(headerText, xPos + 3, yPos, { align: isRTL ? 'right' : 'left' });
+      xPos = isRTL ? xPos - colWidths[i + 1] || 0 : xPos + colWidths[i];
     });
-
-    // Hide container immediately after capture
-    container.style.visibility = 'hidden';
-
-    if (!canvas || canvas.width === 0 || canvas.height === 0) {
-      throw new Error('html2canvas failed to render content');
-    }
-
-    const imgData = canvas.toDataURL('image/png', 1.0);
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4',
-    });
-
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
     
-    // Calculate dimensions
-    const imgWidth = pdfWidth;
-    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-    
-    // Handle multi-page if content is taller than one page
-    let heightLeft = imgHeight;
-    let position = 0;
-    let pageCount = 0;
+    yPos += 8;
 
-    while (heightLeft > 0) {
-      if (pageCount > 0) {
+    // Table rows
+    pdf.setFont('helvetica', 'normal');
+    report.participants.slice(0, 20).forEach((p, index) => {
+      if (yPos > pdf.internal.pageSize.getHeight() - 30) {
         pdf.addPage();
+        yPos = margin;
       }
+
+      // Alternating background
+      if (index % 2 === 0) {
+        pdf.setFillColor(250, 250, 250);
+        pdf.rect(margin, yPos - 4, pageWidth - margin * 2, 8, 'F');
+      }
+
+      pdf.setTextColor(15, 23, 42);
       
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
-      position -= pdfHeight;
-      pageCount++;
+      let xPos = isRTL ? pageWidth - margin - colWidths[0] : margin;
       
-      // Safety limit
-      if (pageCount > 20) break;
-    }
-    
-    pdf.save(fileName);
-  } catch (error) {
-    console.error('PDF generation error:', error);
-    throw new Error(`Failed to generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  } finally {
-    if (container.parentNode) {
-      document.body.removeChild(container);
+      // Name
+      const nameText = isRTL ? processArabicText(p.name || t.anonymous) : (p.name || t.anonymous);
+      pdf.text(nameText.substring(0, 25), xPos + 3, yPos, { align: isRTL ? 'right' : 'left' });
+      xPos = isRTL ? xPos - colWidths[1] : xPos + colWidths[0];
+      
+      // Status
+      const statusText = isRTL ? processArabicText((t as any)[p.status] || p.status) : ((t as any)[p.status] || p.status);
+      pdf.text(statusText, xPos + 3, yPos, { align: isRTL ? 'right' : 'left' });
+      xPos = isRTL ? xPos - colWidths[2] : xPos + colWidths[1];
+      
+      // Score
+      pdf.text(p.score !== null ? `${p.score}%` : '-', xPos + 3, yPos, { align: isRTL ? 'right' : 'left' });
+      xPos = isRTL ? xPos - colWidths[3] : xPos + colWidths[2];
+      
+      // Completed date
+      const dateText = p.completedAt ? format(new Date(p.completedAt), "PP", { locale: dateLocale }) : '-';
+      pdf.text(dateText, xPos + 3, yPos, { align: isRTL ? 'right' : 'left' });
+      
+      yPos += 8;
+    });
+
+    // Show "and more" if truncated
+    if (report.participants.length > 20) {
+      yPos += 5;
+      pdf.setTextColor(100, 116, 139);
+      pdf.setFontSize(10);
+      const moreText = isRTL 
+        ? processArabicText(`+ ${report.participants.length - 20} ${t.andMore}`)
+        : `+ ${report.participants.length - 20} ${t.andMore}`;
+      pdf.text(moreText, pageWidth / 2, yPos, { align: 'center' });
     }
   }
-};
 
-export const generateParticipantPDF = async (report: ParticipantReport): Promise<void> => {
-  const htmlContent = createParticipantReportHTML(report);
-  const fileName = `${report.participantName || "participant"}_${report.assessmentTitle}_report.pdf`
-    .replace(/[^a-zA-Z0-9_-]/g, "_")
-    .toLowerCase();
-  
-  await generatePDFFromHTML(htmlContent, fileName);
-};
-
-export const generateGroupPDF = async (report: GroupReport): Promise<void> => {
-  const htmlContent = createGroupReportHTML(report);
   const fileName = `${report.groupName}_report.pdf`
     .replace(/[^a-zA-Z0-9_-]/g, "_")
     .toLowerCase();
   
-  await generatePDFFromHTML(htmlContent, fileName);
+  pdf.save(fileName);
 };
