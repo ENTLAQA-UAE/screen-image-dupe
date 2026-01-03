@@ -73,8 +73,8 @@ const ASSESSMENT_TYPES = {
   ],
 };
 
-// Config fields per type
-const TYPE_CONFIGS: Record<string, { fields: Array<{ key: string; label: string; type: string; options?: string[]; default?: any }> }> = {
+// Config fields per type - competencies will be loaded dynamically
+const TYPE_CONFIGS: Record<string, { fields: Array<{ key: string; label: string; type: string; options?: string[]; default?: any; dynamic?: boolean }> }> = {
   cognitive: {
     fields: [
       { key: "subdomains", label: "Subdomains to include", type: "multiselect", options: ["numerical", "verbal", "logical", "spatial", "memory"] },
@@ -94,7 +94,7 @@ const TYPE_CONFIGS: Record<string, { fields: Array<{ key: string; label: string;
   },
   situational: {
     fields: [
-      { key: "competencies", label: "Competencies to measure", type: "multiselect", options: ["decision-making", "teamwork", "leadership", "customer-service", "integrity"] },
+      { key: "competencies", label: "Competencies to measure", type: "multiselect", options: [], dynamic: true },
       { key: "scenarioCount", label: "Number of scenarios", type: "number", default: 8 },
     ],
   },
@@ -111,6 +111,13 @@ const TYPE_CONFIGS: Record<string, { fields: Array<{ key: string; label: string;
     ],
   },
 };
+
+interface Competency {
+  id: string;
+  name: string;
+  name_ar: string | null;
+  description: string | null;
+}
 
 interface GeneratedQuestion {
   text: string;
@@ -167,18 +174,36 @@ export default function AssessmentBuilder() {
   const [bankQuestions, setBankQuestions] = useState<any[]>([]);
   const [selectedBankQuestions, setSelectedBankQuestions] = useState<Set<string>>(new Set());
   const [loadingBank, setLoadingBank] = useState(false);
+  
+  // Organization competencies
+  const [orgCompetencies, setOrgCompetencies] = useState<Competency[]>([]);
 
   useEffect(() => {
-    const fetchOrg = async () => {
+    const fetchOrgAndCompetencies = async () => {
       if (!user) return;
       const { data } = await supabase
         .from("profiles")
         .select("organization_id")
         .eq("id", user.id)
         .single();
-      setOrganizationId(data?.organization_id || null);
+      
+      if (data?.organization_id) {
+        setOrganizationId(data.organization_id);
+        
+        // Fetch organization's competencies
+        const { data: competencies } = await supabase
+          .from("competencies")
+          .select("id, name, name_ar, description")
+          .eq("organization_id", data.organization_id)
+          .eq("is_active", true)
+          .order("name");
+        
+        if (competencies) {
+          setOrgCompetencies(competencies);
+        }
+      }
     };
-    fetchOrg();
+    fetchOrgAndCompetencies();
   }, [user]);
 
   const handleGenerateQuestions = async () => {
@@ -530,7 +555,23 @@ export default function AssessmentBuilder() {
     toast.success(`Imported ${questionsToImport.length} questions`);
   };
 
-  const currentTypeConfig = TYPE_CONFIGS[assessmentType] || { fields: [] };
+  // Get type config with dynamic competencies
+  const getTypeConfigWithCompetencies = () => {
+    const config = TYPE_CONFIGS[assessmentType] || { fields: [] };
+    if (assessmentType === "situational" && orgCompetencies.length > 0) {
+      return {
+        ...config,
+        fields: config.fields.map(field => 
+          field.key === "competencies" 
+            ? { ...field, options: orgCompetencies.map(c => c.name) }
+            : field
+        ),
+      };
+    }
+    return config;
+  };
+  
+  const currentTypeConfig = getTypeConfigWithCompetencies();
   const availableTypes = category === "graded_quiz" ? ASSESSMENT_TYPES.graded : ASSESSMENT_TYPES.profile;
 
   const renderStep1 = () => (
