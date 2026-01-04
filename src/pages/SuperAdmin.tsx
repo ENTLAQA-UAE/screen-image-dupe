@@ -59,6 +59,8 @@ interface UserWithRole {
   roles: string[];
 }
 
+type AppRole = "super_admin" | "org_admin" | "hr_admin";
+
 const planColors: Record<string, string> = {
   free: 'bg-muted text-muted-foreground',
   starter: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
@@ -108,7 +110,17 @@ export default function SuperAdmin() {
   const [adminPassword, setAdminPassword] = useState('');
   const [adminName, setAdminName] = useState('');
   const [selectedOrgId, setSelectedOrgId] = useState('');
+  const [selectedRole, setSelectedRole] = useState<AppRole>('org_admin');
   const [isAssigningAdmin, setIsAssigningAdmin] = useState(false);
+  const [createdPassword, setCreatedPassword] = useState<string | null>(null);
+  
+  // Edit user state
+  const [isEditUserOpen, setIsEditUserOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
+  const [editUserName, setEditUserName] = useState('');
+  const [editUserOrgId, setEditUserOrgId] = useState('');
+  const [editUserRoles, setEditUserRoles] = useState<AppRole[]>([]);
+  const [isUpdatingUser, setIsUpdatingUser] = useState(false);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -290,32 +302,122 @@ export default function SuperAdmin() {
           .from('user_roles')
           .insert({
             user_id: signUpData.user.id,
-            role: 'org_admin',
+            role: selectedRole,
           });
         
         if (roleError) throw roleError;
         
+        // Show the created password
+        setCreatedPassword(adminPassword);
+        
         toast({
-          title: "Organization Admin assigned",
-          description: `${adminName} has been assigned as admin for the organization.`,
+          title: "User created successfully",
+          description: `${adminName} has been assigned as ${selectedRole.replace('_', ' ')} for the organization.`,
         });
         
-        setIsAssignAdminOpen(false);
-        setAdminEmail('');
-        setAdminPassword('');
-        setAdminName('');
-        setSelectedOrgId('');
         fetchData();
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Failed to assign admin",
+        title: "Failed to create user",
         description: error.message,
       });
     }
     
     setIsAssigningAdmin(false);
+  };
+
+  const handleCloseCreateDialog = () => {
+    setIsAssignAdminOpen(false);
+    setAdminEmail('');
+    setAdminPassword('');
+    setAdminName('');
+    setSelectedOrgId('');
+    setSelectedRole('org_admin');
+    setCreatedPassword(null);
+  };
+
+  const handleOpenEditUser = (userItem: UserWithRole) => {
+    setEditingUser(userItem);
+    setEditUserName(userItem.full_name || '');
+    setEditUserOrgId(userItem.organization_id || '');
+    setEditUserRoles(userItem.roles as AppRole[]);
+    setIsEditUserOpen(true);
+  };
+
+  const handleUpdateUser = async () => {
+    if (!editingUser) return;
+    
+    setIsUpdatingUser(true);
+    
+    try {
+      // Update profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: editUserName.trim() || null,
+          organization_id: editUserOrgId || null,
+        })
+        .eq('id', editingUser.id);
+      
+      if (profileError) throw profileError;
+      
+      // Get current roles
+      const currentRoles = editingUser.roles as AppRole[];
+      
+      // Determine roles to add and remove
+      const rolesToAdd = editUserRoles.filter(r => !currentRoles.includes(r));
+      const rolesToRemove = currentRoles.filter(r => !editUserRoles.includes(r as AppRole));
+      
+      // Remove roles
+      if (rolesToRemove.length > 0) {
+        const { error: removeError } = await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', editingUser.id)
+          .in('role', rolesToRemove);
+        
+        if (removeError) throw removeError;
+      }
+      
+      // Add roles
+      if (rolesToAdd.length > 0) {
+        const { error: addError } = await supabase
+          .from('user_roles')
+          .insert(rolesToAdd.map(role => ({
+            user_id: editingUser.id,
+            role,
+          })));
+        
+        if (addError) throw addError;
+      }
+      
+      toast({
+        title: "User updated",
+        description: `${editUserName || 'User'} has been updated successfully.`,
+      });
+      
+      setIsEditUserOpen(false);
+      setEditingUser(null);
+      fetchData();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Failed to update user",
+        description: error.message,
+      });
+    }
+    
+    setIsUpdatingUser(false);
+  };
+
+  const toggleRole = (role: AppRole) => {
+    if (editUserRoles.includes(role)) {
+      setEditUserRoles(editUserRoles.filter(r => r !== role));
+    } else {
+      setEditUserRoles([...editUserRoles, role]);
+    }
   };
 
   const handleToggleOrgActive = async (orgId: string, currentlyActive: boolean) => {
@@ -792,73 +894,112 @@ export default function SuperAdmin() {
                     Manage all platform users and their role assignments
                   </p>
                 </div>
-                <Dialog open={isAssignAdminOpen} onOpenChange={setIsAssignAdminOpen}>
+                <Dialog open={isAssignAdminOpen} onOpenChange={(open) => !open && handleCloseCreateDialog()}>
                   <DialogTrigger asChild>
                     <Button>
                       <UserPlus className="h-4 w-4 mr-2" />
-                      Assign Org Admin
+                      Create User
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Assign Organization Admin</DialogTitle>
+                      <DialogTitle>Create New User</DialogTitle>
                       <DialogDescription>
-                        Create a new user and assign them as an organization admin.
+                        Create a new user and assign them to an organization with a role.
                       </DialogDescription>
                     </DialogHeader>
-                    <form onSubmit={handleAssignOrgAdmin} className="space-y-4 mt-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="admin-org">Organization</Label>
-                        <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select organization" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {organizations.map((org) => (
-                              <SelectItem key={org.id} value={org.id}>
-                                {org.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                    {createdPassword ? (
+                      <div className="space-y-4 py-4">
+                        <div className="p-4 bg-success/10 rounded-lg border border-success/20">
+                          <p className="text-success font-medium mb-2">User created successfully!</p>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Share these credentials with the user. They should change their password after first login.
+                          </p>
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Label className="w-20">Email:</Label>
+                              <code className="flex-1 bg-muted px-2 py-1 rounded text-sm">{adminEmail}</code>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Label className="w-20">Password:</Label>
+                              <code className="flex-1 bg-muted px-2 py-1 rounded text-sm">{createdPassword}</code>
+                            </div>
+                          </div>
+                        </div>
+                        <Button onClick={handleCloseCreateDialog} className="w-full">
+                          Done
+                        </Button>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="admin-name">Full Name</Label>
-                        <Input
-                          id="admin-name"
-                          placeholder="John Doe"
-                          value={adminName}
-                          onChange={(e) => setAdminName(e.target.value)}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="admin-email">Email</Label>
-                        <Input
-                          id="admin-email"
-                          type="email"
-                          placeholder="admin@company.com"
-                          value={adminEmail}
-                          onChange={(e) => setAdminEmail(e.target.value)}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="admin-password">Temporary Password</Label>
-                        <Input
-                          id="admin-password"
-                          type="password"
-                          placeholder="••••••••"
-                          value={adminPassword}
-                          onChange={(e) => setAdminPassword(e.target.value)}
-                          required
-                          minLength={6}
-                        />
-                      </div>
-                      <Button type="submit" className="w-full" disabled={isAssigningAdmin || !selectedOrgId}>
-                        {isAssigningAdmin ? "Assigning..." : "Assign Admin"}
-                      </Button>
-                    </form>
+                    ) : (
+                      <form onSubmit={handleAssignOrgAdmin} className="space-y-4 mt-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="admin-org">Organization</Label>
+                          <Select value={selectedOrgId} onValueChange={setSelectedOrgId}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select organization" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {organizations.map((org) => (
+                                <SelectItem key={org.id} value={org.id}>
+                                  {org.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="admin-role">Role</Label>
+                          <Select value={selectedRole} onValueChange={(v) => setSelectedRole(v as AppRole)}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="org_admin">Organization Admin</SelectItem>
+                              <SelectItem value="hr_admin">HR Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="admin-name">Full Name</Label>
+                          <Input
+                            id="admin-name"
+                            placeholder="John Doe"
+                            value={adminName}
+                            onChange={(e) => setAdminName(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="admin-email">Email</Label>
+                          <Input
+                            id="admin-email"
+                            type="email"
+                            placeholder="admin@company.com"
+                            value={adminEmail}
+                            onChange={(e) => setAdminEmail(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="admin-password">Temporary Password</Label>
+                          <Input
+                            id="admin-password"
+                            type="text"
+                            placeholder="Enter a temporary password"
+                            value={adminPassword}
+                            onChange={(e) => setAdminPassword(e.target.value)}
+                            required
+                            minLength={6}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            This password will be shown after creation. Min 6 characters.
+                          </p>
+                        </div>
+                        <Button type="submit" className="w-full" disabled={isAssigningAdmin || !selectedOrgId}>
+                          {isAssigningAdmin ? "Creating..." : "Create User"}
+                        </Button>
+                      </form>
+                    )}
                   </DialogContent>
                 </Dialog>
               </div>
@@ -878,6 +1019,7 @@ export default function SuperAdmin() {
                           <TableHead>Name</TableHead>
                           <TableHead>Organization</TableHead>
                           <TableHead>Roles</TableHead>
+                          <TableHead className="w-20"></TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -906,6 +1048,15 @@ export default function SuperAdmin() {
                                 )}
                               </div>
                             </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleOpenEditUser(userItem)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -913,6 +1064,77 @@ export default function SuperAdmin() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Edit User Dialog */}
+              <Dialog open={isEditUserOpen} onOpenChange={setIsEditUserOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Edit User</DialogTitle>
+                    <DialogDescription>
+                      Update user details and role assignments.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-name">Full Name</Label>
+                      <Input
+                        id="edit-name"
+                        value={editUserName}
+                        onChange={(e) => setEditUserName(e.target.value)}
+                        placeholder="Enter full name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit-org">Organization</Label>
+                      <Select value={editUserOrgId} onValueChange={setEditUserOrgId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="No organization" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">No organization</SelectItem>
+                          {organizations.map((org) => (
+                            <SelectItem key={org.id} value={org.id}>
+                              {org.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Roles</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {(['org_admin', 'hr_admin', 'super_admin'] as AppRole[]).map((role) => (
+                          <Badge
+                            key={role}
+                            variant={editUserRoles.includes(role) ? 'default' : 'outline'}
+                            className={`cursor-pointer transition-colors ${
+                              role === 'super_admin' 
+                                ? editUserRoles.includes(role) 
+                                  ? 'bg-highlight text-highlight-foreground' 
+                                  : 'border-highlight/50 text-highlight hover:bg-highlight/10'
+                                : ''
+                            }`}
+                            onClick={() => toggleRole(role)}
+                          >
+                            {role.replace('_', ' ')}
+                          </Badge>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Click on a role to toggle it on/off
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="outline" onClick={() => setIsEditUserOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleUpdateUser} disabled={isUpdatingUser}>
+                      {isUpdatingUser ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </motion.div>
           )}
 

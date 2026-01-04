@@ -15,7 +15,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { Building2, Users, BarChart3, Upload, Trash2, UserPlus, Mail, Loader2 } from "lucide-react";
+import { Building2, Users, BarChart3, Upload, Trash2, UserPlus, Mail, Loader2, Target } from "lucide-react";
+import { CompetencyManagement } from "@/components/settings/CompetencyManagement";
 
 interface Organization {
   id: string;
@@ -365,6 +366,10 @@ export default function OrganizationSettings() {
               <Building2 className="h-4 w-4" />
               {t.settings.branding}
             </TabsTrigger>
+            <TabsTrigger value="competencies" className="gap-2">
+              <Target className="h-4 w-4" />
+              Competencies
+            </TabsTrigger>
             <TabsTrigger value="users" className="gap-2">
               <Users className="h-4 w-4" />
               {t.settings.users}
@@ -492,6 +497,10 @@ export default function OrganizationSettings() {
                 </Button>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="competencies" className="space-y-6">
+            <CompetencyManagement />
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6">
