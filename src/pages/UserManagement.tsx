@@ -13,14 +13,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Users, UserPlus, Trash2, Mail, Loader2, Shield, Calendar, Pencil } from "lucide-react";
+import { Users, UserPlus, Trash2, Loader2, Shield, Calendar, Pencil, Eye, EyeOff, Copy, Check } from "lucide-react";
 
-interface HRAdmin {
+type AppRole = "org_admin" | "hr_admin";
+
+interface OrgUser {
   id: string;
   full_name: string | null;
-  email: string | null;
   created_at: string | null;
+  role: AppRole | null;
 }
 
 export default function UserManagement() {
@@ -31,22 +34,28 @@ export default function UserManagement() {
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [organizationName, setOrganizationName] = useState<string>("");
   const [maxHrAdmins, setMaxHrAdmins] = useState<number>(5);
-  const [hrAdmins, setHrAdmins] = useState<HRAdmin[]>([]);
+  const [orgUsers, setOrgUsers] = useState<OrgUser[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Invite dialog state
-  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  // Create user dialog state
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteFullName, setInviteFullName] = useState("");
+  const [invitePassword, setInvitePassword] = useState("");
+  const [inviteRole, setInviteRole] = useState<AppRole>("hr_admin");
   const [inviting, setInviting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [createdCredentials, setCreatedCredentials] = useState<{ email: string; password: string } | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
   
   // Delete state
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   
   // Edit dialog state
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<HRAdmin | null>(null);
+  const [editingUser, setEditingUser] = useState<OrgUser | null>(null);
   const [editFullName, setEditFullName] = useState("");
+  const [editRole, setEditRole] = useState<AppRole>("hr_admin");
   const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
@@ -63,7 +72,7 @@ export default function UserManagement() {
 
   useEffect(() => {
     if (organizationId) {
-      fetchHRAdmins();
+      fetchOrgUsers();
     }
   }, [organizationId]);
 
@@ -95,12 +104,12 @@ export default function UserManagement() {
     }
   };
 
-  const fetchHRAdmins = async () => {
+  const fetchOrgUsers = async () => {
     if (!organizationId) return;
     
     setLoading(true);
     try {
-      // Get all users with hr_admin role for this organization
+      // Get all profiles for this organization
       const { data: profiles, error: profilesError } = await supabase
         .from("profiles")
         .select("id, full_name, created_at")
@@ -109,7 +118,7 @@ export default function UserManagement() {
       if (profilesError) throw profilesError;
       
       if (!profiles || profiles.length === 0) {
-        setHrAdmins([]);
+        setOrgUsers([]);
         setLoading(false);
         return;
       }
@@ -118,38 +127,37 @@ export default function UserManagement() {
       const userIds = profiles.map(p => p.id);
       const { data: roles, error: rolesError } = await supabase
         .from("user_roles")
-        .select("user_id")
-        .in("user_id", userIds)
-        .eq("role", "hr_admin");
+        .select("user_id, role")
+        .in("user_id", userIds);
       
       if (rolesError) throw rolesError;
       
-      // Filter to only HR admins
-      const hrAdminIds = new Set(roles?.map(r => r.user_id) || []);
-      const hrAdminProfiles = profiles.filter(p => hrAdminIds.has(p.id));
+      // Map profiles with their roles
+      const users: OrgUser[] = profiles.map(p => {
+        const userRole = roles?.find(r => r.user_id === p.id);
+        return {
+          id: p.id,
+          full_name: p.full_name,
+          created_at: p.created_at,
+          role: userRole?.role as AppRole | null,
+        };
+      });
       
-      // Get emails from auth (we'll just show the full_name for now since we can't access auth.users)
-      const admins: HRAdmin[] = hrAdminProfiles.map(p => ({
-        id: p.id,
-        full_name: p.full_name,
-        email: null, // Email not accessible from profiles
-        created_at: p.created_at,
-      }));
-      
-      setHrAdmins(admins);
+      setOrgUsers(users);
     } catch (error) {
-      console.error("Error fetching HR admins:", error);
-      toast.error("Failed to load HR admins");
+      console.error("Error fetching users:", error);
+      toast.error("Failed to load users");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInviteUser = async () => {
-    if (!inviteEmail || !inviteFullName || !organizationId) return;
+  const handleCreateUser = async () => {
+    if (!inviteEmail || !inviteFullName || !invitePassword || !organizationId) return;
     
     // Check limit
-    if (hrAdmins.length >= maxHrAdmins) {
+    const hrAdminCount = orgUsers.filter(u => u.role === "hr_admin").length;
+    if (inviteRole === "hr_admin" && hrAdminCount >= maxHrAdmins) {
       toast.error(`You have reached the maximum of ${maxHrAdmins} HR admins for your plan.`);
       return;
     }
@@ -157,11 +165,9 @@ export default function UserManagement() {
     setInviting(true);
     
     try {
-      // Sign up the new user with organization_id in metadata
-      const tempPassword = crypto.randomUUID();
       const { data, error } = await supabase.auth.signUp({
         email: inviteEmail,
-        password: tempPassword,
+        password: invitePassword,
         options: {
           emailRedirectTo: `${window.location.origin}/auth`,
           data: {
@@ -190,7 +196,6 @@ export default function UserManagement() {
         .maybeSingle();
       
       if (!existingProfile) {
-        // Profile wasn't created by trigger, create it manually
         const { error: profileError } = await supabase.from("profiles").insert({
           id: newUserId,
           full_name: inviteFullName,
@@ -202,7 +207,6 @@ export default function UserManagement() {
           throw new Error("Failed to create user profile");
         }
       } else if (!existingProfile.organization_id) {
-        // Profile exists but without org, update it
         const { error: updateError } = await supabase
           .from("profiles")
           .update({ organization_id: organizationId, full_name: inviteFullName })
@@ -213,46 +217,63 @@ export default function UserManagement() {
         }
       }
       
-      // Now add hr_admin role (after profile is linked to org)
+      // Add role
       const { error: roleError } = await supabase.from("user_roles").insert({
         user_id: newUserId,
-        role: "hr_admin",
+        role: inviteRole,
       });
       
       if (roleError) {
         console.error("Role assignment error:", roleError);
-        throw new Error("Failed to assign HR Admin role. Please try again.");
+        throw new Error("Failed to assign role. Please try again.");
       }
       
-      setInviteDialogOpen(false);
-      setInviteEmail("");
-      setInviteFullName("");
-      toast.success("HR Admin invited! They will receive an email to set their password.");
-      fetchHRAdmins();
+      // Show created credentials
+      setCreatedCredentials({ email: inviteEmail, password: invitePassword });
+      fetchOrgUsers();
     } catch (error: any) {
-      console.error("Error inviting user:", error);
+      console.error("Error creating user:", error);
       if (error.message?.includes("already registered")) {
         toast.error("This email is already registered.");
       } else {
-        toast.error(error.message || "Failed to invite user");
+        toast.error(error.message || "Failed to create user");
       }
     } finally {
       setInviting(false);
     }
   };
 
-  const handleRemoveUser = async (userId: string) => {
+  const handleCloseCreateDialog = () => {
+    setCreateDialogOpen(false);
+    setInviteEmail("");
+    setInviteFullName("");
+    setInvitePassword("");
+    setInviteRole("hr_admin");
+    setShowPassword(false);
+    setCreatedCredentials(null);
+    setCopiedField(null);
+  };
+
+  const handleCopy = async (text: string, field: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const handleRemoveUser = async (userId: string, role: AppRole | null) => {
     setDeletingUserId(userId);
     
     try {
       // Remove the user's role
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .delete()
-        .eq("user_id", userId)
-        .eq("role", "hr_admin");
-      
-      if (roleError) throw roleError;
+      if (role) {
+        const { error: roleError } = await supabase
+          .from("user_roles")
+          .delete()
+          .eq("user_id", userId)
+          .eq("role", role);
+        
+        if (roleError) throw roleError;
+      }
       
       // Update their profile to remove organization association
       const { error: profileError } = await supabase
@@ -262,8 +283,8 @@ export default function UserManagement() {
       
       if (profileError) throw profileError;
       
-      toast.success("HR Admin removed successfully");
-      fetchHRAdmins();
+      toast.success("User removed successfully");
+      fetchOrgUsers();
     } catch (error: any) {
       console.error("Error removing user:", error);
       toast.error("Failed to remove user");
@@ -272,9 +293,10 @@ export default function UserManagement() {
     }
   };
 
-  const handleOpenEditDialog = (admin: HRAdmin) => {
-    setEditingUser(admin);
-    setEditFullName(admin.full_name || "");
+  const handleOpenEditDialog = (userItem: OrgUser) => {
+    setEditingUser(userItem);
+    setEditFullName(userItem.full_name || "");
+    setEditRole(userItem.role || "hr_admin");
     setEditDialogOpen(true);
   };
 
@@ -283,18 +305,39 @@ export default function UserManagement() {
     
     setIsUpdating(true);
     try {
-      const { error } = await supabase
+      // Update profile
+      const { error: profileError } = await supabase
         .from("profiles")
         .update({ full_name: editFullName.trim() })
         .eq("id", editingUser.id);
       
-      if (error) throw error;
+      if (profileError) throw profileError;
+      
+      // Update role if changed
+      if (editingUser.role !== editRole) {
+        // Remove old role
+        if (editingUser.role) {
+          await supabase
+            .from("user_roles")
+            .delete()
+            .eq("user_id", editingUser.id)
+            .eq("role", editingUser.role);
+        }
+        
+        // Add new role
+        const { error: roleError } = await supabase.from("user_roles").insert({
+          user_id: editingUser.id,
+          role: editRole,
+        });
+        
+        if (roleError) throw roleError;
+      }
       
       toast.success("User updated successfully");
       setEditDialogOpen(false);
       setEditingUser(null);
       setEditFullName("");
-      fetchHRAdmins();
+      fetchOrgUsers();
     } catch (error: any) {
       console.error("Error updating user:", error);
       toast.error("Failed to update user");
@@ -311,6 +354,13 @@ export default function UserManagement() {
       year: "numeric",
     });
   };
+
+  const getRoleBadgeColor = (role: AppRole | null) => {
+    if (role === "org_admin") return "bg-highlight/10 text-highlight border-highlight/20";
+    return "bg-primary/10 text-primary border-primary/20";
+  };
+
+  const hrAdminCount = orgUsers.filter(u => u.role === "hr_admin").length;
 
   if (authLoading || loading) {
     return (
@@ -342,63 +392,150 @@ export default function UserManagement() {
           <div className="flex items-center gap-4">
             <Badge variant="secondary" className="text-base px-4 py-2">
               <Users className="w-4 h-4 me-2" />
-              {hrAdmins.length} / {maxHrAdmins} {t.orgDashboard.hrAdmins}
+              {hrAdminCount} / {maxHrAdmins} {t.orgDashboard.hrAdmins}
             </Badge>
-            <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+            <Dialog open={createDialogOpen} onOpenChange={(open) => !open && handleCloseCreateDialog()}>
               <DialogTrigger asChild>
-                <Button disabled={hrAdmins.length >= maxHrAdmins}>
+                <Button onClick={() => setCreateDialogOpen(true)}>
                   <UserPlus className="w-4 h-4 me-2" />
-                  {t.userManagement.inviteHRAdmin}
+                  Create User
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>{t.userManagement.inviteHRAdmin}</DialogTitle>
+                  <DialogTitle>Create New User</DialogTitle>
                   <DialogDescription>
-                    {t.userManagement.sendInvitation}
+                    Create a new user for your organization with a temporary password.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="full-name">{t.userManagement.fullName}</Label>
-                    <Input
-                      id="full-name"
-                      value={inviteFullName}
-                      onChange={(e) => setInviteFullName(e.target.value)}
-                      placeholder={t.userManagement.enterFullName}
-                    />
+                
+                {createdCredentials ? (
+                  <div className="space-y-4 py-4">
+                    <div className="p-4 bg-success/10 rounded-lg border border-success/20">
+                      <p className="text-success font-medium mb-2">User created successfully!</p>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Share these credentials with the user. They should change their password after first login.
+                      </p>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Label className="w-20 shrink-0">Email:</Label>
+                          <code className="flex-1 bg-muted px-3 py-2 rounded text-sm">{createdCredentials.email}</code>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleCopy(createdCredentials.email, "email")}
+                          >
+                            {copiedField === "email" ? (
+                              <Check className="h-4 w-4 text-success" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Label className="w-20 shrink-0">Password:</Label>
+                          <code className="flex-1 bg-muted px-3 py-2 rounded text-sm">{createdCredentials.password}</code>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleCopy(createdCredentials.password, "password")}
+                          >
+                            {copiedField === "password" ? (
+                              <Check className="h-4 w-4 text-success" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    <Button onClick={handleCloseCreateDialog} className="w-full">
+                      Done
+                    </Button>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">{t.userManagement.emailAddress}</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                      placeholder={t.userManagement.enterEmail}
-                    />
+                ) : (
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="role">Role</Label>
+                      <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as AppRole)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="hr_admin">HR Admin</SelectItem>
+                          <SelectItem value="org_admin">Organization Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="full-name">{t.userManagement.fullName}</Label>
+                      <Input
+                        id="full-name"
+                        value={inviteFullName}
+                        onChange={(e) => setInviteFullName(e.target.value)}
+                        placeholder={t.userManagement.enterFullName}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">{t.userManagement.emailAddress}</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={inviteEmail}
+                        onChange={(e) => setInviteEmail(e.target.value)}
+                        placeholder={t.userManagement.enterEmail}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Temporary Password</Label>
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          value={invitePassword}
+                          onChange={(e) => setInvitePassword(e.target.value)}
+                          placeholder="Enter a temporary password"
+                          className="pr-10"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Min 6 characters. This will be shown after creation.
+                      </p>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={handleCloseCreateDialog}>
+                        {t.userManagement.cancel}
+                      </Button>
+                      <Button 
+                        onClick={handleCreateUser} 
+                        disabled={inviting || !inviteEmail || !inviteFullName || !invitePassword || invitePassword.length < 6}
+                      >
+                        {inviting && <Loader2 className="w-4 h-4 animate-spin me-2" />}
+                        Create User
+                      </Button>
+                    </DialogFooter>
                   </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
-                    {t.userManagement.cancel}
-                  </Button>
-                  <Button 
-                    onClick={handleInviteUser} 
-                    disabled={inviting || !inviteEmail || !inviteFullName}
-                  >
-                    {inviting && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-                    <Mail className="w-4 h-4 me-2" />
-                    {t.userManagement.sendInvite}
-                  </Button>
-                </DialogFooter>
+                )}
               </DialogContent>
             </Dialog>
           </div>
         </div>
 
         {/* Limit Warning */}
-        {hrAdmins.length >= maxHrAdmins && (
+        {hrAdminCount >= maxHrAdmins && (
           <Card className="border-warning bg-warning/10">
             <CardContent className="py-4">
               <p className="text-warning-foreground flex items-center gap-2">
@@ -409,7 +546,7 @@ export default function UserManagement() {
           </Card>
         )}
 
-        {/* HR Admins Table */}
+        {/* Users Table */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -417,15 +554,15 @@ export default function UserManagement() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Shield className="w-5 h-5" />
-                {t.userManagement.hrAdminUsers}
+                <Users className="w-5 h-5" />
+                Organization Users
               </CardTitle>
               <CardDescription>
-                {t.userManagement.hrAdminDesc}
+                Manage users and their roles within your organization
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {hrAdmins.length === 0 ? (
+              {orgUsers.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-foreground mb-2">
@@ -434,9 +571,9 @@ export default function UserManagement() {
                   <p className="text-muted-foreground mb-4">
                     {t.userManagement.inviteFirst}
                   </p>
-                  <Button onClick={() => setInviteDialogOpen(true)}>
+                  <Button onClick={() => setCreateDialogOpen(true)}>
                     <UserPlus className="w-4 h-4 me-2" />
-                    {t.userManagement.inviteHRAdmin}
+                    Create First User
                   </Button>
                 </div>
               ) : (
@@ -446,36 +583,40 @@ export default function UserManagement() {
                       <TableHead>{t.userManagement.user}</TableHead>
                       <TableHead>{t.userManagement.role}</TableHead>
                       <TableHead>{t.userManagement.added}</TableHead>
-                      <TableHead className="w-20"></TableHead>
+                      <TableHead className="w-28"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {hrAdmins.map((admin) => (
-                      <TableRow key={admin.id}>
+                    {orgUsers.map((userItem) => (
+                      <TableRow key={userItem.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                              <Shield className="w-5 h-5 text-primary" />
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                              userItem.role === "org_admin" ? "bg-highlight/10" : "bg-primary/10"
+                            }`}>
+                              <Shield className={`w-5 h-5 ${
+                                userItem.role === "org_admin" ? "text-highlight" : "text-primary"
+                              }`} />
                             </div>
                             <div>
                               <p className="font-medium">
-                                {admin.full_name || "Unknown"}
+                                {userItem.full_name || "Unknown"}
                               </p>
-                              {admin.email && (
-                                <p className="text-sm text-muted-foreground">
-                                  {admin.email}
-                                </p>
+                              {userItem.id === user?.id && (
+                                <p className="text-xs text-muted-foreground">You</p>
                               )}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="secondary">HR Admin</Badge>
+                          <Badge variant="outline" className={getRoleBadgeColor(userItem.role)}>
+                            {userItem.role === "org_admin" ? "Org Admin" : "HR Admin"}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <Calendar className="w-4 h-4" />
-                            {formatDate(admin.created_at)}
+                            {formatDate(userItem.created_at)}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -484,43 +625,46 @@ export default function UserManagement() {
                               variant="ghost"
                               size="icon"
                               className="text-muted-foreground hover:text-foreground"
-                              onClick={() => handleOpenEditDialog(admin)}
+                              onClick={() => handleOpenEditDialog(userItem)}
                             >
                               <Pencil className="w-4 h-4" />
                             </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                  disabled={deletingUserId === admin.id}
-                                >
-                                  {deletingUserId === admin.id ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                  ) : (
-                                    <Trash2 className="w-4 h-4" />
-                                  )}
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>{t.userManagement.removeHRAdmin}</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    {t.userManagement.removeConfirm} {admin.full_name || t.common.noData} {t.userManagement.removeWarning}
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>{t.userManagement.cancel}</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleRemoveUser(admin.id)}
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            {userItem.id !== user?.id && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    disabled={deletingUserId === userItem.id}
                                   >
-                                    {t.userManagement.remove}
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                                    {deletingUserId === userItem.id ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="w-4 h-4" />
+                                    )}
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Remove User</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to remove {userItem.full_name || "this user"} from your organization? 
+                                      They will lose access to all organization resources.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>{t.userManagement.cancel}</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleRemoveUser(userItem.id, userItem.role)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                      {t.userManagement.remove}
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -536,9 +680,9 @@ export default function UserManagement() {
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{t.common.edit} {t.userManagement.user}</DialogTitle>
+              <DialogTitle>Edit User</DialogTitle>
               <DialogDescription>
-                {t.userManagement.hrAdminDesc}
+                Update user details and role assignment.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -550,6 +694,18 @@ export default function UserManagement() {
                   onChange={(e) => setEditFullName(e.target.value)}
                   placeholder={t.userManagement.enterFullName}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-role">Role</Label>
+                <Select value={editRole} onValueChange={(v) => setEditRole(v as AppRole)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="hr_admin">HR Admin</SelectItem>
+                    <SelectItem value="org_admin">Organization Admin</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <DialogFooter>
