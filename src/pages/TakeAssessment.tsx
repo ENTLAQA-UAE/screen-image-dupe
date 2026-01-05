@@ -978,8 +978,8 @@ export default function TakeAssessment() {
               transition={{ duration: 0.2 }}
             >
               <Card className="shadow-elegant">
-                <CardContent className="pt-8 pb-8">
-                  <h2 className="text-xl font-semibold mb-8 font-display leading-relaxed">{question.text}</h2>
+                <CardContent className="pt-8 pb-8" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                  <h2 className={`text-xl font-semibold mb-8 font-display leading-relaxed ${isArabic ? 'text-right' : 'text-left'}`}>{question.text}</h2>
 
                   {isMultiSelect ? (
                     <div className="space-y-3">
@@ -998,7 +998,7 @@ export default function TakeAssessment() {
                               checked={isChecked}
                               onCheckedChange={(checked) => handleMultiAnswer(question.id, optionValue, !!checked)}
                             />
-                            <Label className="flex-1 cursor-pointer text-base">{option.text}</Label>
+                            <Label className={`flex-1 cursor-pointer text-base ${isArabic ? 'text-right' : 'text-left'}`}>{option.text}</Label>
                           </div>
                         );
                       })}
@@ -1026,7 +1026,7 @@ export default function TakeAssessment() {
                               value={optionValue.toString()}
                               id={`option-${index}`}
                             />
-                            <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer text-base">
+                            <Label htmlFor={`option-${index}`} className={`flex-1 cursor-pointer text-base ${isArabic ? 'text-right' : 'text-left'}`}>
                               {option.text}
                             </Label>
                           </div>

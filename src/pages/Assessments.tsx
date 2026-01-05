@@ -462,10 +462,12 @@ const Assessments = () => {
                           <Edit className="w-4 h-4 mr-2" />
                           {t.assessments.edit}
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate(`/assessments/new?edit=${assessment.id}`)}>
-                          <FileText className="w-4 h-4 mr-2" />
-                          {t.builder.questions}
-                        </DropdownMenuItem>
+                        {assessment.status === 'draft' && (
+                          <DropdownMenuItem onClick={() => navigate(`/assessments/new?edit=${assessment.id}`)}>
+                            <FileText className="w-4 h-4 mr-2" />
+                            {t.builder.questions}
+                          </DropdownMenuItem>
+                        )}
                         {/* Status change options */}
                         {assessment.status !== 'active' && (
                           <DropdownMenuItem onClick={() => handleStatusChange(assessment.id, 'active')}>
