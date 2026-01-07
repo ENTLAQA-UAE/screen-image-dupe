@@ -3,92 +3,16 @@ import html2canvas from "html2canvas";
 import { format } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
 
-type Language = 'en' | 'ar';
+// ============= Types =============
+export type Language = 'en' | 'ar';
 
-const translations = {
-  en: {
-    assessmentReport: "Assessment Report",
-    groupAssessmentReport: "Group Assessment Report",
-    participantInformation: "Participant Information",
-    name: "Name",
-    email: "Email",
-    assessment: "Assessment",
-    type: "Type",
-    group: "Group",
-    completed: "Completed",
-    results: "Results",
-    correct: "correct",
-    grade: "Grade",
-    aiGeneratedFeedback: "AI-Generated Feedback",
-    generatedOn: "Generated on",
-    page: "Page",
-    of: "of",
-    assessmentDetails: "Assessment Details",
-    period: "Period",
-    to: "to",
-    statisticsOverview: "Statistics Overview",
-    total: "Total",
-    completionRate: "Completed",
-    avgScore: "Avg Score",
-    highest: "Highest",
-    participants: "Participants",
-    status: "Status",
-    score: "Score",
-    anonymous: "Anonymous",
-    andMore: "and more participants",
-    employeeCode: "Employee Code",
-    department: "Department",
-    cognitive: "Cognitive",
-    personality: "Personality",
-    situational: "Situational",
-    language: "Language",
-    invited: "Invited",
-    started: "Started",
-    traitAnalysis: "Trait Analysis",
-  },
-  ar: {
-    assessmentReport: "تقرير التقييم",
-    groupAssessmentReport: "تقرير تقييم المجموعة",
-    participantInformation: "معلومات المشارك",
-    name: "الاسم",
-    email: "البريد الإلكتروني",
-    assessment: "التقييم",
-    type: "النوع",
-    group: "المجموعة",
-    completed: "تاريخ الإكمال",
-    results: "النتائج",
-    correct: "صحيحة",
-    grade: "التقدير",
-    aiGeneratedFeedback: "ملاحظات الذكاء الاصطناعي",
-    generatedOn: "تم الإنشاء في",
-    page: "صفحة",
-    of: "من",
-    assessmentDetails: "تفاصيل التقييم",
-    period: "الفترة",
-    to: "إلى",
-    statisticsOverview: "نظرة عامة على الإحصائيات",
-    total: "المجموع",
-    completionRate: "نسبة الإكمال",
-    avgScore: "متوسط الدرجة",
-    highest: "الأعلى",
-    participants: "المشاركون",
-    status: "الحالة",
-    score: "الدرجة",
-    anonymous: "مجهول",
-    andMore: "مشاركين آخرين",
-    employeeCode: "رقم الموظف",
-    department: "القسم",
-    cognitive: "معرفي",
-    personality: "شخصية",
-    situational: "مواقف",
-    language: "لغة",
-    invited: "مدعو",
-    started: "بدأ",
-    traitAnalysis: "تحليل السمات",
-  }
-};
+export interface OrganizationBranding {
+  name: string;
+  logoUrl?: string | null;
+  primaryColor?: string | null;
+}
 
-interface ParticipantReport {
+export interface ParticipantReport {
   participantName: string;
   participantEmail: string;
   employeeCode?: string;
@@ -105,19 +29,17 @@ interface ParticipantReport {
     traits?: Record<string, number>;
   } | null;
   aiReport: string | null;
-  organizationName: string;
-  organizationLogo?: string;
+  organization: OrganizationBranding;
   language?: Language;
 }
 
-interface GroupReport {
+export interface GroupReport {
   groupName: string;
   assessmentTitle: string;
   assessmentType: string;
   startDate: string | null;
   endDate: string | null;
-  organizationName: string;
-  organizationLogo?: string;
+  organization: OrganizationBranding;
   stats: {
     totalParticipants: number;
     completed: number;
@@ -139,27 +61,247 @@ interface GroupReport {
   aiNarrative?: string;
 }
 
-// Build sections HTML
-function buildSectionsHtml(sections: Array<{ label: string; value: string }>): string {
-  return sections.map(s => `
-    <div style="background:#f8fafc;padding:15px;border-radius:8px;">
-      <div style="color:#64748b;font-size:12px;margin-bottom:5px;">${s.label}</div>
-      <div style="color:#0f172a;font-weight:600;font-size:14px;">${s.value}</div>
-    </div>
-  `).join('');
+// ============= Translations =============
+const translations = {
+  en: {
+    assessmentReport: "Assessment Report",
+    groupAssessmentReport: "Group Assessment Report",
+    participantInformation: "Participant Information",
+    name: "Name",
+    email: "Email",
+    assessment: "Assessment",
+    type: "Type",
+    group: "Group",
+    completed: "Completed",
+    results: "Results",
+    correct: "Correct Answers",
+    grade: "Grade",
+    aiGeneratedFeedback: "AI-Generated Feedback",
+    generatedOn: "Generated on",
+    page: "Page",
+    of: "of",
+    assessmentDetails: "Assessment Details",
+    period: "Period",
+    to: "to",
+    statisticsOverview: "Statistics Overview",
+    total: "Total",
+    completionRate: "Completion Rate",
+    avgScore: "Average Score",
+    highest: "Highest Score",
+    participants: "Participants",
+    status: "Status",
+    score: "Score",
+    anonymous: "Anonymous",
+    andMore: "and more participants",
+    employeeCode: "Employee Code",
+    department: "Department",
+    cognitive: "Cognitive",
+    personality: "Personality",
+    situational: "Situational",
+    language: "Language",
+    invited: "Invited",
+    started: "Started",
+    traitAnalysis: "Trait Analysis",
+    poweredBy: "Powered by",
+  },
+  ar: {
+    assessmentReport: "تقرير التقييم",
+    groupAssessmentReport: "تقرير تقييم المجموعة",
+    participantInformation: "معلومات المشارك",
+    name: "الاسم",
+    email: "البريد الإلكتروني",
+    assessment: "التقييم",
+    type: "النوع",
+    group: "المجموعة",
+    completed: "تاريخ الإكمال",
+    results: "النتائج",
+    correct: "الإجابات الصحيحة",
+    grade: "التقدير",
+    aiGeneratedFeedback: "ملاحظات الذكاء الاصطناعي",
+    generatedOn: "تم الإنشاء في",
+    page: "صفحة",
+    of: "من",
+    assessmentDetails: "تفاصيل التقييم",
+    period: "الفترة",
+    to: "إلى",
+    statisticsOverview: "نظرة عامة على الإحصائيات",
+    total: "المجموع",
+    completionRate: "نسبة الإكمال",
+    avgScore: "متوسط الدرجة",
+    highest: "أعلى درجة",
+    participants: "المشاركون",
+    status: "الحالة",
+    score: "الدرجة",
+    anonymous: "مجهول",
+    andMore: "مشاركين آخرين",
+    employeeCode: "رقم الموظف",
+    department: "القسم",
+    cognitive: "معرفي",
+    personality: "شخصية",
+    situational: "مواقف",
+    language: "لغة",
+    invited: "مدعو",
+    started: "بدأ",
+    traitAnalysis: "تحليل السمات",
+    poweredBy: "مدعوم من",
+  }
+};
+
+// ============= Utility Functions =============
+function getTranslations(lang: Language) {
+  return translations[lang];
 }
 
-// Build stats HTML
-function buildStatsHtml(stats: { label: string; value: string | number }[]): string {
-  return stats.slice(0, 4).map(stat => `
-    <div style="background:linear-gradient(135deg,#f0f5ff 0%,#e8ecff 100%);padding:20px;border-radius:10px;text-align:center;">
-      <div style="color:#6366f1;font-size:28px;font-weight:700;">${stat.value}</div>
-      <div style="color:#64748b;font-size:12px;margin-top:5px;">${stat.label}</div>
-    </div>
-  `).join('');
+function getDirection(lang: Language): 'rtl' | 'ltr' {
+  return lang === 'ar' ? 'rtl' : 'ltr';
 }
 
-// Generate PDF from HTML using html2canvas
+function getTextAlign(lang: Language): 'right' | 'left' {
+  return lang === 'ar' ? 'right' : 'left';
+}
+
+function getDateLocale(lang: Language) {
+  return lang === 'ar' ? ar : enUS;
+}
+
+function formatDate(date: string | null, lang: Language, includeTime = false): string {
+  if (!date) return "-";
+  const formatStr = includeTime ? "PPP p" : "PP";
+  return format(new Date(date), formatStr, { locale: getDateLocale(lang) });
+}
+
+function getPrimaryColor(org: OrganizationBranding): string {
+  return org.primaryColor || '#0f172a';
+}
+
+function hexToHsl(hex: string): { h: number; s: number; l: number } {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return { h: 220, s: 50, l: 20 };
+  
+  let r = parseInt(result[1], 16) / 255;
+  let g = parseInt(result[2], 16) / 255;
+  let b = parseInt(result[3], 16) / 255;
+  
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0;
+  const l = (max + min) / 2;
+
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+      case g: h = ((b - r) / d + 2) / 6; break;
+      case b: h = ((r - g) / d + 4) / 6; break;
+    }
+  }
+  
+  return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+}
+
+function getGradientColors(primaryColor: string): { start: string; end: string } {
+  const hsl = hexToHsl(primaryColor);
+  return {
+    start: `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`,
+    end: `hsl(${hsl.h + 20}, ${Math.max(hsl.s - 10, 30)}%, ${Math.min(hsl.l + 15, 45)}%)`,
+  };
+}
+
+// ============= HTML Template Builders =============
+function buildHeaderHtml(
+  title: string, 
+  org: OrganizationBranding, 
+  lang: Language
+): string {
+  const gradient = getGradientColors(getPrimaryColor(org));
+  const dir = getDirection(lang);
+  const textAlign = getTextAlign(lang);
+  
+  const logoHtml = org.logoUrl ? `
+    <div style="margin-bottom: 15px;">
+      <img src="${org.logoUrl}" alt="${org.name}" style="max-height: 60px; max-width: 200px; object-fit: contain;" crossorigin="anonymous" />
+    </div>
+  ` : '';
+
+  return `
+    <div style="background: linear-gradient(135deg, ${gradient.start} 0%, ${gradient.end} 100%); color: white; padding: 35px 40px; border-radius: 16px; text-align: center; margin-bottom: 35px; direction: ${dir};">
+      ${logoHtml}
+      <h1 style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: 0.5px; text-align: ${textAlign === 'right' ? 'center' : 'center'};">${title}</h1>
+      <div style="margin-top: 8px; font-size: 14px; opacity: 0.9;">${org.name}</div>
+    </div>
+  `;
+}
+
+function buildSectionHeader(title: string, primaryColor: string): string {
+  return `
+    <h2 style="color: ${primaryColor}; font-size: 17px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid ${primaryColor}; font-weight: 600;">
+      ${title}
+    </h2>
+  `;
+}
+
+function buildInfoGrid(items: { label: string; value: string }[], lang: Language): string {
+  const dir = getDirection(lang);
+  const textAlign = getTextAlign(lang);
+  
+  return `
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; direction: ${dir};">
+      ${items.map(item => `
+        <div style="background: #f8fafc; padding: 14px 16px; border-radius: 10px; text-align: ${textAlign};">
+          <div style="color: #64748b; font-size: 11px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">${item.label}</div>
+          <div style="color: #0f172a; font-weight: 600; font-size: 14px;">${item.value}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function buildStatsGrid(stats: { label: string; value: string | number }[], primaryColor: string, lang: Language): string {
+  const dir = getDirection(lang);
+  const hsl = hexToHsl(primaryColor);
+  const bgStart = `hsl(${hsl.h}, 30%, 96%)`;
+  const bgEnd = `hsl(${hsl.h}, 25%, 93%)`;
+  
+  return `
+    <div style="display: grid; grid-template-columns: repeat(${Math.min(stats.length, 4)}, 1fr); gap: 12px; direction: ${dir};">
+      ${stats.slice(0, 4).map(stat => `
+        <div style="background: linear-gradient(135deg, ${bgStart} 0%, ${bgEnd} 100%); padding: 20px 16px; border-radius: 12px; text-align: center;">
+          <div style="color: ${primaryColor}; font-size: 28px; font-weight: 700;">${stat.value}</div>
+          <div style="color: #64748b; font-size: 11px; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.3px;">${stat.label}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function buildAiFeedbackSection(content: string, title: string, primaryColor: string, lang: Language): string {
+  const dir = getDirection(lang);
+  const textAlign = getTextAlign(lang);
+  const hsl = hexToHsl(primaryColor);
+  
+  return `
+    <div style="margin-bottom: 30px; direction: ${dir};">
+      ${buildSectionHeader(title, primaryColor)}
+      <div style="background: linear-gradient(135deg, hsl(${hsl.h}, 40%, 97%) 0%, hsl(${hsl.h}, 35%, 94%) 100%); border: 1px solid hsl(${hsl.h}, 50%, 85%); padding: 24px; border-radius: 12px; line-height: 1.8; color: #1e293b; font-size: 14px; white-space: pre-wrap; text-align: ${textAlign};">
+        ${content}
+      </div>
+    </div>
+  `;
+}
+
+function buildFooterHtml(t: typeof translations.en, org: OrganizationBranding, lang: Language): string {
+  const dateStr = format(new Date(), "PPP p", { locale: getDateLocale(lang) });
+  const dir = getDirection(lang);
+  
+  return `
+    <div style="text-align: center; color: #94a3b8; font-size: 10px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; direction: ${dir};">
+      <div>${t.generatedOn} ${dateStr}</div>
+      <div style="margin-top: 4px;">${t.poweredBy} ${org.name}</div>
+    </div>
+  `;
+}
+
+// ============= PDF Generation Core =============
 async function generatePdfFromHtml(htmlContent: string, fileName: string): Promise<void> {
   const container = document.createElement('div');
   container.innerHTML = htmlContent;
@@ -177,6 +319,7 @@ async function generatePdfFromHtml(htmlContent: string, fileName: string): Promi
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
+      allowTaint: true,
     });
 
     const imgData = canvas.toDataURL('image/png');
@@ -222,130 +365,153 @@ async function generatePdfFromHtml(htmlContent: string, fileName: string): Promi
   }
 }
 
+function buildDocumentContainer(content: string, lang: Language): string {
+  const dir = getDirection(lang);
+  const textAlign = getTextAlign(lang);
+  const fontFamily = lang === 'ar' 
+    ? "'Segoe UI', 'Tahoma', 'Arial', sans-serif" 
+    : "'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
+  
+  return `
+    <div id="pdf-content" style="
+      width: 794px;
+      padding: 45px;
+      background: white;
+      font-family: ${fontFamily};
+      direction: ${dir};
+      text-align: ${textAlign};
+      line-height: 1.5;
+    ">
+      ${content}
+    </div>
+  `;
+}
+
+// ============= Public Export Functions =============
 export async function generateParticipantPDF(report: ParticipantReport): Promise<void> {
   const lang = report.language || 'en';
-  const t = translations[lang];
-  const isRTL = lang === 'ar';
-  const dateLocale = lang === 'ar' ? ar : enUS;
-  const dir = isRTL ? 'rtl' : 'ltr';
-  const textAlign = isRTL ? 'right' : 'left';
+  const t = getTranslations(lang);
+  const primaryColor = getPrimaryColor(report.organization);
 
-  const completedDate = report.completedAt 
-    ? format(new Date(report.completedAt), "PPP p", { locale: dateLocale })
-    : "-";
-
-  const typeKey = report.assessmentType.toLowerCase() as keyof typeof t;
-  const typeLabel = t[typeKey] || report.assessmentType;
-
-  const sections = [
+  // Build info items
+  const infoItems: { label: string; value: string }[] = [
     { label: t.name, value: report.participantName || t.anonymous },
     { label: t.email, value: report.participantEmail || "-" },
   ];
-  if (report.employeeCode) sections.push({ label: t.employeeCode, value: report.employeeCode });
-  if (report.department) sections.push({ label: t.department, value: report.department });
-  sections.push(
+  
+  if (report.employeeCode) {
+    infoItems.push({ label: t.employeeCode, value: report.employeeCode });
+  }
+  if (report.department) {
+    infoItems.push({ label: t.department, value: report.department });
+  }
+  
+  const typeKey = report.assessmentType.toLowerCase() as keyof typeof t;
+  const typeLabel = (t[typeKey] as string) || report.assessmentType;
+  
+  infoItems.push(
     { label: t.assessment, value: report.assessmentTitle },
-    { label: t.type, value: String(typeLabel) },
+    { label: t.type, value: typeLabel },
     { label: t.group, value: report.groupName },
-    { label: t.completed, value: completedDate }
+    { label: t.completed, value: formatDate(report.completedAt, lang, true) }
   );
 
-  let stats: { label: string; value: string | number }[] = [];
+  // Build stats
+  let statsItems: { label: string; value: string | number }[] = [];
   if (report.scoreSummary) {
     if (report.scoreSummary.percentage !== undefined) {
-      stats.push({ label: t.score, value: `${report.scoreSummary.percentage}%` });
-      stats.push({ label: t.correct, value: `${report.scoreSummary.correctCount || 0}/${report.scoreSummary.totalPossible || 0}` });
-      if (report.scoreSummary.grade) stats.push({ label: t.grade, value: report.scoreSummary.grade });
+      statsItems.push({ label: t.score, value: `${report.scoreSummary.percentage}%` });
+      statsItems.push({ 
+        label: t.correct, 
+        value: `${report.scoreSummary.correctCount || 0}/${report.scoreSummary.totalPossible || 0}` 
+      });
+      if (report.scoreSummary.grade) {
+        statsItems.push({ label: t.grade, value: report.scoreSummary.grade });
+      }
     } else if (report.scoreSummary.traits) {
-      stats = Object.entries(report.scoreSummary.traits).map(([trait, score]) => ({
+      statsItems = Object.entries(report.scoreSummary.traits).map(([trait, score]) => ({
         label: trait.charAt(0).toUpperCase() + trait.slice(1),
         value: score.toFixed(1),
       }));
     }
   }
 
-  const html = `
-    <div id="pdf-content" style="width:794px;padding:40px;background:white;font-family:Arial,sans-serif;direction:${dir};text-align:${textAlign};">
-      <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);color:white;padding:30px;border-radius:12px;text-align:center;margin-bottom:30px;">
-        <h1 style="margin:0;font-size:28px;font-weight:700;">${t.assessmentReport}</h1>
-      </div>
-      <div style="margin-bottom:30px;">
-        <h2 style="color:#6366f1;font-size:18px;margin-bottom:20px;padding-bottom:8px;border-bottom:2px solid #6366f1;">${t.participantInformation}</h2>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">${buildSectionsHtml(sections)}</div>
-      </div>
-      ${stats.length > 0 ? `
-        <div style="margin-bottom:30px;">
-          <h2 style="color:#6366f1;font-size:18px;margin-bottom:20px;padding-bottom:8px;border-bottom:2px solid #6366f1;">${t.results}</h2>
-          <div style="display:grid;grid-template-columns:repeat(${Math.min(stats.length, 4)},1fr);gap:15px;">${buildStatsHtml(stats)}</div>
-        </div>
-      ` : ''}
-      ${report.aiReport ? `
-        <div style="margin-bottom:30px;">
-          <h2 style="color:#6366f1;font-size:18px;margin-bottom:20px;padding-bottom:8px;border-bottom:2px solid #6366f1;">${t.aiGeneratedFeedback}</h2>
-          <div style="background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 100%);border:1px solid #c7d2fe;padding:25px;border-radius:10px;line-height:1.7;color:#0f172a;font-size:14px;white-space:pre-wrap;">${report.aiReport}</div>
-        </div>
-      ` : ''}
-      <div style="text-align:center;color:#94a3b8;font-size:11px;margin-top:40px;padding-top:20px;border-top:1px solid #e2e8f0;">
-        ${t.generatedOn} ${format(new Date(), "PPP p", { locale: dateLocale })}
-      </div>
-    </div>
-  `;
+  // Build HTML content
+  let content = buildHeaderHtml(t.assessmentReport, report.organization, lang);
+  
+  content += `<div style="margin-bottom: 30px;">`;
+  content += buildSectionHeader(t.participantInformation, primaryColor);
+  content += buildInfoGrid(infoItems, lang);
+  content += `</div>`;
 
-  const fileName = `${report.participantName || "participant"}_report.pdf`.replace(/[^a-zA-Z0-9_.-]/g, "_").toLowerCase();
+  if (statsItems.length > 0) {
+    content += `<div style="margin-bottom: 30px;">`;
+    content += buildSectionHeader(t.results, primaryColor);
+    content += buildStatsGrid(statsItems, primaryColor, lang);
+    content += `</div>`;
+  }
+
+  if (report.aiReport) {
+    content += buildAiFeedbackSection(report.aiReport, t.aiGeneratedFeedback, primaryColor, lang);
+  }
+
+  content += buildFooterHtml(t, report.organization, lang);
+
+  const html = buildDocumentContainer(content, lang);
+  const fileName = `${report.participantName || "participant"}_report.pdf`
+    .replace(/[^a-zA-Z0-9_.-\u0600-\u06FF]/g, "_")
+    .toLowerCase();
+  
   await generatePdfFromHtml(html, fileName);
 }
 
 export async function generateGroupPDF(report: GroupReport): Promise<void> {
   const lang = report.language || 'en';
-  const t = translations[lang];
-  const isRTL = lang === 'ar';
-  const dateLocale = lang === 'ar' ? ar : enUS;
-  const dir = isRTL ? 'rtl' : 'ltr';
-  const textAlign = isRTL ? 'right' : 'left';
+  const t = getTranslations(lang);
+  const primaryColor = getPrimaryColor(report.organization);
 
   const typeKey = report.assessmentType.toLowerCase() as keyof typeof t;
-  const typeLabel = t[typeKey] || report.assessmentType;
-  const periodText = `${report.startDate ? format(new Date(report.startDate), "PP", { locale: dateLocale }) : "-"} ${t.to} ${report.endDate ? format(new Date(report.endDate), "PP", { locale: dateLocale }) : "-"}`;
+  const typeLabel = (t[typeKey] as string) || report.assessmentType;
+  
+  const periodText = `${formatDate(report.startDate, lang)} ${t.to} ${formatDate(report.endDate, lang)}`;
 
-  const sections = [
+  const infoItems = [
     { label: t.group, value: report.groupName },
     { label: t.assessment, value: report.assessmentTitle },
-    { label: t.type, value: String(typeLabel) },
+    { label: t.type, value: typeLabel },
     { label: t.period, value: periodText },
   ];
 
-  const stats = [
+  const statsItems = [
     { label: t.total, value: report.stats.totalParticipants },
     { label: t.completionRate, value: `${report.stats.completionRate}%` },
     { label: t.avgScore, value: report.stats.averageScore !== null ? `${report.stats.averageScore}%` : '-' },
     { label: t.highest, value: report.stats.highestScore !== null ? `${report.stats.highestScore}%` : '-' },
   ];
 
-  const html = `
-    <div id="pdf-content" style="width:794px;padding:40px;background:white;font-family:Arial,sans-serif;direction:${dir};text-align:${textAlign};">
-      <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);color:white;padding:30px;border-radius:12px;text-align:center;margin-bottom:30px;">
-        <h1 style="margin:0;font-size:28px;font-weight:700;">${t.groupAssessmentReport}</h1>
-      </div>
-      <div style="margin-bottom:30px;">
-        <h2 style="color:#6366f1;font-size:18px;margin-bottom:20px;padding-bottom:8px;border-bottom:2px solid #6366f1;">${t.assessmentDetails}</h2>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">${buildSectionsHtml(sections)}</div>
-      </div>
-      <div style="margin-bottom:30px;">
-        <h2 style="color:#6366f1;font-size:18px;margin-bottom:20px;padding-bottom:8px;border-bottom:2px solid #6366f1;">${t.statisticsOverview}</h2>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:15px;">${buildStatsHtml(stats)}</div>
-      </div>
-      ${report.aiNarrative ? `
-        <div style="margin-bottom:30px;">
-          <h2 style="color:#6366f1;font-size:18px;margin-bottom:20px;padding-bottom:8px;border-bottom:2px solid #6366f1;">${t.aiGeneratedFeedback}</h2>
-          <div style="background:linear-gradient(135deg,#f5f3ff 0%,#ede9fe 100%);border:1px solid #c7d2fe;padding:25px;border-radius:10px;line-height:1.7;color:#0f172a;font-size:14px;white-space:pre-wrap;">${report.aiNarrative}</div>
-        </div>
-      ` : ''}
-      <div style="text-align:center;color:#94a3b8;font-size:11px;margin-top:40px;padding-top:20px;border-top:1px solid #e2e8f0;">
-        ${t.generatedOn} ${format(new Date(), "PPP p", { locale: dateLocale })}
-      </div>
-    </div>
-  `;
+  // Build HTML content
+  let content = buildHeaderHtml(t.groupAssessmentReport, report.organization, lang);
+  
+  content += `<div style="margin-bottom: 30px;">`;
+  content += buildSectionHeader(t.assessmentDetails, primaryColor);
+  content += buildInfoGrid(infoItems, lang);
+  content += `</div>`;
 
-  const fileName = `${report.groupName}_group_report.pdf`.replace(/[^a-zA-Z0-9_.-]/g, "_").toLowerCase();
+  content += `<div style="margin-bottom: 30px;">`;
+  content += buildSectionHeader(t.statisticsOverview, primaryColor);
+  content += buildStatsGrid(statsItems, primaryColor, lang);
+  content += `</div>`;
+
+  if (report.aiNarrative) {
+    content += buildAiFeedbackSection(report.aiNarrative, t.aiGeneratedFeedback, primaryColor, lang);
+  }
+
+  content += buildFooterHtml(t, report.organization, lang);
+
+  const html = buildDocumentContainer(content, lang);
+  const fileName = `${report.groupName}_group_report.pdf`
+    .replace(/[^a-zA-Z0-9_.-\u0600-\u06FF]/g, "_")
+    .toLowerCase();
+  
   await generatePdfFromHtml(html, fileName);
 }

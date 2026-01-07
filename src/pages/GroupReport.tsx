@@ -68,6 +68,7 @@ interface OrganizationData {
   name: string;
   primary_language: string | null;
   logo_url: string | null;
+  primary_color: string | null;
 }
 
 interface ParticipantData {
@@ -151,7 +152,7 @@ const GroupReport = () => {
       // Fetch organization details
       const { data: orgData } = await supabase
         .from("organizations")
-        .select("id, name, primary_language, logo_url")
+        .select("id, name, primary_language, logo_url, primary_color")
         .eq("id", groupData.organization_id)
         .maybeSingle();
 
@@ -309,8 +310,11 @@ const GroupReport = () => {
         assessmentType: group.assessment?.type || "unknown",
         startDate: group.start_date,
         endDate: group.end_date,
-        organizationName: organization?.name || "Organization",
-        organizationLogo: organization?.logo_url || undefined,
+        organization: {
+          name: organization?.name || "Organization",
+          logoUrl: organization?.logo_url,
+          primaryColor: organization?.primary_color,
+        },
         stats: {
           totalParticipants: stats.totalParticipants,
           completed: stats.completed,
@@ -353,8 +357,11 @@ const GroupReport = () => {
         completedAt: participant.completed_at,
         scoreSummary: participant.score_summary,
         aiReport: participant.ai_report_text,
-        organizationName: organization?.name || "Organization",
-        organizationLogo: organization?.logo_url || undefined,
+        organization: {
+          name: organization?.name || "Organization",
+          logoUrl: organization?.logo_url,
+          primaryColor: organization?.primary_color,
+        },
         language: lang,
       });
       toast.success("PDF exported successfully");

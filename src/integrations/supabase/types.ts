@@ -523,6 +523,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_participant_by_token: {
+        Args: { p_access_token: string }
+        Returns: string
+      }
       get_user_organization_id: { Args: { _user_id?: string }; Returns: string }
       has_role: {
         Args: {
@@ -534,6 +538,10 @@ export type Database = {
       is_hr_admin: { Args: { _user_id?: string }; Returns: boolean }
       is_org_admin: { Args: { _user_id?: string }; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
+      verify_participant_access: {
+        Args: { p_access_token: string; p_participant_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "super_admin" | "org_admin" | "hr_admin"

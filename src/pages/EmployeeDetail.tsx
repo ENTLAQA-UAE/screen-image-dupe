@@ -310,7 +310,9 @@ const EmployeeDetail = () => {
         completedAt: assessment.completed_at,
         scoreSummary: assessment.score_summary,
         aiReport: assessment.ai_report_text,
-        organizationName: employee.organization_name,
+        organization: {
+          name: employee.organization_name,
+        },
       });
       toast.success("PDF exported successfully");
     } catch (error) {
