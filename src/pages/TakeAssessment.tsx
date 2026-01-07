@@ -1234,8 +1234,11 @@ export default function TakeAssessment() {
                           completedAt,
                           scoreSummary: scoreSummary || null,
                           aiReport: aiReport || null,
-                          organizationName: orgName,
-                          organizationLogo: orgLogo,
+                          organization: {
+                            name: orgName,
+                            logoUrl: orgLogo,
+                            primaryColor: resultPrimaryColor,
+                          },
                           language: isArabic ? 'ar' : 'en',
                         });
                         toast.success(isArabic ? "تم تصدير التقرير بنجاح" : "PDF exported successfully");
