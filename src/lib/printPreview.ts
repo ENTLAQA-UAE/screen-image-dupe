@@ -54,8 +54,9 @@ export function openTalentSnapshotPrintPreview(
   organization: OrganizationBranding,
   language: "en" | "ar" = "en"
 ): void {
-  // Store data in sessionStorage for the print preview page to access
-  sessionStorage.setItem("printReportData", JSON.stringify({
+  // Store data in localStorage for the print preview page to access
+  // Use localStorage instead of sessionStorage as it works across tabs
+  localStorage.setItem("printReportData", JSON.stringify({
     organization,
     reportData: data,
   }));
@@ -69,7 +70,7 @@ export function openParticipantPrintPreview(
   organization: OrganizationBranding,
   language: "en" | "ar" = "en"
 ): void {
-  sessionStorage.setItem("printReportData", JSON.stringify({
+  localStorage.setItem("printReportData", JSON.stringify({
     organization,
     reportData: data,
   }));
@@ -82,7 +83,7 @@ export function openGroupPrintPreview(
   organization: OrganizationBranding,
   language: "en" | "ar" = "en"
 ): void {
-  sessionStorage.setItem("printReportData", JSON.stringify({
+  localStorage.setItem("printReportData", JSON.stringify({
     organization,
     reportData: data,
   }));
