@@ -207,34 +207,55 @@ function getGradientColors(primaryColor: string): { start: string; end: string }
   };
 }
 
+// Convert image URL to base64 for embedding in PDF
+async function imageUrlToBase64(url: string): Promise<string | null> {
+  try {
+    // Fetch the image and convert to blob
+    const response = await fetch(url, { mode: 'cors' });
+    if (!response.ok) return null;
+    
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    console.warn('Failed to load logo image:', url);
+    return null;
+  }
+}
+
 // ============= HTML Template Builders =============
 function buildHeaderHtml(
   title: string, 
   org: OrganizationBranding, 
-  lang: Language
+  lang: Language,
+  logoBase64?: string | null
 ): string {
   const gradient = getGradientColors(getPrimaryColor(org));
   const dir = getDirection(lang);
-  const textAlign = getTextAlign(lang);
   
-  const logoHtml = org.logoUrl ? `
+  const logoHtml = logoBase64 ? `
     <div style="margin-bottom: 15px;">
-      <img src="${org.logoUrl}" alt="${org.name}" style="max-height: 60px; max-width: 200px; object-fit: contain;" crossorigin="anonymous" />
+      <img src="${logoBase64}" alt="${org.name}" style="max-height: 60px; max-width: 200px; object-fit: contain;" />
     </div>
   ` : '';
 
   return `
-    <div style="background: linear-gradient(135deg, ${gradient.start} 0%, ${gradient.end} 100%); color: white; padding: 35px 40px; border-radius: 16px; text-align: center; margin-bottom: 35px; direction: ${dir};">
+    <div class="page-break-inside-avoid" style="background: linear-gradient(135deg, ${gradient.start} 0%, ${gradient.end} 100%); color: white; padding: 35px 40px; border-radius: 16px; text-align: center; margin-bottom: 35px; direction: ${dir};">
       ${logoHtml}
-      <h1 style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: 0.5px; text-align: ${textAlign === 'right' ? 'center' : 'center'};">${title}</h1>
+      <h1 style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: 0.5px;">${title}</h1>
       <div style="margin-top: 8px; font-size: 14px; opacity: 0.9;">${org.name}</div>
     </div>
   `;
 }
 
-function buildSectionHeader(title: string, primaryColor: string): string {
+function buildSectionHeader(title: string, primaryColor: string, lang: Language): string {
+  const textAlign = getTextAlign(lang);
   return `
-    <h2 style="color: ${primaryColor}; font-size: 17px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid ${primaryColor}; font-weight: 600;">
+    <h2 style="color: ${primaryColor}; font-size: 17px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid ${primaryColor}; font-weight: 600; text-align: ${textAlign};">
       ${title}
     </h2>
   `;
@@ -248,11 +269,11 @@ function buildInfoGrid(items: { label: string; value: string }[], lang: Language
     : 'color: #64748b; font-size: 11px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;';
 
   return `
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; direction: ${dir};">
+    <div class="page-break-inside-avoid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; direction: ${dir};">
       ${items.map(item => `
-        <div style="background: #f8fafc; padding: 14px 16px; border-radius: 10px; text-align: ${textAlign}; unicode-bidi: plaintext;">
+        <div style="background: #f8fafc; padding: 14px 16px; border-radius: 10px; text-align: ${textAlign};">
           <div style="${labelStyle}">${item.label}</div>
-          <div style="color: #0f172a; font-weight: 600; font-size: 14px; unicode-bidi: plaintext;">${item.value}</div>
+          <div style="color: #0f172a; font-weight: 600; font-size: 14px;">${item.value}</div>
         </div>
       `).join('')}
     </div>
@@ -266,7 +287,7 @@ function buildStatsGrid(stats: { label: string; value: string | number }[], prim
   const bgEnd = `hsl(${hsl.h}, 25%, 93%)`;
   
   return `
-    <div style="display: grid; grid-template-columns: repeat(${Math.min(stats.length, 4)}, 1fr); gap: 12px; direction: ${dir};">
+    <div class="page-break-inside-avoid" style="display: grid; grid-template-columns: repeat(${Math.min(stats.length, 4)}, 1fr); gap: 12px; direction: ${dir};">
       ${stats.slice(0, 4).map(stat => `
         <div style="background: linear-gradient(135deg, ${bgStart} 0%, ${bgEnd} 100%); padding: 20px 16px; border-radius: 12px; text-align: center;">
           <div style="color: ${primaryColor}; font-size: 28px; font-weight: 700;">${stat.value}</div>
@@ -282,11 +303,17 @@ function buildAiFeedbackSection(content: string, title: string, primaryColor: st
   const textAlign = getTextAlign(lang);
   const hsl = hexToHsl(primaryColor);
   
+  // Split content into paragraphs to avoid page breaks mid-paragraph
+  const paragraphs = content.split('\n\n').filter(p => p.trim());
+  const formattedContent = paragraphs.map(p => 
+    `<p style="margin: 0 0 12px 0; text-align: ${textAlign};">${p.trim()}</p>`
+  ).join('');
+  
   return `
     <div style="margin-bottom: 30px; direction: ${dir};">
-      ${buildSectionHeader(title, primaryColor)}
-      <div style="background: linear-gradient(135deg, hsl(${hsl.h}, 40%, 97%) 0%, hsl(${hsl.h}, 35%, 94%) 100%); border: 1px solid hsl(${hsl.h}, 50%, 85%); padding: 24px; border-radius: 12px; line-height: 1.8; color: #1e293b; font-size: 14px; white-space: pre-wrap; text-align: ${textAlign};">
-        ${content}
+      ${buildSectionHeader(title, primaryColor, lang)}
+      <div style="background: linear-gradient(135deg, hsl(${hsl.h}, 40%, 97%) 0%, hsl(${hsl.h}, 35%, 94%) 100%); border: 1px solid hsl(${hsl.h}, 50%, 85%); padding: 24px; border-radius: 12px; line-height: 1.8; color: #1e293b; font-size: 14px;">
+        ${formattedContent}
       </div>
     </div>
   `;
@@ -297,7 +324,7 @@ function buildFooterHtml(t: typeof translations.en, org: OrganizationBranding, l
   const dir = getDirection(lang);
   
   return `
-    <div style="text-align: center; color: #94a3b8; font-size: 10px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; direction: ${dir};">
+    <div class="page-break-inside-avoid" style="text-align: center; color: #94a3b8; font-size: 10px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0; direction: ${dir};">
       <div>${t.generatedOn} ${dateStr}</div>
       <div style="margin-top: 4px;">${t.poweredBy} ${org.name}</div>
     </div>
@@ -318,12 +345,12 @@ async function generatePdfFromHtml(htmlContent: string, fileName: string): Promi
     const element = container.querySelector('#pdf-content') as HTMLElement | null;
     if (!element) throw new Error('PDF content not found');
 
-    // Ensure fonts + images are loaded before rasterizing.
-    // This avoids partially rendered text / blank images.
+    // Ensure fonts are loaded before rasterizing
     if (document.fonts?.ready) {
       await document.fonts.ready;
     }
 
+    // Wait for images to load
     const imgs = Array.from(element.querySelectorAll('img'));
     await Promise.all(
       imgs.map((img) =>
@@ -336,18 +363,21 @@ async function generatePdfFromHtml(htmlContent: string, fileName: string): Promi
       )
     );
 
+    // Small delay to ensure rendering is complete
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
 
-    // Rasterize the whole document once, then slice into A4 pages.
+    // Rasterize the whole document
     const canvas = await html2canvas(element, {
       scale: 2,
       useCORS: true,
       allowTaint: false,
       logging: false,
       backgroundColor: '#ffffff',
-      windowWidth: element.scrollWidth,
+      windowWidth: 794,
       windowHeight: element.scrollHeight,
       scrollX: 0,
       scrollY: 0,
@@ -407,7 +437,7 @@ function buildDocumentContainer(content: string, lang: Language): string {
   const dir = getDirection(lang);
   const textAlign = getTextAlign(lang);
 
-  // Use a proper Arabic font (loaded via Google Fonts) so RTL text renders correctly.
+  // Use proper Arabic font loaded via Google Fonts
   const fontFamily = lang === 'ar'
     ? "'Cairo', 'Noto Naskh Arabic', 'Noto Sans Arabic', 'Tahoma', 'Arial', sans-serif"
     : "'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
@@ -417,6 +447,7 @@ function buildDocumentContainer(content: string, lang: Language): string {
       @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
       #pdf-content { box-sizing: border-box; }
       #pdf-content * { box-sizing: border-box; }
+      .page-break-inside-avoid { break-inside: avoid; page-break-inside: avoid; }
     </style>
   `;
 
@@ -429,7 +460,6 @@ function buildDocumentContainer(content: string, lang: Language): string {
       font-family: ${fontFamily};
       direction: ${dir};
       text-align: ${textAlign};
-      unicode-bidi: plaintext;
       line-height: 1.5;
     ">
       ${content}
@@ -442,6 +472,12 @@ export async function generateParticipantPDF(report: ParticipantReport): Promise
   const lang = report.language || 'en';
   const t = getTranslations(lang);
   const primaryColor = getPrimaryColor(report.organization);
+
+  // Pre-load logo as base64
+  let logoBase64: string | null = null;
+  if (report.organization.logoUrl) {
+    logoBase64 = await imageUrlToBase64(report.organization.logoUrl);
+  }
 
   // Build info items
   const infoItems: { label: string; value: string }[] = [
@@ -487,16 +523,16 @@ export async function generateParticipantPDF(report: ParticipantReport): Promise
   }
 
   // Build HTML content
-  let content = buildHeaderHtml(t.assessmentReport, report.organization, lang);
+  let content = buildHeaderHtml(t.assessmentReport, report.organization, lang, logoBase64);
   
-  content += `<div style="margin-bottom: 30px;">`;
-  content += buildSectionHeader(t.participantInformation, primaryColor);
+  content += `<div class="page-break-inside-avoid" style="margin-bottom: 30px;">`;
+  content += buildSectionHeader(t.participantInformation, primaryColor, lang);
   content += buildInfoGrid(infoItems, lang);
   content += `</div>`;
 
   if (statsItems.length > 0) {
-    content += `<div style="margin-bottom: 30px;">`;
-    content += buildSectionHeader(t.results, primaryColor);
+    content += `<div class="page-break-inside-avoid" style="margin-bottom: 30px;">`;
+    content += buildSectionHeader(t.results, primaryColor, lang);
     content += buildStatsGrid(statsItems, primaryColor, lang);
     content += `</div>`;
   }
@@ -520,6 +556,12 @@ export async function generateGroupPDF(report: GroupReport): Promise<void> {
   const t = getTranslations(lang);
   const primaryColor = getPrimaryColor(report.organization);
 
+  // Pre-load logo as base64
+  let logoBase64: string | null = null;
+  if (report.organization.logoUrl) {
+    logoBase64 = await imageUrlToBase64(report.organization.logoUrl);
+  }
+
   const typeKey = report.assessmentType.toLowerCase() as keyof typeof t;
   const typeLabel = (t[typeKey] as string) || report.assessmentType;
   
@@ -540,15 +582,15 @@ export async function generateGroupPDF(report: GroupReport): Promise<void> {
   ];
 
   // Build HTML content
-  let content = buildHeaderHtml(t.groupAssessmentReport, report.organization, lang);
+  let content = buildHeaderHtml(t.groupAssessmentReport, report.organization, lang, logoBase64);
   
-  content += `<div style="margin-bottom: 30px;">`;
-  content += buildSectionHeader(t.assessmentDetails, primaryColor);
+  content += `<div class="page-break-inside-avoid" style="margin-bottom: 30px;">`;
+  content += buildSectionHeader(t.assessmentDetails, primaryColor, lang);
   content += buildInfoGrid(infoItems, lang);
   content += `</div>`;
 
-  content += `<div style="margin-bottom: 30px;">`;
-  content += buildSectionHeader(t.statisticsOverview, primaryColor);
+  content += `<div class="page-break-inside-avoid" style="margin-bottom: 30px;">`;
+  content += buildSectionHeader(t.statisticsOverview, primaryColor, lang);
   content += buildStatsGrid(statsItems, primaryColor, lang);
   content += `</div>`;
 
