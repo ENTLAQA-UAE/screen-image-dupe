@@ -311,86 +311,90 @@ async function generatePdfFromHtml(htmlContent: string, fileName: string): Promi
   container.style.position = 'absolute';
   container.style.left = '-9999px';
   container.style.top = '0';
+  container.style.width = '794px';
   document.body.appendChild(container);
 
   try {
     const element = container.querySelector('#pdf-content') as HTMLElement | null;
     if (!element) throw new Error('PDF content not found');
 
-    // Prefer jsPDF's HTML renderer (better paging + fewer mid-section cuts)
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-
-    const canUseHtml = typeof (pdf as any).html === 'function';
-    if (canUseHtml) {
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-
-      await (pdf as any).html(element, {
-        x: 0,
-        y: 0,
-        width: pdfWidth,
-        windowWidth: element.scrollWidth,
-        margin: [10, 10, 10, 10],
-        autoPaging: 'text',
-        html2canvas: {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          logging: false,
-          backgroundColor: '#ffffff',
-        },
-      });
-
-      pdf.save(fileName);
-      return;
+    // Ensure fonts + images are loaded before rasterizing.
+    // This avoids partially rendered text / blank images.
+    if (document.fonts?.ready) {
+      await document.fonts.ready;
     }
 
-    // Fallback: rasterize whole document and slice (kept for safety)
+    const imgs = Array.from(element.querySelectorAll('img'));
+    await Promise.all(
+      imgs.map((img) =>
+        img.complete
+          ? Promise.resolve()
+          : new Promise<void>((resolve) => {
+              img.addEventListener('load', () => resolve(), { once: true });
+              img.addEventListener('error', () => resolve(), { once: true });
+            })
+      )
+    );
+
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+    // Rasterize the whole document once, then slice into A4 pages.
     const canvas = await html2canvas(element, {
       scale: 2,
       useCORS: true,
+      allowTaint: false,
       logging: false,
       backgroundColor: '#ffffff',
-      allowTaint: true,
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight,
+      scrollX: 0,
+      scrollY: 0,
     });
 
-    const imgData = canvas.toDataURL('image/png');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = canvas.width;
-    const imgHeight = canvas.height;
-    const ratio = pdfWidth / imgWidth;
-    const scaledHeight = imgHeight * ratio;
+    const imgWidthPx = canvas.width;
+    const imgHeightPx = canvas.height;
 
-    if (scaledHeight <= pdfHeight) {
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, scaledHeight);
-    } else {
-      let remainingHeight = scaledHeight;
-      let srcY = 0;
-      let pageNum = 0;
+    const mmPerPx = pdfWidth / imgWidthPx;
+    const pageHeightPx = pdfHeight / mmPerPx;
 
-      while (remainingHeight > 0) {
-        if (pageNum > 0) pdf.addPage();
+    let srcY = 0;
+    let page = 0;
 
-        // Small overlap reduces the chance of cutting through a baseline
-        const overlapMm = 2;
-        const sliceHeight = Math.min(pdfHeight, remainingHeight);
-        const sliceHeightWithOverlap = Math.min(pdfHeight, sliceHeight + (pageNum > 0 ? overlapMm : 0));
+    while (srcY < imgHeightPx) {
+      if (page > 0) pdf.addPage();
 
-        const srcHeight = sliceHeightWithOverlap / ratio;
+      const sliceHeightPx = Math.min(pageHeightPx, imgHeightPx - srcY);
 
-        const pageCanvas = document.createElement('canvas');
-        pageCanvas.width = imgWidth;
-        pageCanvas.height = srcHeight;
-        const ctx = pageCanvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(canvas, 0, srcY, imgWidth, srcHeight, 0, 0, imgWidth, srcHeight);
-          pdf.addImage(pageCanvas.toDataURL('image/png'), 'PNG', 0, 0, pdfWidth, sliceHeightWithOverlap);
-        }
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = imgWidthPx;
+      pageCanvas.height = Math.ceil(sliceHeightPx);
 
-        srcY += srcHeight - (pageNum > 0 ? overlapMm / ratio : 0);
-        remainingHeight -= sliceHeight;
-        pageNum++;
-      }
+      const ctx = pageCanvas.getContext('2d');
+      if (!ctx) break;
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+      ctx.drawImage(
+        canvas,
+        0,
+        srcY,
+        imgWidthPx,
+        sliceHeightPx,
+        0,
+        0,
+        imgWidthPx,
+        sliceHeightPx
+      );
+
+      const sliceImg = pageCanvas.toDataURL('image/png');
+      const sliceHeightMm = sliceHeightPx * mmPerPx;
+
+      pdf.addImage(sliceImg, 'PNG', 0, 0, pdfWidth, sliceHeightMm, undefined, 'FAST');
+
+      srcY += sliceHeightPx;
+      page++;
     }
 
     pdf.save(fileName);
