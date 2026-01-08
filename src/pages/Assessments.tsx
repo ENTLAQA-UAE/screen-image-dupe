@@ -64,22 +64,28 @@ interface Assessment {
   questions_count?: number;
 }
 
-const assessmentTypes = [
-  { value: 'cognitive', label: 'Cognitive Assessment', icon: Brain },
-  { value: 'personality', label: 'Personality Profile', icon: Heart },
-  { value: 'situational', label: 'Situational Judgment', icon: MessageSquare },
-  { value: 'language', label: 'Language Assessment', icon: Languages },
+const getAssessmentTypes = (t: any) => [
+  { value: 'cognitive', label: t.assessments.cognitiveAssessment, icon: Brain },
+  { value: 'personality', label: t.assessments.personalityProfile, icon: Heart },
+  { value: 'situational', label: t.assessments.situationalJudgment, icon: MessageSquare },
+  { value: 'language', label: t.assessments.languageAssessmentType, icon: Languages },
 ];
 
-const statusConfig = {
-  draft: { label: 'Draft', color: 'bg-muted text-muted-foreground border-border', icon: Clock },
-  active: { label: 'Active', color: 'bg-success/10 text-success border-success/20', icon: Play },
-  archived: { label: 'Archived', color: 'bg-accent/10 text-accent border-accent/20', icon: CheckCircle2 },
+const getStatusConfig = (t: any) => ({
+  draft: { label: t.assessments.draft, color: 'bg-muted text-muted-foreground border-border', icon: Clock },
+  active: { label: t.assessments.active, color: 'bg-success/10 text-success border-success/20', icon: Play },
+  archived: { label: t.assessments.archived, color: 'bg-accent/10 text-accent border-accent/20', icon: CheckCircle2 },
+});
+
+const assessmentTypeIcons: Record<string, any> = {
+  cognitive: Brain,
+  personality: Heart,
+  situational: MessageSquare,
+  language: Languages,
 };
 
 const getAssessmentIcon = (type: string) => {
-  const found = assessmentTypes.find(t => t.value === type);
-  return found?.icon || FileText;
+  return assessmentTypeIcons[type?.toLowerCase()] || FileText;
 };
 
 const getIconColor = (type: string) => {
@@ -405,7 +411,7 @@ const Assessments = () => {
           </div>
         ) : !organizationId ? (
           <div className="text-center py-20">
-            <p className="text-muted-foreground">You are not assigned to any organization.</p>
+            <p className="text-muted-foreground">{t.assessments.notAssigned}</p>
           </div>
         ) : filteredAssessments.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card p-12 text-center">
@@ -430,6 +436,8 @@ const Assessments = () => {
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {filteredAssessments.map((assessment, index) => {
+              const assessmentTypes = getAssessmentTypes(t);
+              const statusConfig = getStatusConfig(t);
               const IconComponent = getAssessmentIcon(assessment.type);
               const iconColor = getIconColor(assessment.type);
               const status = statusConfig[assessment.status as keyof typeof statusConfig] || statusConfig.draft;
@@ -502,7 +510,7 @@ const Assessments = () => {
                     {assessment.title}
                   </h3>
                   <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                    {assessment.description || 'No description'}
+                    {assessment.description || t.assessments.noDescription}
                   </p>
 
                   <div className="flex items-center justify-between text-sm">
@@ -511,12 +519,12 @@ const Assessments = () => {
                       {status.label}
                     </span>
                     <span className="text-muted-foreground">
-                      {assessment.questions_count} questions
+                      {assessment.questions_count} {t.assessments.questions.toLowerCase()}
                     </span>
                   </div>
 
                   <div className="mt-4 pt-4 border-t border-border text-xs text-muted-foreground">
-                    Created {formatDate(assessment.created_at)}
+                    {t.assessments.created} {formatDate(assessment.created_at)}
                   </div>
                 </motion.div>
               );
@@ -529,14 +537,14 @@ const Assessments = () => {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Create Assessment</DialogTitle>
+            <DialogTitle>{t.assessments.createAssessment}</DialogTitle>
             <DialogDescription>
-              Create a new assessment template for your organization.
+              {t.assessments.createAssessmentDesc}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Title *</Label>
+              <Label htmlFor="title">{t.builder.assessmentTitle} *</Label>
               <Input
                 id="title"
                 value={formData.title}
@@ -545,7 +553,7 @@ const Assessments = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">{t.builder.description}</Label>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -556,7 +564,7 @@ const Assessments = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Type</Label>
+                <Label>{t.assessments.type}</Label>
                 <Select
                   value={formData.type}
                   onValueChange={(value) => setFormData({ ...formData, type: value })}
@@ -565,7 +573,7 @@ const Assessments = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {assessmentTypes.map((type) => (
+                    {getAssessmentTypes(t).map((type) => (
                       <SelectItem key={type.value} value={type.value}>
                         {type.label}
                       </SelectItem>
@@ -574,7 +582,7 @@ const Assessments = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Language</Label>
+                <Label>{t.assessments.language}</Label>
                 <Select
                   value={formData.language}
                   onValueChange={(value) => setFormData({ ...formData, language: value })}
@@ -583,8 +591,8 @@ const Assessments = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="ar">Arabic</SelectItem>
+                    <SelectItem value="en">{t.assessments.english}</SelectItem>
+                    <SelectItem value="ar">{t.assessments.arabic}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -592,11 +600,11 @@ const Assessments = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button onClick={handleCreate} disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Create Assessment
+              {t.assessments.createAssessment}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -606,14 +614,14 @@ const Assessments = () => {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Edit Assessment</DialogTitle>
+            <DialogTitle>{t.assessments.editAssessment}</DialogTitle>
             <DialogDescription>
-              Update assessment details.
+              {t.assessments.editAssessmentDesc}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-title">Title *</Label>
+              <Label htmlFor="edit-title">{t.builder.assessmentTitle} *</Label>
               <Input
                 id="edit-title"
                 value={formData.title}
@@ -621,7 +629,7 @@ const Assessments = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-description">Description</Label>
+              <Label htmlFor="edit-description">{t.builder.description}</Label>
               <Textarea
                 id="edit-description"
                 value={formData.description}
@@ -631,7 +639,7 @@ const Assessments = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Type</Label>
+                <Label>{t.assessments.type}</Label>
                 <Select
                   value={formData.type}
                   onValueChange={(value) => setFormData({ ...formData, type: value })}
@@ -640,7 +648,7 @@ const Assessments = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {assessmentTypes.map((type) => (
+                    {getAssessmentTypes(t).map((type) => (
                       <SelectItem key={type.value} value={type.value}>
                         {type.label}
                       </SelectItem>
@@ -649,7 +657,7 @@ const Assessments = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Language</Label>
+                <Label>{t.assessments.language}</Label>
                 <Select
                   value={formData.language}
                   onValueChange={(value) => setFormData({ ...formData, language: value })}
@@ -658,8 +666,8 @@ const Assessments = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="ar">Arabic</SelectItem>
+                    <SelectItem value="en">{t.assessments.english}</SelectItem>
+                    <SelectItem value="ar">{t.assessments.arabic}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -667,11 +675,11 @@ const Assessments = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button onClick={handleUpdate} disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Save Changes
+              {t.assessments.saveChanges}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -681,18 +689,18 @@ const Assessments = () => {
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Assessment</DialogTitle>
+            <DialogTitle>{t.assessments.deleteAssessment}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{selectedAssessment?.title}"? This action cannot be undone.
+              {t.assessments.deleteConfirm} "{selectedAssessment?.title}"? {t.assessments.deleteWarning}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Delete
+              {t.common.delete}
             </Button>
           </DialogFooter>
         </DialogContent>

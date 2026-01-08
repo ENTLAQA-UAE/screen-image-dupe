@@ -480,10 +480,10 @@ const Participants = () => {
           </div>
           <Select value={filterGroup} onValueChange={setFilterGroup}>
             <SelectTrigger className="w-48">
-              <SelectValue placeholder="All Groups" />
+              <SelectValue placeholder={t.participants.allGroups} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Groups</SelectItem>
+              <SelectItem value="all">{t.participants.allGroups}</SelectItem>
               {groups.map((group) => (
                 <SelectItem key={group.id} value={group.id}>
                   {group.name}
@@ -493,13 +493,13 @@ const Participants = () => {
           </Select>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="All Statuses" />
+              <SelectValue placeholder={t.participants.allStatuses} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="invited">Invited</SelectItem>
-              <SelectItem value="started">Started</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="all">{t.participants.allStatuses}</SelectItem>
+              <SelectItem value="invited">{t.participants.invited}</SelectItem>
+              <SelectItem value="started">{t.participants.started}</SelectItem>
+              <SelectItem value="completed">{t.participants.completed}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -511,25 +511,25 @@ const Participants = () => {
           </div>
         ) : !organizationId ? (
           <div className="text-center py-20">
-            <p className="text-muted-foreground">You are not assigned to any organization.</p>
+            <p className="text-muted-foreground">{t.participants.notAssigned}</p>
           </div>
         ) : filteredParticipants.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card p-12 text-center">
             <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">
               {searchQuery || filterGroup !== 'all' || filterStatus !== 'all' 
-                ? 'No participants found' 
-                : 'No participants yet'}
+                ? t.participants.noParticipants 
+                : t.participants.noParticipantsYet}
             </h3>
             <p className="text-muted-foreground mb-4">
               {searchQuery || filterGroup !== 'all' || filterStatus !== 'all'
-                ? 'Try adjusting your filters.'
-                : 'Add your first participant to get started.'}
+                ? t.participants.tryAdjustFilters
+                : t.participants.addFirstParticipant}
             </p>
             {!searchQuery && filterGroup === 'all' && filterStatus === 'all' && (
               <Button variant="hero" onClick={() => setIsCreateOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
-                Add Participant
+                {t.participants.add}
               </Button>
             )}
           </div>
@@ -538,12 +538,12 @@ const Participants = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Participant</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Group</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Status</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Started</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Completed</th>
-                  <th className="text-right py-4 px-6 text-sm font-semibold text-foreground">Actions</th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">{t.participants.participant}</th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">{t.participants.group}</th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">{t.participants.status}</th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">{t.participants.startedAt}</th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">{t.participants.completedAt}</th>
+                  <th className="text-right py-4 px-6 text-sm font-semibold text-foreground">{t.participants.actions}</th>
                 </tr>
               </thead>
               <tbody>
@@ -566,7 +566,7 @@ const Participants = () => {
                           </div>
                           <div>
                             <div className="font-medium text-foreground">
-                              {participant.full_name || 'Unnamed'}
+                              {participant.full_name || t.participants.unnamed}
                             </div>
                             <div className="text-sm text-muted-foreground flex items-center gap-1">
                               {participant.email && (
@@ -583,12 +583,12 @@ const Participants = () => {
                         </div>
                       </td>
                       <td className="py-4 px-6 text-muted-foreground">
-                        {participant.group?.name || 'No group'}
+                        {participant.group?.name || t.participants.noGroup}
                       </td>
                       <td className="py-4 px-6">
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${statusColors[status]}`}>
                           <StatusIcon className="w-3 h-3 mr-1" />
-                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                          {t.participants[status as keyof typeof t.participants] || status}
                         </span>
                       </td>
                       <td className="py-4 px-6 text-sm text-muted-foreground">
@@ -607,19 +607,19 @@ const Participants = () => {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => copyAccessLink(participant)}>
                               <LinkIcon className="w-4 h-4 mr-2" />
-                              Copy Access Link
+                              {t.participants.copyAccessLink}
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => resendInvitationLink(participant)}
                               disabled={!participant.email}
                             >
                               <RefreshCw className="w-4 h-4 mr-2" />
-                              Resend Invitation Link
+                              {t.participants.resendInvitationLink}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => openEditDialog(participant)}>
                               <Edit className="w-4 h-4 mr-2" />
-                              Edit
+                              {t.common.edit}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
@@ -627,7 +627,7 @@ const Participants = () => {
                               className="text-destructive focus:text-destructive"
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
-                              Delete
+                              {t.common.delete}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -643,10 +643,10 @@ const Participants = () => {
         {/* Summary */}
         {!loading && organizationId && participants.length > 0 && (
           <div className="mt-6 flex items-center gap-6 text-sm text-muted-foreground">
-            <span>Total: {participants.length}</span>
-            <span>Invited: {participants.filter(p => p.status === 'invited').length}</span>
-            <span>Started: {participants.filter(p => p.status === 'started').length}</span>
-            <span>Completed: {participants.filter(p => p.status === 'completed').length}</span>
+            <span>{t.participants.total}: {participants.length}</span>
+            <span>{t.participants.invited}: {participants.filter(p => p.status === 'invited').length}</span>
+            <span>{t.participants.started}: {participants.filter(p => p.status === 'started').length}</span>
+            <span>{t.participants.completed}: {participants.filter(p => p.status === 'completed').length}</span>
           </div>
         )}
       </div>
@@ -655,14 +655,14 @@ const Participants = () => {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Participant</DialogTitle>
+            <DialogTitle>{t.participants.addParticipant}</DialogTitle>
             <DialogDescription>
-              Add a new participant to your organization.
+              {t.participants.addParticipantDesc}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="full_name">Full Name</Label>
+              <Label htmlFor="full_name">{t.participants.fullName}</Label>
               <Input
                 id="full_name"
                 value={formData.full_name}
@@ -671,7 +671,7 @@ const Participants = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t.participants.email}</Label>
               <Input
                 id="email"
                 type="email"
@@ -681,7 +681,7 @@ const Participants = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="employee_code">Employee Code (Optional)</Label>
+              <Label htmlFor="employee_code">{t.participants.employeeCodeOptional}</Label>
               <Input
                 id="employee_code"
                 value={formData.employee_code}
@@ -690,13 +690,13 @@ const Participants = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="group">Assessment Group (Optional)</Label>
+              <Label htmlFor="group">{t.participants.assessmentGroupOptional}</Label>
               <Select
                 value={formData.group_id}
                 onValueChange={(value) => setFormData({ ...formData, group_id: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a group" />
+                  <SelectValue placeholder={t.participants.selectGroup} />
                 </SelectTrigger>
                 <SelectContent>
                   {groups.map((group) => (
@@ -710,11 +710,11 @@ const Participants = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button onClick={handleCreate} disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Add Participant
+              {t.participants.addParticipant}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -724,14 +724,14 @@ const Participants = () => {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Participant</DialogTitle>
+            <DialogTitle>{t.participants.editParticipant}</DialogTitle>
             <DialogDescription>
-              Update participant details.
+              {t.participants.editParticipantDesc}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="edit_full_name">Full Name</Label>
+              <Label htmlFor="edit_full_name">{t.participants.fullName}</Label>
               <Input
                 id="edit_full_name"
                 value={formData.full_name}
@@ -740,7 +740,7 @@ const Participants = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit_email">Email</Label>
+              <Label htmlFor="edit_email">{t.participants.email}</Label>
               <Input
                 id="edit_email"
                 type="email"
@@ -750,7 +750,7 @@ const Participants = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit_employee_code">Employee Code (Optional)</Label>
+              <Label htmlFor="edit_employee_code">{t.participants.employeeCodeOptional}</Label>
               <Input
                 id="edit_employee_code"
                 value={formData.employee_code}
@@ -759,13 +759,13 @@ const Participants = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit_group">Assessment Group (Optional)</Label>
+              <Label htmlFor="edit_group">{t.participants.assessmentGroupOptional}</Label>
               <Select
                 value={formData.group_id}
                 onValueChange={(value) => setFormData({ ...formData, group_id: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a group" />
+                  <SelectValue placeholder={t.participants.selectGroup} />
                 </SelectTrigger>
                 <SelectContent>
                   {groups.map((group) => (
@@ -779,11 +779,11 @@ const Participants = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button onClick={handleUpdate} disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Save Changes
+              {t.common.save}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -793,18 +793,18 @@ const Participants = () => {
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Participant</DialogTitle>
+            <DialogTitle>{t.participants.deleteParticipant}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{selectedParticipant?.full_name || selectedParticipant?.email || 'this participant'}"? This action cannot be undone and will also delete all their responses.
+              {t.participants.deleteParticipantConfirm} "{selectedParticipant?.full_name || selectedParticipant?.email || t.participants.participant}"? {t.participants.deleteParticipantWarning}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Delete
+              {t.common.delete}
             </Button>
           </DialogFooter>
         </DialogContent>

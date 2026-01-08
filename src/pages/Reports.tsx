@@ -527,9 +527,9 @@ const Reports = () => {
 
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
-            <TabsTrigger value="overview">Organization Overview</TabsTrigger>
-            <TabsTrigger value="groups">Group Analytics</TabsTrigger>
-            <TabsTrigger value="employees">Employee Reports</TabsTrigger>
+            <TabsTrigger value="overview">{t.reports.organizationOverview}</TabsTrigger>
+            <TabsTrigger value="groups">{t.reports.groupAnalytics}</TabsTrigger>
+            <TabsTrigger value="employees">{t.reports.employeeReports}</TabsTrigger>
           </TabsList>
 
           {/* Organization Overview Tab */}
@@ -540,7 +540,7 @@ const Reports = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <Activity className="w-5 h-5" />
-                    Completion Trend (Last 30 Days)
+                    {t.reports.completionTrendLast30}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -574,7 +574,7 @@ const Reports = () => {
                     </ResponsiveContainer>
                   ) : (
                     <div className="flex items-center justify-center h-[250px] text-muted-foreground">
-                      No completion data in the last 30 days
+                      {t.reports.noCompletionData}
                     </div>
                   )}
                 </CardContent>
@@ -585,7 +585,7 @@ const Reports = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <PieChart className="w-5 h-5" />
-                    Assessment Types
+                    {t.reports.assessmentTypes}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -613,7 +613,7 @@ const Reports = () => {
                     </ResponsiveContainer>
                   ) : (
                     <div className="flex items-center justify-center h-[250px] text-muted-foreground">
-                      No assessments created yet
+                      {t.reports.noAssessmentsCreated}
                     </div>
                   )}
                 </CardContent>
