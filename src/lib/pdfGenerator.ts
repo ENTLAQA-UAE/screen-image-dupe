@@ -324,19 +324,23 @@ function buildAiFeedbackSection(content: string, title: string, primaryColor: st
   const textAlign = getTextAlign(lang);
   const hsl = hexToHsl(primaryColor);
 
-  // Split content into paragraphs to avoid page breaks mid-paragraph
+  // Split content into paragraphs to keep better layout and avoid mid-paragraph breaks
   const paragraphs = content.split("\n\n").filter((p) => p.trim());
   const formattedContent = paragraphs
-    .map(
-      (p) =>
-        `<p class="bidi-plaintext" style="margin: 0 0 12px 0; text-align: ${textAlign};">${p.trim()}</p>`
-    )
+    .map((p) => {
+      const safe = p.trim();
+      // For Arabic, isolate the paragraph to prevent punctuation/numbers flipping.
+      const bidi = lang === "ar" ? "isolate" : "plaintext";
+      return `<p style="margin: 0 0 12px 0; text-align: ${textAlign}; direction: ${dir}; unicode-bidi: ${bidi};">${safe}</p>`;
+    })
     .join("");
+
+  const bidiContainer = lang === "ar" ? "isolate" : "plaintext";
 
   return `
     <div style="margin-bottom: 30px; direction: ${dir}; text-align: ${textAlign};">
       ${buildSectionHeader(title, primaryColor, lang)}
-      <div class="bidi-plaintext" style="
+      <div style="
         background: linear-gradient(135deg, hsl(${hsl.h}, 40%, 97%) 0%, hsl(${hsl.h}, 35%, 94%) 100%);
         border: 1px solid hsl(${hsl.h}, 50%, 85%);
         padding: 24px;
@@ -345,9 +349,11 @@ function buildAiFeedbackSection(content: string, title: string, primaryColor: st
         color: #1e293b;
         font-size: 14px;
         direction: ${dir};
-        unicode-bidi: plaintext;
+        text-align: ${textAlign};
+        unicode-bidi: ${bidiContainer};
+        word-break: break-word;
       ">
-        ${formattedContent || `<p class="bidi-plaintext" style="margin:0; text-align:${textAlign};">-</p>`}
+        ${formattedContent || `<p style="margin:0; text-align:${textAlign}; direction:${dir}; unicode-bidi:${bidiContainer};">-</p>`}
       </div>
     </div>
   `;
@@ -457,11 +463,85 @@ async function generatePdfFromPages(pagesHtml: string[], fileName: string, lang:
     const canvas = await renderPageToCanvas(pagesHtml[i], lang);
     const imgData = canvas.toDataURL('image/png');
 
-    // Always fit exactly one A4 page (prevents mid-page cutting)
+    // Fit exactly one A4 page
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
   }
 
   pdf.save(fileName);
+}
+
+async function measurePdfPageScrollHeight(pageHtml: string, lang: Language): Promise<number> {
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = pageHtml;
+  wrapper.style.position = 'absolute';
+  wrapper.style.left = '-9999px';
+  wrapper.style.top = '0';
+  document.body.appendChild(wrapper);
+
+  try {
+    if (document.fonts?.ready) {
+      await document.fonts.ready;
+    }
+
+    const page = wrapper.querySelector('#pdf-page') as HTMLElement | null;
+    if (!page) return A4_HEIGHT_PX;
+
+    // scrollHeight reflects overflow content even when fixed height is used
+    return page.scrollHeight;
+  } finally {
+    document.body.removeChild(wrapper);
+  }
+}
+
+async function paginateAiTextToPages(params: {
+  headerHtml: string;
+  footerHtml: string;
+  aiTitle: string;
+  aiText: string;
+  primaryColor: string;
+  lang: Language;
+}): Promise<string[]> {
+  const { headerHtml, footerHtml, aiTitle, aiText, primaryColor, lang } = params;
+
+  const paragraphs = aiText.split('\n\n').map((p) => p.trim()).filter(Boolean);
+  if (paragraphs.length === 0) {
+    const content = headerHtml + buildAiFeedbackSection('-', aiTitle, primaryColor, lang) + footerHtml;
+    return [buildPageContainer(content, lang)];
+  }
+
+  const pages: string[] = [];
+  let start = 0;
+
+  while (start < paragraphs.length) {
+    let low = start + 1;
+    let high = paragraphs.length;
+    let best = low;
+
+    while (low <= high) {
+      const mid = Math.floor((low + high) / 2);
+      const chunk = paragraphs.slice(start, mid).join('\n\n');
+      const content = headerHtml + buildAiFeedbackSection(chunk, aiTitle, primaryColor, lang) + footerHtml;
+      const pageHtml = buildPageContainer(content, lang);
+      const h = await measurePdfPageScrollHeight(pageHtml, lang);
+
+      if (h <= A4_HEIGHT_PX) {
+        best = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+
+    // Safety: always progress at least one paragraph
+    if (best === start) best = start + 1;
+
+    const chunk = paragraphs.slice(start, best).join('\n\n');
+    const content = headerHtml + buildAiFeedbackSection(chunk, aiTitle, primaryColor, lang) + footerHtml;
+    pages.push(buildPageContainer(content, lang));
+    start = best;
+  }
+
+  return pages;
 }
 
 function buildPageContainer(content: string, lang: Language): string {
@@ -578,16 +658,19 @@ export async function generateParticipantPDF(report: ParticipantReport): Promise
     page1 += `</div>`;
   }
 
-  // Build page 2 (AI feedback)
-  let page2 = buildHeaderHtml(t.assessmentReport, report.organization, lang, logoBase64);
-  if (report.aiReport) {
-    page2 += buildAiFeedbackSection(report.aiReport, t.aiGeneratedFeedback, primaryColor, lang);
-  } else {
-    page2 += buildAiFeedbackSection('-', t.aiGeneratedFeedback, primaryColor, lang);
-  }
-  page2 += buildFooterHtml(t, report.organization, lang);
+  // Build AI feedback pages (auto-paginated so nothing gets cut)
+  const header2 = buildHeaderHtml(t.assessmentReport, report.organization, lang, logoBase64);
+  const footer2 = buildFooterHtml(t, report.organization, lang);
+  const aiPages = await paginateAiTextToPages({
+    headerHtml: header2,
+    footerHtml: footer2,
+    aiTitle: t.aiGeneratedFeedback,
+    aiText: report.aiReport || "-",
+    primaryColor,
+    lang,
+  });
 
-  const pages = [buildPageContainer(page1, lang), buildPageContainer(page2, lang)];
+  const pages = [buildPageContainer(page1, lang), ...aiPages];
 
   const fileName = `${report.participantName || "participant"}_report.pdf`
     .replace(/[^a-zA-Z0-9_.-\u0600-\u06FF]/g, "_")
@@ -639,16 +722,19 @@ export async function generateGroupPDF(report: GroupReport): Promise<void> {
   page1 += buildStatsGrid(statsItems, primaryColor, lang);
   page1 += `</div>`;
 
-  // Build page 2 (AI narrative)
-  let page2 = buildHeaderHtml(t.groupAssessmentReport, report.organization, lang, logoBase64);
-  if (report.aiNarrative) {
-    page2 += buildAiFeedbackSection(report.aiNarrative, t.aiGeneratedFeedback, primaryColor, lang);
-  } else {
-    page2 += buildAiFeedbackSection('-', t.aiGeneratedFeedback, primaryColor, lang);
-  }
-  page2 += buildFooterHtml(t, report.organization, lang);
+  // Build AI narrative pages (auto-paginated so nothing gets cut)
+  const header2 = buildHeaderHtml(t.groupAssessmentReport, report.organization, lang, logoBase64);
+  const footer2 = buildFooterHtml(t, report.organization, lang);
+  const aiPages = await paginateAiTextToPages({
+    headerHtml: header2,
+    footerHtml: footer2,
+    aiTitle: t.aiGeneratedFeedback,
+    aiText: report.aiNarrative || "-",
+    primaryColor,
+    lang,
+  });
 
-  const pages = [buildPageContainer(page1, lang), buildPageContainer(page2, lang)];
+  const pages = [buildPageContainer(page1, lang), ...aiPages];
 
   const fileName = `${report.groupName}_group_report.pdf`
     .replace(/[^a-zA-Z0-9_.-\u0600-\u06FF]/g, "_")
@@ -702,12 +788,19 @@ export async function generateTalentSnapshotPDF(report: TalentSnapshotReport): P
   page1 += buildStatsGrid(statsItems, primaryColor, lang);
   page1 += `</div>`;
 
-  // Build page 2 (AI snapshot content)
-  let page2 = buildHeaderHtml(t.talentSnapshotReport, report.organization, lang, logoBase64);
-  page2 += buildAiFeedbackSection(report.snapshotText, t.aiGeneratedFeedback, primaryColor, lang);
-  page2 += buildFooterHtml(t, report.organization, lang);
+  // Build AI snapshot pages (auto-paginated so nothing gets cut)
+  const header2 = buildHeaderHtml(t.talentSnapshotReport, report.organization, lang, logoBase64);
+  const footer2 = buildFooterHtml(t, report.organization, lang);
+  const aiPages = await paginateAiTextToPages({
+    headerHtml: header2,
+    footerHtml: footer2,
+    aiTitle: t.aiGeneratedFeedback,
+    aiText: report.snapshotText || "-",
+    primaryColor,
+    lang,
+  });
 
-  const pages = [buildPageContainer(page1, lang), buildPageContainer(page2, lang)];
+  const pages = [buildPageContainer(page1, lang), ...aiPages];
 
   const fileName = `${report.employeeName || "employee"}_talent_snapshot.pdf`
     .replace(/[^a-zA-Z0-9_.-\u0600-\u06FF]/g, "_")
