@@ -128,6 +128,11 @@ const EmployeeDetail = () => {
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [isAnonymizeOpen, setIsAnonymizeOpen] = useState(false);
   const [anonymizing, setAnonymizing] = useState(false);
+  const [snapshotDiagnostics, setSnapshotDiagnostics] = useState<{
+    status: number | null;
+    message: string | null;
+    timestamp: Date | null;
+  }>({ status: null, message: null, timestamp: null });
 
   useEffect(() => {
     if (email && user) {
@@ -325,12 +330,14 @@ const EmployeeDetail = () => {
     if (!employee || !organizationId || snapshotLoading) return;
 
     setSnapshotLoading(true);
+    setSnapshotDiagnostics({ status: null, message: null, timestamp: null });
     try {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) throw sessionError;
 
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) {
+        setSnapshotDiagnostics({ status: 401, message: "No access token - user not authenticated", timestamp: new Date() });
         toast.error("Authentication required. Please sign in again.");
         return;
       }
@@ -345,21 +352,28 @@ const EmployeeDetail = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        const statusMatch = error.message?.match(/(\d{3})/);
+        const status = statusMatch ? parseInt(statusMatch[1]) : 500;
+        setSnapshotDiagnostics({ status, message: error.message, timestamp: new Date() });
+        throw error;
+      }
 
       if (data?.snapshot) {
         setTalentSnapshot(data.snapshot);
+        setSnapshotDiagnostics({ status: 200, message: "Success", timestamp: new Date() });
         toast.success("AI Talent Snapshot generated");
       }
     } catch (error: any) {
       console.error("Error generating snapshot:", error);
-      if (error?.message?.includes("429")) {
+      const errorMsg = error?.message || "Unknown error";
+      if (errorMsg.includes("429")) {
         toast.error("Rate limit exceeded. Please try again later.");
-      } else if (error?.message?.includes("402")) {
+      } else if (errorMsg.includes("402")) {
         toast.error("AI credits exhausted. Please add credits.");
-      } else if (error?.message?.includes("404")) {
+      } else if (errorMsg.includes("404")) {
         toast.error("No completed assessments found for this employee.");
-      } else if (error?.message?.includes("401") || error?.status === 401) {
+      } else if (errorMsg.includes("401") || error?.status === 401) {
         toast.error("Authentication required. Please sign in again.");
       } else {
         toast.error("Failed to generate talent snapshot");
@@ -634,6 +648,29 @@ const EmployeeDetail = () => {
                   {stats?.completed === 0 && (
                     <p className="text-xs text-muted-foreground mt-2">
                       {t.employeeDetail.requiresCompleted}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Diagnostics Panel */}
+              {snapshotDiagnostics.timestamp && (
+                <div className="mt-4 p-3 rounded-lg bg-muted/50 border text-xs">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium">Last Request:</span>
+                    <Badge 
+                      variant={snapshotDiagnostics.status === 200 ? "default" : "destructive"}
+                      className="text-xs"
+                    >
+                      {snapshotDiagnostics.status}
+                    </Badge>
+                    <span className="text-muted-foreground">
+                      {snapshotDiagnostics.timestamp.toLocaleTimeString()}
+                    </span>
+                  </div>
+                  {snapshotDiagnostics.message && snapshotDiagnostics.status !== 200 && (
+                    <p className="text-destructive truncate" title={snapshotDiagnostics.message}>
+                      {snapshotDiagnostics.message}
                     </p>
                   )}
                 </div>
