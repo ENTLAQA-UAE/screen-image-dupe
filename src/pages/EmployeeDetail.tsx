@@ -498,17 +498,17 @@ const EmployeeDetail = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <Card className="border-l-4 border-l-primary">
-              <CardContent className="pt-6">
+            <Card className="h-full bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-0 shadow-md">
+              <CardContent className="pt-6 pb-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">{t.employeeDetail.totalAssessments}</p>
-                    <p className="text-3xl font-bold">{stats.totalAssessments}</p>
+                    <p className="text-sm font-medium text-blue-600 dark:text-blue-400">{t.employeeDetail.totalAssessments}</p>
+                    <p className="text-4xl font-bold text-blue-700 dark:text-blue-300 mt-1">{stats.totalAssessments}</p>
                   </div>
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-primary" />
+                  <div className="w-14 h-14 rounded-2xl bg-blue-500/20 flex items-center justify-center">
+                    <FileText className="w-7 h-7 text-blue-600 dark:text-blue-400" />
                   </div>
                 </div>
               </CardContent>
@@ -516,36 +516,36 @@ const EmployeeDetail = () => {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-            <Card className="border-l-4 border-l-success">
-              <CardContent className="pt-6">
+            <Card className="h-full bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/30 dark:to-emerald-900/20 border-0 shadow-md">
+              <CardContent className="pt-6 pb-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">{t.employeeDetail.completionRate}</p>
-                    <p className="text-3xl font-bold">{stats.completionRate}%</p>
+                    <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">{t.employeeDetail.completionRate}</p>
+                    <p className="text-4xl font-bold text-emerald-700 dark:text-emerald-300 mt-1">{stats.completionRate}%</p>
+                    <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-1">
+                      {stats.completed} {t.employeeDetail.ofCompleted} {stats.totalAssessments}
+                    </p>
                   </div>
-                  <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
-                    <CheckCircle2 className="w-6 h-6 text-success" />
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 flex items-center justify-center">
+                    <CheckCircle2 className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {stats.completed} {t.employeeDetail.ofCompleted} {stats.totalAssessments} {t.employeeDetail.completed}
-                </p>
               </CardContent>
             </Card>
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <Card className="border-l-4 border-l-accent">
-              <CardContent className="pt-6">
+            <Card className="h-full bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-950/30 dark:to-violet-900/20 border-0 shadow-md">
+              <CardContent className="pt-6 pb-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">{t.employeeDetail.averageScore}</p>
-                    <p className="text-3xl font-bold">
+                    <p className="text-sm font-medium text-violet-600 dark:text-violet-400">{t.employeeDetail.averageScore}</p>
+                    <p className="text-4xl font-bold text-violet-700 dark:text-violet-300 mt-1">
                       {stats.averageScore !== null ? `${stats.averageScore}%` : "-"}
                     </p>
                   </div>
-                  <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6 text-accent" />
+                  <div className="w-14 h-14 rounded-2xl bg-violet-500/20 flex items-center justify-center">
+                    <TrendingUp className="w-7 h-7 text-violet-600 dark:text-violet-400" />
                   </div>
                 </div>
               </CardContent>
@@ -553,17 +553,17 @@ const EmployeeDetail = () => {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-            <Card className="border-l-4 border-l-warning">
-              <CardContent className="pt-6">
+            <Card className="h-full bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 border-0 shadow-md">
+              <CardContent className="pt-6 pb-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">{t.employeeDetail.bestScore}</p>
-                    <p className="text-3xl font-bold">
+                    <p className="text-sm font-medium text-amber-600 dark:text-amber-400">{t.employeeDetail.bestScore}</p>
+                    <p className="text-4xl font-bold text-amber-700 dark:text-amber-300 mt-1">
                       {stats.highestScore !== null ? `${stats.highestScore}%` : "-"}
                     </p>
                   </div>
-                  <div className="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
-                    <Award className="w-6 h-6 text-warning" />
+                  <div className="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center">
+                    <Award className="w-7 h-7 text-amber-600 dark:text-amber-400" />
                   </div>
                 </div>
               </CardContent>
@@ -571,142 +571,152 @@ const EmployeeDetail = () => {
           </motion.div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        {/* Profile & AI Snapshot Row */}
+        <div className="grid lg:grid-cols-2 gap-6 mb-6">
           {/* Profile Info */}
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <User className="w-10 h-10 text-primary" />
-              </div>
-              <CardTitle className="text-xl text-center">{employee.full_name || "Unknown"}</CardTitle>
-              <CardDescription className="text-center">{employee.email}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {employee.employee_code && (
-                <div className="flex items-center gap-3 text-sm">
-                  <Hash className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{t.employeeDetail.employeeCode}:</span>
-                  <span className="font-medium">{employee.employee_code}</span>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+            <Card className="h-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-0 shadow-lg">
+              <CardHeader className="text-center pb-2">
+                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <User className="w-12 h-12 text-white" />
                 </div>
-              )}
-              {employee.department && (
-                <div className="flex items-center gap-3 text-sm">
-                  <Building2 className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{t.employeeDetail.department}:</span>
-                  <span className="font-medium">{employee.department}</span>
+                <CardTitle className="text-2xl">{employee.full_name || "Unknown"}</CardTitle>
+                <CardDescription className="text-base">{employee.email}</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  {employee.employee_code && (
+                    <div className="bg-white/60 dark:bg-white/5 rounded-xl p-4 text-center">
+                      <Hash className="w-5 h-5 text-primary mx-auto mb-2" />
+                      <p className="text-xs text-muted-foreground">{t.employeeDetail.employeeCode}</p>
+                      <p className="font-semibold text-sm">{employee.employee_code}</p>
+                    </div>
+                  )}
+                  {employee.department && (
+                    <div className="bg-white/60 dark:bg-white/5 rounded-xl p-4 text-center">
+                      <Building2 className="w-5 h-5 text-emerald-500 mx-auto mb-2" />
+                      <p className="text-xs text-muted-foreground">{t.employeeDetail.department}</p>
+                      <p className="font-semibold text-sm">{employee.department}</p>
+                    </div>
+                  )}
+                  {employee.job_title && (
+                    <div className="bg-white/60 dark:bg-white/5 rounded-xl p-4 text-center">
+                      <Briefcase className="w-5 h-5 text-violet-500 mx-auto mb-2" />
+                      <p className="text-xs text-muted-foreground">{t.employeeDetail.jobTitle}</p>
+                      <p className="font-semibold text-sm">{employee.job_title}</p>
+                    </div>
+                  )}
+                  <div className="bg-white/60 dark:bg-white/5 rounded-xl p-4 text-center">
+                    <Calendar className="w-5 h-5 text-amber-500 mx-auto mb-2" />
+                    <p className="text-xs text-muted-foreground">{t.employeeDetail.firstAssessment}</p>
+                    <p className="font-semibold text-sm">{formatDate(employee.first_seen)}</p>
+                  </div>
                 </div>
-              )}
-              {employee.job_title && (
-                <div className="flex items-center gap-3 text-sm">
-                  <Briefcase className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{t.employeeDetail.jobTitle}:</span>
-                  <span className="font-medium">{employee.job_title}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-3 text-sm">
-                <Calendar className="w-4 h-4 text-muted-foreground" />
-                <span className="text-muted-foreground">{t.employeeDetail.firstAssessment}:</span>
-                <span className="font-medium">{formatDate(employee.first_seen)}</span>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
 
           {/* AI Talent Snapshot */}
-          <Card className="lg:col-span-1 mt-6">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-accent" />
-                {t.employeeDetail.aiTalentSnapshot}
-              </CardTitle>
-              <CardDescription>
-                {t.employeeDetail.aiTalentDesc}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {talentSnapshot ? (
-                <div className="space-y-4">
-                  {/* Truncated Preview - max 4 lines */}
-                  <div 
-                    dir={dir}
-                    className={`text-sm text-muted-foreground leading-relaxed line-clamp-4 ${dir === "rtl" ? "text-right" : "text-left"}`}
-                    style={{ unicodeBidi: "plaintext" }}
-                  >
-                    {talentSnapshot.replace(/##\s*/g, '').replace(/\*\*/g, '').substring(0, 250)}...
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+            <Card className="h-full bg-gradient-to-br from-purple-50 via-fuchsia-50 to-pink-50 dark:from-purple-950/30 dark:via-fuchsia-950/20 dark:to-pink-950/20 border-0 shadow-lg">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-white" />
                   </div>
-                  
-                  {snapshotGeneratedAt && (
-                    <p className="text-xs text-muted-foreground">
-                      {t.employeeDetail.lastGenerated}: {new Date(snapshotGeneratedAt).toLocaleDateString()}
-                    </p>
-                  )}
-
-                  {/* Action Buttons */}
-                  <div className="flex flex-col gap-2">
-                    <Button 
-                      variant="hero" 
-                      size="sm" 
-                      className="w-full"
-                      onClick={() => setIsSnapshotModalOpen(true)}
+                  {t.employeeDetail.aiTalentSnapshot}
+                </CardTitle>
+                <CardDescription>
+                  {t.employeeDetail.aiTalentDesc}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {talentSnapshot ? (
+                  <div className="space-y-4">
+                    {/* Truncated Preview */}
+                    <div 
+                      dir={dir}
+                      className={`text-sm text-foreground/80 leading-relaxed line-clamp-5 bg-white/50 dark:bg-white/5 rounded-xl p-4 ${dir === "rtl" ? "text-right" : "text-left"}`}
+                      style={{ unicodeBidi: "plaintext" }}
                     >
-                      <Eye className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
-                      {t.employeeDetail.seeMore}
-                    </Button>
+                      {talentSnapshot.replace(/##\s*/g, '').replace(/\*\*/g, '').substring(0, 300)}...
+                    </div>
+                    
+                    {snapshotGeneratedAt && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {t.employeeDetail.lastGenerated}: {new Date(snapshotGeneratedAt).toLocaleDateString()}
+                      </p>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-3">
+                      <Button 
+                        className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-md"
+                        size="sm" 
+                        onClick={() => setIsSnapshotModalOpen(true)}
+                      >
+                        <Eye className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
+                        {t.employeeDetail.seeMore}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1 border-purple-200 hover:bg-purple-50 dark:border-purple-800 dark:hover:bg-purple-900/30"
+                        onClick={() => generateTalentSnapshot(true)}
+                        disabled={snapshotLoading}
+                      >
+                        {snapshotLoading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
+                            {t.employeeDetail.regenerateSnapshot}
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 flex items-center justify-center mx-auto mb-4">
+                      <Sparkles className="w-8 h-8 text-purple-500" />
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {t.employeeDetail.generateTalentProfile}
+                    </p>
                     <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full"
-                      onClick={() => generateTalentSnapshot(true)}
-                      disabled={snapshotLoading}
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-md"
+                      onClick={() => generateTalentSnapshot(false)}
+                      disabled={snapshotLoading || stats?.completed === 0}
                     >
                       {snapshotLoading ? (
                         <>
                           <Loader2 className="w-4 h-4 ltr:mr-2 rtl:ml-2 animate-spin" />
-                          {t.employeeDetail.regenerating}
+                          {t.employeeDetail.generating}
                         </>
                       ) : (
                         <>
                           <Sparkles className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
-                          {t.employeeDetail.regenerateSnapshot}
+                          {t.employeeDetail.generateTalentSnapshot}
                         </>
                       )}
                     </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-6">
-                  <Sparkles className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {t.employeeDetail.generateTalentProfile}
-                  </p>
-                  <Button 
-                    variant="hero" 
-                    onClick={() => generateTalentSnapshot(false)}
-                    disabled={snapshotLoading || stats?.completed === 0}
-                  >
-                    {snapshotLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 ltr:mr-2 rtl:ml-2 animate-spin" />
-                        {t.employeeDetail.generating}
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
-                        {t.employeeDetail.generateTalentSnapshot}
-                      </>
+                    {stats?.completed === 0 && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {t.employeeDetail.requiresCompleted}
+                      </p>
                     )}
-                  </Button>
-                  {stats?.completed === 0 && (
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {t.employeeDetail.requiresCompleted}
-                    </p>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
 
-          {/* Performance Charts */}
-          <Card className="lg:col-span-2">
+        {/* Performance Charts */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+          <Card className="mb-6 shadow-lg border-0 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="w-5 h-5" />
@@ -767,17 +777,20 @@ const EmployeeDetail = () => {
               </Tabs>
             </CardContent>
           </Card>
-        </div>
+        </motion.div>
 
         {/* Assessment History */}
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              {t.employeeDetail.assessmentHistory}
-            </CardTitle>
-            <CardDescription>{t.employeeDetail.allAssessmentsParticipated}</CardDescription>
-          </CardHeader>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
+          <Card className="shadow-lg border-0 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-white" />
+                </div>
+                {t.employeeDetail.assessmentHistory}
+              </CardTitle>
+              <CardDescription>{t.employeeDetail.allAssessmentsParticipated}</CardDescription>
+            </CardHeader>
           <CardContent>
             {assessments.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">{t.employeeDetail.noAssessmentsFound}</div>
@@ -854,6 +867,7 @@ const EmployeeDetail = () => {
             )}
           </CardContent>
         </Card>
+      </motion.div>
       </div>
 
       {/* Report Dialog */}
