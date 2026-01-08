@@ -534,10 +534,10 @@ const Participants = () => {
             )}
           </div>
         ) : (
-          <div className="rounded-2xl border border-border bg-card overflow-hidden">
+          <div className="rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-0 shadow-lg overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-border bg-muted/30">
+                <tr className="border-b border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-white/5">
                   <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">{t.participants.participant}</th>
                   <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">{t.participants.group}</th>
                   <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">{t.participants.status}</th>
@@ -557,12 +557,12 @@ const Participants = () => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: index * 0.03 }}
-                      className="border-b border-border last:border-b-0 hover:bg-muted/20 transition-colors"
+                      className="border-b border-slate-200 dark:border-slate-700 last:border-b-0 hover:bg-white/60 dark:hover:bg-white/5 transition-colors"
                     >
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
-                            <User className="w-5 h-5 text-accent" />
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-md">
+                            <User className="w-5 h-5 text-white" />
                           </div>
                           <div>
                             <div className="font-medium text-foreground">
@@ -582,12 +582,22 @@ const Participants = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="py-4 px-6 text-muted-foreground">
-                        {participant.group?.name || t.participants.noGroup}
+                      <td className="py-4 px-6">
+                        {participant.group?.name ? (
+                          <span className="px-2.5 py-1 rounded-lg bg-violet-50 dark:bg-violet-950/30 text-sm text-violet-700 dark:text-violet-300">
+                            {participant.group.name}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">{t.participants.noGroup}</span>
+                        )}
                       </td>
                       <td className="py-4 px-6">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${statusColors[status]}`}>
-                          <StatusIcon className="w-3 h-3 mr-1" />
+                        <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium ${
+                          status === 'completed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                          status === 'started' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                          'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                        }`}>
+                          <StatusIcon className="w-3 h-3 mr-1.5" />
                           {t.participants[status as keyof typeof t.participants] || status}
                         </span>
                       </td>
