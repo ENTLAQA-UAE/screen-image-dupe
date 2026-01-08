@@ -332,50 +332,53 @@ function buildFooterHtml(t: typeof translations.en, org: OrganizationBranding, l
 }
 
 // ============= PDF Generation Core =============
-async function generatePdfFromHtml(htmlContent: string, fileName: string, lang: Language = 'en'): Promise<void> {
-  // Pre-load Arabic font if needed - add to document head
-  if (lang === 'ar') {
-    const existingLink = document.querySelector('link[href*="fonts.googleapis.com"][href*="Cairo"]');
-    if (!existingLink) {
-      const fontLink = document.createElement('link');
-      fontLink.rel = 'stylesheet';
-      fontLink.href = 'https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap';
-      document.head.appendChild(fontLink);
-    }
-    // Wait for font to load
-    await new Promise(resolve => setTimeout(resolve, 500));
-    if (document.fonts?.ready) {
-      await document.fonts.ready;
-    }
-    // Force font load by creating a test element
-    const testEl = document.createElement('span');
-    testEl.style.fontFamily = 'Cairo, sans-serif';
-    testEl.style.position = 'absolute';
-    testEl.style.left = '-9999px';
-    testEl.textContent = 'تجربة الخط العربي';
-    document.body.appendChild(testEl);
-    await new Promise(resolve => setTimeout(resolve, 200));
-    document.body.removeChild(testEl);
+const A4_WIDTH_PX = 794; // 8.27in @ 96dpi
+const A4_HEIGHT_PX = 1122; // 11.69in @ 96dpi
+
+async function ensureArabicFontLoaded(lang: Language) {
+  if (lang !== 'ar') return;
+
+  const existingLink = document.querySelector('link[href*="fonts.googleapis.com"][href*="Cairo"]');
+  if (!existingLink) {
+    const fontLink = document.createElement('link');
+    fontLink.rel = 'stylesheet';
+    fontLink.href = 'https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap';
+    document.head.appendChild(fontLink);
   }
 
-  const container = document.createElement('div');
-  container.innerHTML = htmlContent;
-  container.style.position = 'absolute';
-  container.style.left = '-9999px';
-  container.style.top = '0';
-  container.style.width = '794px';
-  document.body.appendChild(container);
+  // Wait for font to load
+  if (document.fonts?.ready) {
+    await document.fonts.ready;
+  }
+
+  // Force font load by creating a test element
+  const testEl = document.createElement('span');
+  testEl.style.fontFamily = 'Cairo, sans-serif';
+  testEl.style.position = 'absolute';
+  testEl.style.left = '-9999px';
+  testEl.textContent = 'تجربة الخط العربي';
+  document.body.appendChild(testEl);
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  document.body.removeChild(testEl);
+}
+
+async function renderPageToCanvas(pageHtml: string, lang: Language): Promise<HTMLCanvasElement> {
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = pageHtml;
+  wrapper.style.position = 'absolute';
+  wrapper.style.left = '-9999px';
+  wrapper.style.top = '0';
+  document.body.appendChild(wrapper);
 
   try {
-    const element = container.querySelector('#pdf-content') as HTMLElement | null;
-    if (!element) throw new Error('PDF content not found');
+    const element = wrapper.querySelector('#pdf-page') as HTMLElement | null;
+    if (!element) throw new Error('PDF page not found');
 
-    // Ensure fonts are loaded before rasterizing
+    // Ensure fonts/images are ready
     if (document.fonts?.ready) {
       await document.fonts.ready;
     }
 
-    // Wait for images to load
     const imgs = Array.from(element.querySelectorAll('img'));
     await Promise.all(
       imgs.map((img) =>
@@ -388,99 +391,77 @@ async function generatePdfFromHtml(htmlContent: string, fileName: string, lang: 
       )
     );
 
-    // Longer delay for Arabic content to ensure font rendering
-    await new Promise(resolve => setTimeout(resolve, lang === 'ar' ? 300 : 100));
+    // Delay helps Arabic shaping apply before rasterization
+    await new Promise((resolve) => setTimeout(resolve, lang === 'ar' ? 250 : 80));
 
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-
-    // Rasterize the whole document
-    const canvas = await html2canvas(element, {
+    return await html2canvas(element, {
       scale: 2,
       useCORS: true,
       allowTaint: false,
       logging: false,
       backgroundColor: '#ffffff',
-      windowWidth: 794,
-      windowHeight: element.scrollHeight,
+      windowWidth: A4_WIDTH_PX,
+      windowHeight: A4_HEIGHT_PX,
       scrollX: 0,
       scrollY: 0,
     });
-
-    const imgWidthPx = canvas.width;
-    const imgHeightPx = canvas.height;
-
-    const mmPerPx = pdfWidth / imgWidthPx;
-    const pageHeightPx = pdfHeight / mmPerPx;
-
-    let srcY = 0;
-    let page = 0;
-
-    while (srcY < imgHeightPx) {
-      if (page > 0) pdf.addPage();
-
-      const sliceHeightPx = Math.min(pageHeightPx, imgHeightPx - srcY);
-
-      const pageCanvas = document.createElement('canvas');
-      pageCanvas.width = imgWidthPx;
-      pageCanvas.height = Math.ceil(sliceHeightPx);
-
-      const ctx = pageCanvas.getContext('2d');
-      if (!ctx) break;
-
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-      ctx.drawImage(
-        canvas,
-        0,
-        srcY,
-        imgWidthPx,
-        sliceHeightPx,
-        0,
-        0,
-        imgWidthPx,
-        sliceHeightPx
-      );
-
-      const sliceImg = pageCanvas.toDataURL('image/png');
-      const sliceHeightMm = sliceHeightPx * mmPerPx;
-
-      pdf.addImage(sliceImg, 'PNG', 0, 0, pdfWidth, sliceHeightMm, undefined, 'FAST');
-
-      srcY += sliceHeightPx;
-      page++;
-    }
-
-    pdf.save(fileName);
   } finally {
-    document.body.removeChild(container);
+    document.body.removeChild(wrapper);
   }
 }
 
-function buildDocumentContainer(content: string, lang: Language): string {
+async function generatePdfFromPages(pagesHtml: string[], fileName: string, lang: Language): Promise<void> {
+  await ensureArabicFontLoaded(lang);
+
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pdfWidth = pdf.internal.pageSize.getWidth();
+  const pdfHeight = pdf.internal.pageSize.getHeight();
+
+  for (let i = 0; i < pagesHtml.length; i++) {
+    if (i > 0) pdf.addPage();
+
+    const canvas = await renderPageToCanvas(pagesHtml[i], lang);
+    const imgData = canvas.toDataURL('image/png');
+
+    // Always fit exactly one A4 page (prevents mid-page cutting)
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+  }
+
+  pdf.save(fileName);
+}
+
+function buildPageContainer(content: string, lang: Language): string {
   const dir = getDirection(lang);
   const textAlign = getTextAlign(lang);
 
-  // Use proper Arabic font loaded via Google Fonts
   const fontFamily = lang === 'ar'
     ? "'Cairo', 'Noto Naskh Arabic', 'Noto Sans Arabic', 'Tahoma', 'Arial', sans-serif"
     : "'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
 
+  // NOTE: font is loaded in the document head (see ensureArabicFontLoaded)
   const styleTag = `
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
-      #pdf-content { box-sizing: border-box; }
-      #pdf-content * { box-sizing: border-box; }
+      #pdf-page { box-sizing: border-box; }
+      #pdf-page * { box-sizing: border-box; }
+
+      /* Improve Arabic RTL shaping/ordering */
+      #pdf-page { unicode-bidi: plaintext; }
+
+      /* Make tables respect RTL alignment */
+      #pdf-page table { width: 100%; border-collapse: collapse; direction: ${dir}; }
+      #pdf-page th, #pdf-page td { text-align: ${textAlign}; vertical-align: top; }
+
       .page-break-inside-avoid { break-inside: avoid; page-break-inside: avoid; }
     </style>
   `;
 
   return `
     ${styleTag}
-    <div id="pdf-content" style="
-      width: 794px;
+    <div id="pdf-page" style="
+      width: ${A4_WIDTH_PX}px;
+      height: ${A4_HEIGHT_PX}px;
       padding: 45px;
+      overflow: hidden;
       background: white;
       font-family: ${fontFamily};
       direction: ${dir};
@@ -547,33 +528,37 @@ export async function generateParticipantPDF(report: ParticipantReport): Promise
     }
   }
 
-  // Build HTML content
-  let content = buildHeaderHtml(t.assessmentReport, report.organization, lang, logoBase64);
-  
-  content += `<div class="page-break-inside-avoid" style="margin-bottom: 30px;">`;
-  content += buildSectionHeader(t.participantInformation, primaryColor, lang);
-  content += buildInfoGrid(infoItems, lang);
-  content += `</div>`;
+  // Build page 1 (summary)
+  let page1 = buildHeaderHtml(t.assessmentReport, report.organization, lang, logoBase64);
+
+  page1 += `<div class="page-break-inside-avoid" style="margin-bottom: 30px;">`;
+  page1 += buildSectionHeader(t.participantInformation, primaryColor, lang);
+  page1 += buildInfoGrid(infoItems, lang);
+  page1 += `</div>`;
 
   if (statsItems.length > 0) {
-    content += `<div class="page-break-inside-avoid" style="margin-bottom: 30px;">`;
-    content += buildSectionHeader(t.results, primaryColor, lang);
-    content += buildStatsGrid(statsItems, primaryColor, lang);
-    content += `</div>`;
+    page1 += `<div class="page-break-inside-avoid" style="margin-bottom: 30px;">`;
+    page1 += buildSectionHeader(t.results, primaryColor, lang);
+    page1 += buildStatsGrid(statsItems, primaryColor, lang);
+    page1 += `</div>`;
   }
 
+  // Build page 2 (AI feedback)
+  let page2 = buildHeaderHtml(t.assessmentReport, report.organization, lang, logoBase64);
   if (report.aiReport) {
-    content += buildAiFeedbackSection(report.aiReport, t.aiGeneratedFeedback, primaryColor, lang);
+    page2 += buildAiFeedbackSection(report.aiReport, t.aiGeneratedFeedback, primaryColor, lang);
+  } else {
+    page2 += buildAiFeedbackSection('-', t.aiGeneratedFeedback, primaryColor, lang);
   }
+  page2 += buildFooterHtml(t, report.organization, lang);
 
-  content += buildFooterHtml(t, report.organization, lang);
+  const pages = [buildPageContainer(page1, lang), buildPageContainer(page2, lang)];
 
-  const html = buildDocumentContainer(content, lang);
   const fileName = `${report.participantName || "participant"}_report.pdf`
     .replace(/[^a-zA-Z0-9_.-\u0600-\u06FF]/g, "_")
     .toLowerCase();
-  
-  await generatePdfFromHtml(html, fileName, lang);
+
+  await generatePdfFromPages(pages, fileName, lang);
 }
 
 export async function generateGroupPDF(report: GroupReport): Promise<void> {
@@ -606,29 +591,33 @@ export async function generateGroupPDF(report: GroupReport): Promise<void> {
     { label: t.highest, value: report.stats.highestScore !== null ? `${report.stats.highestScore}%` : '-' },
   ];
 
-  // Build HTML content
-  let content = buildHeaderHtml(t.groupAssessmentReport, report.organization, lang, logoBase64);
-  
-  content += `<div class="page-break-inside-avoid" style="margin-bottom: 30px;">`;
-  content += buildSectionHeader(t.assessmentDetails, primaryColor, lang);
-  content += buildInfoGrid(infoItems, lang);
-  content += `</div>`;
+  // Build page 1 (summary)
+  let page1 = buildHeaderHtml(t.groupAssessmentReport, report.organization, lang, logoBase64);
 
-  content += `<div class="page-break-inside-avoid" style="margin-bottom: 30px;">`;
-  content += buildSectionHeader(t.statisticsOverview, primaryColor, lang);
-  content += buildStatsGrid(statsItems, primaryColor, lang);
-  content += `</div>`;
+  page1 += `<div class="page-break-inside-avoid" style="margin-bottom: 30px;">`;
+  page1 += buildSectionHeader(t.assessmentDetails, primaryColor, lang);
+  page1 += buildInfoGrid(infoItems, lang);
+  page1 += `</div>`;
 
+  page1 += `<div class="page-break-inside-avoid" style="margin-bottom: 30px;">`;
+  page1 += buildSectionHeader(t.statisticsOverview, primaryColor, lang);
+  page1 += buildStatsGrid(statsItems, primaryColor, lang);
+  page1 += `</div>`;
+
+  // Build page 2 (AI narrative)
+  let page2 = buildHeaderHtml(t.groupAssessmentReport, report.organization, lang, logoBase64);
   if (report.aiNarrative) {
-    content += buildAiFeedbackSection(report.aiNarrative, t.aiGeneratedFeedback, primaryColor, lang);
+    page2 += buildAiFeedbackSection(report.aiNarrative, t.aiGeneratedFeedback, primaryColor, lang);
+  } else {
+    page2 += buildAiFeedbackSection('-', t.aiGeneratedFeedback, primaryColor, lang);
   }
+  page2 += buildFooterHtml(t, report.organization, lang);
 
-  content += buildFooterHtml(t, report.organization, lang);
+  const pages = [buildPageContainer(page1, lang), buildPageContainer(page2, lang)];
 
-  const html = buildDocumentContainer(content, lang);
   const fileName = `${report.groupName}_group_report.pdf`
     .replace(/[^a-zA-Z0-9_.-\u0600-\u06FF]/g, "_")
     .toLowerCase();
-  
-  await generatePdfFromHtml(html, fileName, lang);
+
+  await generatePdfFromPages(pages, fileName, lang);
 }
