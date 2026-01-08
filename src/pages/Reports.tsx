@@ -453,70 +453,104 @@ const Reports = () => {
           </Button>
         </div>
 
-        {/* Overview Stats */}
+        {/* Overview Stats - Colorful Gradient Cards */}
         {stats && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {/* Total Assessments */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <Card className="border-l-4 border-l-primary">
-                <CardContent className="pt-6">
+              <Card className="h-full bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-0 shadow-md overflow-hidden">
+                <CardContent className="pt-6 pb-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">{t.dashboard.totalAssessments}</p>
-                      <p className="text-3xl font-bold">{stats.totalAssessments}</p>
+                      <p className="text-sm font-medium text-blue-600 dark:text-blue-400">{t.dashboard.totalAssessments}</p>
+                      <p className="text-4xl font-bold text-blue-700 dark:text-blue-300 mt-1">{stats.totalAssessments}</p>
                     </div>
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <FileText className="w-6 h-6 text-primary" />
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
+                      <FileText className="w-8 h-8 text-white" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
 
+            {/* Completion Rate with Circular Progress */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-              <Card className="border-l-4 border-l-success">
-                <CardContent className="pt-6">
+              <Card className="h-full bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/30 dark:to-emerald-900/20 border-0 shadow-md overflow-hidden">
+                <CardContent className="pt-5 pb-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">{t.dashboard.completionRate}</p>
-                      <p className="text-3xl font-bold">{stats.averageCompletionRate}%</p>
+                      <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">{t.dashboard.completionRate}</p>
+                      <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-1">
+                        {stats.completedParticipants} / {stats.totalParticipants}
+                      </p>
                     </div>
-                    <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
-                      <CheckCircle2 className="w-6 h-6 text-success" />
+                    <div className="relative">
+                      <svg width="70" height="70" className="-rotate-90">
+                        <circle cx="35" cy="35" r="28" fill="none" strokeWidth="7" className="stroke-emerald-200 dark:stroke-emerald-800/50" />
+                        <circle
+                          cx="35" cy="35" r="28" fill="none" strokeWidth="7" strokeLinecap="round"
+                          strokeDasharray={2 * Math.PI * 28}
+                          strokeDashoffset={2 * Math.PI * 28 * (1 - stats.averageCompletionRate / 100)}
+                          className="stroke-emerald-500 transition-all duration-700 ease-out"
+                        />
+                      </svg>
+                      <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-emerald-700 dark:text-emerald-300">
+                        {stats.averageCompletionRate}%
+                      </span>
                     </div>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {stats.completedParticipants} {t.common.of} {stats.totalParticipants} {t.nav.participants.toLowerCase()}
-                  </p>
                 </CardContent>
               </Card>
             </motion.div>
 
+            {/* Active Groups */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-              <Card className="border-l-4 border-l-accent">
-                <CardContent className="pt-6">
+              <Card className="h-full bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-950/30 dark:to-violet-900/20 border-0 shadow-md overflow-hidden">
+                <CardContent className="pt-6 pb-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">{t.dashboard.activeGroups}</p>
-                      <p className="text-3xl font-bold">{stats.activeGroups}</p>
+                      <p className="text-sm font-medium text-violet-600 dark:text-violet-400">{t.dashboard.activeGroups}</p>
+                      <p className="text-4xl font-bold text-violet-700 dark:text-violet-300 mt-1">{stats.activeGroups}</p>
                     </div>
-                    <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
-                      <Users className="w-6 h-6 text-accent" />
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shadow-lg">
+                      <Users className="w-8 h-8 text-white" />
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
 
+            {/* Average Score with Circular Progress */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-              <Card className="border-l-4 border-l-warning">
-                <CardContent className="pt-6">
+              <Card className="h-full bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 border-0 shadow-md overflow-hidden">
+                <CardContent className="pt-5 pb-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">{t.employees.averageScore}</p>
-                      <p className="text-3xl font-bold">{stats.averageScore !== null ? `${stats.averageScore}%` : "-"}</p>
+                      <p className="text-sm font-medium text-amber-600 dark:text-amber-400">{t.employees.averageScore}</p>
+                      <p className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-1">
+                        {t.reports.organizationOverview}
+                      </p>
                     </div>
-                    <div className="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
-                      <TrendingUp className="w-6 h-6 text-warning" />
+                    <div className="relative">
+                      <svg width="70" height="70" className="-rotate-90">
+                        <defs>
+                          <linearGradient id="avgScoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#f59e0b" />
+                            <stop offset="100%" stopColor="#f97316" />
+                          </linearGradient>
+                        </defs>
+                        <circle cx="35" cy="35" r="28" fill="none" strokeWidth="7" className="stroke-amber-200 dark:stroke-amber-800/50" />
+                        <circle
+                          cx="35" cy="35" r="28" fill="none" strokeWidth="7" strokeLinecap="round"
+                          strokeDasharray={2 * Math.PI * 28}
+                          strokeDashoffset={stats.averageScore !== null ? 2 * Math.PI * 28 * (1 - stats.averageScore / 100) : 2 * Math.PI * 28}
+                          stroke="url(#avgScoreGradient)"
+                          className="transition-all duration-700 ease-out"
+                        />
+                      </svg>
+                      <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-amber-700 dark:text-amber-300">
+                        {stats.averageScore !== null ? `${stats.averageScore}%` : "-"}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -536,96 +570,109 @@ const Reports = () => {
           <TabsContent value="overview" className="space-y-6">
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Completion Trend */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Activity className="w-5 h-5" />
-                    {t.reports.completionTrendLast30}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {trendData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={250}>
-                      <AreaChart data={trendData}>
-                        <defs>
-                          <linearGradient id="colorCompletions" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                        <XAxis dataKey="date" className="text-xs" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
-                        <YAxis allowDecimals={false} className="text-xs" />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "hsl(var(--card))",
-                            border: "1px solid hsl(var(--border))",
-                            borderRadius: "8px",
-                          }}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="completions"
-                          stroke="hsl(var(--primary))"
-                          fillOpacity={1}
-                          fill="url(#colorCompletions)"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="flex items-center justify-center h-[250px] text-muted-foreground">
-                      {t.reports.noCompletionData}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                <Card className="h-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                        <Activity className="w-5 h-5 text-white" />
+                      </div>
+                      {t.reports.completionTrendLast30}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {trendData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={250}>
+                        <AreaChart data={trendData}>
+                          <defs>
+                            <linearGradient id="colorCompletions" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                          <XAxis dataKey="date" className="text-xs" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
+                          <YAxis allowDecimals={false} className="text-xs" />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "hsl(var(--card))",
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: "8px",
+                            }}
+                          />
+                          <Area
+                            type="monotone"
+                            dataKey="completions"
+                            stroke="#3b82f6"
+                            fillOpacity={1}
+                            fill="url(#colorCompletions)"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+                        {t.reports.noCompletionData}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
 
               {/* Assessment Types Distribution */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <PieChart className="w-5 h-5" />
-                    {t.reports.assessmentTypes}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {typeStats.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={250}>
-                      <RechartsPie>
-                        <Pie
-                          data={typeStats}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={50}
-                          outerRadius={90}
-                          paddingAngle={2}
-                          dataKey="count"
-                          nameKey="type"
-                          label={({ type, count }) => `${type}: ${count}`}
-                        >
-                          {typeStats.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Legend />
-                        <Tooltip />
-                      </RechartsPie>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="flex items-center justify-center h-[250px] text-muted-foreground">
-                      {t.reports.noAssessmentsCreated}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+                <Card className="h-full bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                        <PieChart className="w-5 h-5 text-white" />
+                      </div>
+                      {t.reports.assessmentTypes}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {typeStats.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={250}>
+                        <RechartsPie>
+                          <Pie
+                            data={typeStats}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={100}
+                            paddingAngle={2}
+                            dataKey="count"
+                            nameKey="type"
+                            label={({ type, count }) => `${type}: ${count}`}
+                          >
+                            {typeStats.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Legend />
+                          <Tooltip />
+                        </RechartsPie>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+                        {t.reports.noAssessmentsCreated}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
             </div>
           </TabsContent>
 
           {/* Group Analytics Tab */}
           <TabsContent value="groups" className="space-y-6">
-            <Card>
+            <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-0 shadow-lg">
               <CardHeader>
-                <CardTitle>Active Assessment Groups</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
+                    <Users className="w-5 h-5 text-white" />
+                  </div>
+                  Active Assessment Groups
+                </CardTitle>
                 <CardDescription>Performance overview for each group</CardDescription>
               </CardHeader>
               <CardContent>
@@ -644,11 +691,11 @@ const Reports = () => {
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: index * 0.05 }}
-                          className="flex items-center gap-4 p-4 rounded-xl border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+                          className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800/50 shadow-sm hover:shadow-md transition-all cursor-pointer"
                           onClick={() => navigate(`/assessment-groups/${group.id}/report`)}
                         >
-                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <TypeIcon className="w-6 h-6 text-primary" />
+                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0 shadow-md">
+                            <TypeIcon className="w-6 h-6 text-white" />
                           </div>
 
                           <div className="flex-1 min-w-0">
@@ -657,23 +704,23 @@ const Reports = () => {
                           </div>
 
                           <div className="hidden sm:flex items-center gap-6">
-                            <div className="text-center">
-                              <p className="text-lg font-semibold">{group.totalParticipants}</p>
-                              <p className="text-xs text-muted-foreground">Participants</p>
+                            <div className="text-center px-3 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/30">
+                              <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">{group.totalParticipants}</p>
+                              <p className="text-xs text-blue-600/70 dark:text-blue-400/70">Participants</p>
                             </div>
-                            <div className="text-center">
-                              <p className="text-lg font-semibold text-success">{group.completionRate}%</p>
-                              <p className="text-xs text-muted-foreground">Completed</p>
+                            <div className="text-center px-3 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/30">
+                              <p className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">{group.completionRate}%</p>
+                              <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">Completed</p>
                             </div>
                             {group.averageScore !== null && (
-                              <div className="text-center">
-                                <p className="text-lg font-semibold text-primary">{group.averageScore}%</p>
-                                <p className="text-xs text-muted-foreground">Avg Score</p>
+                              <div className="text-center px-3 py-1 rounded-lg bg-violet-50 dark:bg-violet-950/30">
+                                <p className="text-lg font-semibold text-violet-600 dark:text-violet-400">{group.averageScore}%</p>
+                                <p className="text-xs text-violet-600/70 dark:text-violet-400/70">Avg Score</p>
                               </div>
                             )}
                           </div>
 
-                          <Button variant="ghost" size="sm">
+                          <Button variant="outline" size="sm" className="shadow-sm">
                             <Eye className="w-4 h-4 mr-1" />
                             View
                             <ArrowRight className="w-4 h-4 ml-1" />
@@ -689,10 +736,12 @@ const Reports = () => {
 
           {/* Employee Reports Tab */}
           <TabsContent value="employees" className="space-y-6">
-            <Card>
+            <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-0 shadow-lg">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Award className="w-5 h-5" />
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                    <Award className="w-5 h-5 text-white" />
+                  </div>
                   Top Performers
                 </CardTitle>
                 <CardDescription>Employees with most completed assessments</CardDescription>
@@ -711,10 +760,15 @@ const Reports = () => {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.05 }}
-                        className="flex items-center gap-4 p-4 rounded-xl border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+                        className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800/50 shadow-sm hover:shadow-md transition-all cursor-pointer"
                         onClick={() => navigate(`/employees/${encodeURIComponent(employee.email)}`)}
                       >
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 font-semibold text-primary">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-white shadow-md ${
+                          index === 0 ? 'bg-gradient-to-br from-amber-400 to-amber-600' :
+                          index === 1 ? 'bg-gradient-to-br from-slate-400 to-slate-500' :
+                          index === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-600' :
+                          'bg-gradient-to-br from-blue-400 to-blue-500'
+                        }`}>
                           {index + 1}
                         </div>
 
@@ -724,17 +778,17 @@ const Reports = () => {
                         </div>
 
                         <div className="flex items-center gap-4">
-                          <div className="text-center">
-                            <p className="text-lg font-semibold">{employee.assessmentsCompleted}</p>
-                            <p className="text-xs text-muted-foreground">Completed</p>
+                          <div className="text-center px-3 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/30">
+                            <p className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">{employee.assessmentsCompleted}</p>
+                            <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">Completed</p>
                           </div>
                           {employee.averageScore !== null && (
-                            <div className="text-center">
-                              <p className="text-lg font-semibold text-primary">{employee.averageScore}%</p>
-                              <p className="text-xs text-muted-foreground">Avg Score</p>
+                            <div className="text-center px-3 py-1 rounded-lg bg-violet-50 dark:bg-violet-950/30">
+                              <p className="text-lg font-semibold text-violet-600 dark:text-violet-400">{employee.averageScore}%</p>
+                              <p className="text-xs text-violet-600/70 dark:text-violet-400/70">Avg Score</p>
                             </div>
                           )}
-                          <Button variant="ghost" size="sm">
+                          <Button variant="outline" size="sm" className="shadow-sm">
                             <Eye className="w-4 h-4" />
                           </Button>
                         </div>
