@@ -332,7 +332,32 @@ function buildFooterHtml(t: typeof translations.en, org: OrganizationBranding, l
 }
 
 // ============= PDF Generation Core =============
-async function generatePdfFromHtml(htmlContent: string, fileName: string): Promise<void> {
+async function generatePdfFromHtml(htmlContent: string, fileName: string, lang: Language = 'en'): Promise<void> {
+  // Pre-load Arabic font if needed - add to document head
+  if (lang === 'ar') {
+    const existingLink = document.querySelector('link[href*="fonts.googleapis.com"][href*="Cairo"]');
+    if (!existingLink) {
+      const fontLink = document.createElement('link');
+      fontLink.rel = 'stylesheet';
+      fontLink.href = 'https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap';
+      document.head.appendChild(fontLink);
+    }
+    // Wait for font to load
+    await new Promise(resolve => setTimeout(resolve, 500));
+    if (document.fonts?.ready) {
+      await document.fonts.ready;
+    }
+    // Force font load by creating a test element
+    const testEl = document.createElement('span');
+    testEl.style.fontFamily = 'Cairo, sans-serif';
+    testEl.style.position = 'absolute';
+    testEl.style.left = '-9999px';
+    testEl.textContent = 'تجربة الخط العربي';
+    document.body.appendChild(testEl);
+    await new Promise(resolve => setTimeout(resolve, 200));
+    document.body.removeChild(testEl);
+  }
+
   const container = document.createElement('div');
   container.innerHTML = htmlContent;
   container.style.position = 'absolute';
@@ -363,8 +388,8 @@ async function generatePdfFromHtml(htmlContent: string, fileName: string): Promi
       )
     );
 
-    // Small delay to ensure rendering is complete
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Longer delay for Arabic content to ensure font rendering
+    await new Promise(resolve => setTimeout(resolve, lang === 'ar' ? 300 : 100));
 
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -548,7 +573,7 @@ export async function generateParticipantPDF(report: ParticipantReport): Promise
     .replace(/[^a-zA-Z0-9_.-\u0600-\u06FF]/g, "_")
     .toLowerCase();
   
-  await generatePdfFromHtml(html, fileName);
+  await generatePdfFromHtml(html, fileName, lang);
 }
 
 export async function generateGroupPDF(report: GroupReport): Promise<void> {
@@ -605,5 +630,5 @@ export async function generateGroupPDF(report: GroupReport): Promise<void> {
     .replace(/[^a-zA-Z0-9_.-\u0600-\u06FF]/g, "_")
     .toLowerCase();
   
-  await generatePdfFromHtml(html, fileName);
+  await generatePdfFromHtml(html, fileName, lang);
 }
