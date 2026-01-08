@@ -166,8 +166,8 @@ const PrintPreview = () => {
 
   const loadReportData = async () => {
     try {
-      // Get data from sessionStorage (set by the calling page)
-      const storedData = sessionStorage.getItem("printReportData");
+      // Get data from localStorage (set by the calling page)
+      const storedData = localStorage.getItem("printReportData");
       if (!storedData) {
         setError("No report data found");
         setLoading(false);
@@ -176,6 +176,9 @@ const PrintPreview = () => {
 
       const data = JSON.parse(storedData);
       setOrganization(data.organization);
+
+      // Clean up localStorage after reading
+      localStorage.removeItem("printReportData");
 
       switch (reportType) {
         case "talent-snapshot":
