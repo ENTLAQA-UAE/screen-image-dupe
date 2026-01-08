@@ -395,84 +395,59 @@ export default function TakeAssessment() {
       return;
     }
 
-    if (!assessmentData?.assessmentGroup?.organizationId) {
-      console.error("Missing organization ID");
+    if (!token) {
+      console.error("Missing group token");
       toast.error(t.registrationFailed);
       return;
     }
 
     try {
-      // Check if employee code already took this assessment
-      const { data: existingByCode, error: codeCheckError } = await supabase
-        .from("participants")
-        .select("id, status")
-        .eq("group_id", assessmentData.assessmentGroup.id)
-        .eq("employee_code", regForm.employee_code.trim())
-        .maybeSingle();
-
-      if (codeCheckError) {
-        console.error("Check error:", codeCheckError);
-      }
-
-      if (existingByCode) {
-        const errorMsg = isArabic 
-          ? "رقم الموظف هذا قد أخذ هذا التقييم بالفعل" 
-          : "This employee code has already taken this assessment";
-        toast.error(errorMsg);
-        return;
-      }
-
-      // Check if email already took this assessment
-      const { data: existingByEmail, error: emailCheckError } = await supabase
-        .from("participants")
-        .select("id, status")
-        .eq("group_id", assessmentData.assessmentGroup.id)
-        .eq("email", regForm.email.trim().toLowerCase())
-        .maybeSingle();
-
-      if (emailCheckError) {
-        console.error("Email check error:", emailCheckError);
-      }
-
-      if (existingByEmail) {
-        const errorMsg = isArabic 
-          ? "هذا البريد الإلكتروني قد أخذ هذا التقييم بالفعل" 
-          : "This email has already taken this assessment";
-        toast.error(errorMsg);
-        return;
-      }
-
-      // Generate a UUID for the participant before insert
-      const newParticipantId = crypto.randomUUID();
-
-      const { error } = await supabase
-        .from("participants")
-        .insert({
-          id: newParticipantId,
-          group_id: assessmentData.assessmentGroup.id,
-          organization_id: assessmentData.assessmentGroup.organizationId,
-          full_name: regForm.full_name.trim(),
+      // Use edge function for registration to bypass RLS issues
+      const funcUrl = `https://ephwmhikhiiyrnikvrwp.supabase.co/functions/v1/register-participant`;
+      const res = await fetch(funcUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          groupToken: token,
+          fullName: regForm.full_name.trim(),
           email: regForm.email.trim().toLowerCase(),
+          employeeCode: regForm.employee_code.trim(),
           department: regForm.department?.trim() || null,
-          job_title: regForm.job_title?.trim() || null,
-          employee_code: regForm.employee_code.trim(),
-          status: "started",
-          started_at: new Date().toISOString(),
-        });
+          jobTitle: regForm.job_title?.trim() || null,
+        }),
+      });
 
-      if (error) {
-        // Handle unique constraint violation
-        if (error.code === '23505') {
+      const data = await res.json();
+
+      if (!res.ok) {
+        // Handle specific error codes
+        if (data.code === "DUPLICATE_CODE") {
+          const errorMsg = isArabic 
+            ? "رقم الموظف هذا قد أخذ هذا التقييم بالفعل" 
+            : "This employee code has already taken this assessment";
+          toast.error(errorMsg);
+          return;
+        }
+        if (data.code === "DUPLICATE_EMAIL") {
+          const errorMsg = isArabic 
+            ? "هذا البريد الإلكتروني قد أخذ هذا التقييم بالفعل" 
+            : "This email has already taken this assessment";
+          toast.error(errorMsg);
+          return;
+        }
+        if (data.code === "DUPLICATE") {
           const errorMsg = isArabic 
             ? "لقد قمت بأخذ هذا التقييم بالفعل" 
             : "You have already taken this assessment";
           toast.error(errorMsg);
           return;
         }
-        throw error;
+        throw new Error(data.error || "Registration failed");
       }
 
-      setParticipantId(newParticipantId);
+      setParticipantId(data.participantId);
       setPageState("intro");
     } catch (error: any) {
       console.error("Registration error:", error);

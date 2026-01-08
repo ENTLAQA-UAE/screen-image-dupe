@@ -14,3 +14,6 @@ verify_jwt = true
 
 [functions.generate-talent-snapshot]
 verify_jwt = true
+
+[functions.register-participant]
+verify_jwt = false
