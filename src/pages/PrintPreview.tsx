@@ -312,11 +312,15 @@ const PrintPreview = () => {
             font-family: ${isRtl ? "'Cairo', 'Noto Naskh Arabic', sans-serif" : "'Segoe UI', 'Helvetica Neue', Arial, sans-serif"};
             direction: ${isRtl ? "rtl" : "ltr"};
             text-align: ${isRtl ? "right" : "left"};
-            unicode-bidi: plaintext;
+            unicode-bidi: normal;
             line-height: 1.6;
             color: #1e293b;
           }
-          
+
+          .bidi-plaintext {
+            unicode-bidi: plaintext;
+          }
+
           .page-break {
             page-break-before: always;
           }
@@ -404,8 +408,11 @@ const PrintPreview = () => {
             border-radius: 12px;
             line-height: 1.8;
             font-size: 14px;
+            direction: ${isRtl ? "rtl" : "ltr"};
+            text-align: ${isRtl ? "right" : "left"};
+            unicode-bidi: plaintext;
           }
-          
+
           .ai-content h4 {
             font-weight: 600;
             color: ${primaryColor};
@@ -419,8 +426,9 @@ const PrintPreview = () => {
           
           .ai-content p {
             margin-bottom: 8px;
+            unicode-bidi: plaintext;
           }
-          
+
           .ai-content ul {
             margin: 8px 0;
             padding-${isRtl ? "right" : "left"}: 20px;
