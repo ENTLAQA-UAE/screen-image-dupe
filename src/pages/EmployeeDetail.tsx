@@ -13,7 +13,7 @@ import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { generateParticipantPDF } from "@/lib/pdfGenerator";
+import { generateParticipantPDF, generateTalentSnapshotPDF } from "@/lib/pdfGenerator";
 import {
   ArrowLeft,
   User,
@@ -129,11 +129,9 @@ const EmployeeDetail = () => {
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [isAnonymizeOpen, setIsAnonymizeOpen] = useState(false);
   const [anonymizing, setAnonymizing] = useState(false);
-  const [snapshotDiagnostics, setSnapshotDiagnostics] = useState<{
-    status: number | null;
-    message: string | null;
-    timestamp: Date | null;
-  }>({ status: null, message: null, timestamp: null });
+  const [isSnapshotModalOpen, setIsSnapshotModalOpen] = useState(false);
+  const [snapshotPdfLoading, setSnapshotPdfLoading] = useState(false);
+  const [orgBranding, setOrgBranding] = useState<{ name: string; logoUrl: string | null; primaryColor: string | null } | null>(null);
 
   useEffect(() => {
     if (email && user) {
@@ -159,12 +157,20 @@ const EmployeeDetail = () => {
 
       setOrganizationId(profile.organization_id);
 
-      // Get organization name
+      // Get organization name and branding
       const { data: org } = await supabase
         .from("organizations")
-        .select("name")
+        .select("name, logo_url, primary_color")
         .eq("id", profile.organization_id)
         .maybeSingle();
+
+      if (org) {
+        setOrgBranding({
+          name: org.name,
+          logoUrl: org.logo_url,
+          primaryColor: org.primary_color,
+        });
+      }
 
       // Fetch all participants with this email
       const { data: participants, error } = await supabase
@@ -331,14 +337,12 @@ const EmployeeDetail = () => {
     if (!employee || !organizationId || snapshotLoading) return;
 
     setSnapshotLoading(true);
-    setSnapshotDiagnostics({ status: null, message: null, timestamp: null });
     try {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) throw sessionError;
 
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) {
-        setSnapshotDiagnostics({ status: 401, message: "No access token - user not authenticated", timestamp: new Date() });
         toast.error("Authentication required. Please sign in again.");
         return;
       }
@@ -355,16 +359,12 @@ const EmployeeDetail = () => {
       });
 
       if (error) {
-        const statusMatch = error.message?.match(/(\d{3})/);
-        const status = statusMatch ? parseInt(statusMatch[1]) : 500;
-        setSnapshotDiagnostics({ status, message: error.message, timestamp: new Date() });
         throw error;
       }
 
       if (data?.snapshot) {
         setTalentSnapshot(data.snapshot);
         setSnapshotGeneratedAt(data.generatedAt);
-        setSnapshotDiagnostics({ status: 200, message: data.cached ? "Cached" : "Generated", timestamp: new Date() });
         if (!data.cached) {
           toast.success("AI Talent Snapshot generated");
         }
@@ -394,6 +394,36 @@ const EmployeeDetail = () => {
       generateTalentSnapshot(false);
     }
   }, [employee, organizationId]);
+
+  const handleExportSnapshotPDF = async () => {
+    if (!employee || !talentSnapshot || !orgBranding) return;
+
+    setSnapshotPdfLoading(true);
+    try {
+      await generateTalentSnapshotPDF({
+        employeeName: employee.full_name,
+        employeeEmail: employee.email,
+        employeeCode: employee.employee_code || undefined,
+        department: employee.department || undefined,
+        jobTitle: employee.job_title || undefined,
+        snapshotText: talentSnapshot,
+        generatedAt: snapshotGeneratedAt || new Date().toISOString(),
+        assessmentCount: stats?.completed || 0,
+        organization: {
+          name: orgBranding.name,
+          logoUrl: orgBranding.logoUrl,
+          primaryColor: orgBranding.primaryColor,
+        },
+        language: dir === "rtl" ? "ar" : "en",
+      });
+      toast.success(t.common.success);
+    } catch (error) {
+      console.error("Error exporting snapshot PDF:", error);
+      toast.error(t.common.error);
+    } finally {
+      setSnapshotPdfLoading(false);
+    }
+  };
 
   const handleAnonymize = async () => {
     if (!employee || !organizationId) return;
@@ -598,46 +628,53 @@ const EmployeeDetail = () => {
             </CardHeader>
             <CardContent>
               {talentSnapshot ? (
-                <div className="prose prose-sm dark:prose-invert max-w-none">
-                  <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                    {talentSnapshot.split(/##\s*/).filter(Boolean).map((section, i) => {
-                      const [title, ...content] = section.split('\n');
-                      return (
-                        <div key={i} className="mb-4">
-                          {title && <h4 className="font-semibold text-foreground mb-2">{title.replace(/\*\*/g, '')}</h4>}
-                          <div className="text-muted-foreground">
-                            {content.join('\n').split('\n').map((line, j) => (
-                              <p key={j} className="mb-1">{line.replace(/\*\*/g, '').replace(/^\s*[-•]\s*/, '• ')}</p>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
+                <div className="space-y-4">
+                  {/* Truncated Preview - max 4 lines */}
+                  <div 
+                    dir={dir}
+                    className={`text-sm text-muted-foreground leading-relaxed line-clamp-4 ${dir === "rtl" ? "text-right" : "text-left"}`}
+                    style={{ unicodeBidi: "plaintext" }}
+                  >
+                    {talentSnapshot.replace(/##\s*/g, '').replace(/\*\*/g, '').substring(0, 250)}...
                   </div>
+                  
                   {snapshotGeneratedAt && (
-                    <p className="text-xs text-muted-foreground mb-3">
-                      Last generated: {new Date(snapshotGeneratedAt).toLocaleString()}
+                    <p className="text-xs text-muted-foreground">
+                      {t.employeeDetail.lastGenerated}: {new Date(snapshotGeneratedAt).toLocaleDateString()}
                     </p>
                   )}
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="mt-4 w-full"
-                    onClick={() => generateTalentSnapshot(true)}
-                    disabled={snapshotLoading}
-                  >
-                    {snapshotLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 ltr:mr-2 rtl:ml-2 animate-spin" />
-                        {t.employeeDetail.regenerating}
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
-                        {t.employeeDetail.regenerateSnapshot}
-                      </>
-                    )}
-                  </Button>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-col gap-2">
+                    <Button 
+                      variant="hero" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => setIsSnapshotModalOpen(true)}
+                    >
+                      <Eye className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
+                      {t.employeeDetail.seeMore}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => generateTalentSnapshot(true)}
+                      disabled={snapshotLoading}
+                    >
+                      {snapshotLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 ltr:mr-2 rtl:ml-2 animate-spin" />
+                          {t.employeeDetail.regenerating}
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
+                          {t.employeeDetail.regenerateSnapshot}
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-6">
@@ -669,7 +706,6 @@ const EmployeeDetail = () => {
                   )}
                 </div>
               )}
-
             </CardContent>
           </Card>
 
@@ -905,6 +941,75 @@ const EmployeeDetail = () => {
                 {t.employeeDetail.exportPdf}
               </Button>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Talent Snapshot Modal */}
+      <Dialog open={isSnapshotModalOpen} onOpenChange={setIsSnapshotModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-accent" />
+              {t.employeeDetail.aiTalentSnapshot}
+            </DialogTitle>
+            <DialogDescription>
+              {t.employeeDetail.aiTalentDesc}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto pr-2">
+            {talentSnapshot && (
+              <div 
+                dir={dir}
+                className={`prose prose-sm dark:prose-invert max-w-none ${dir === "rtl" ? "text-right" : "text-left"}`}
+              >
+                <div 
+                  className="text-sm text-foreground whitespace-pre-wrap leading-relaxed"
+                  style={{ unicodeBidi: "plaintext" }}
+                >
+                  {talentSnapshot.split(/##\s*/).filter(Boolean).map((section, i) => {
+                    const [title, ...content] = section.split('\n');
+                    return (
+                      <div key={i} className="mb-4">
+                        {title && (
+                          <h4 className="font-semibold text-foreground mb-2">
+                            {title.replace(/\*\*/g, '')}
+                          </h4>
+                        )}
+                        <div className="text-muted-foreground">
+                          {content.join('\n').split('\n').map((line, j) => (
+                            <p key={j} className="mb-1">
+                              {line.replace(/\*\*/g, '').replace(/^\s*[-•]\s*/, '• ')}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {snapshotGeneratedAt && (
+            <p className="text-xs text-muted-foreground py-2 border-t">
+              {t.employeeDetail.lastGenerated}: {new Date(snapshotGeneratedAt).toLocaleString()}
+            </p>
+          )}
+
+          <div className="flex justify-end gap-2 pt-4 border-t">
+            <Button variant="outline" onClick={() => setIsSnapshotModalOpen(false)}>
+              {t.employeeDetail.close}
+            </Button>
+            <Button onClick={handleExportSnapshotPDF} disabled={snapshotPdfLoading}>
+              {snapshotPdfLoading ? (
+                <Loader2 className="w-4 h-4 ltr:mr-2 rtl:ml-2 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
+              )}
+              {t.employeeDetail.downloadPdf}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

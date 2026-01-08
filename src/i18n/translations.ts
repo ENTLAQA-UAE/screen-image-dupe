@@ -564,6 +564,10 @@ export const translations = {
       anonymizeItem4: "Delete AI-generated report text",
       anonymizeItem5: "Preserve assessment scores and completion data",
       anonymizeData: "Anonymize Data",
+      seeMore: "See More",
+      downloadPdf: "Download PDF",
+      talentSnapshotReport: "Talent Snapshot Report",
+      lastGenerated: "Last generated",
     },
     // Subscription Page
     subscription: {
@@ -1205,6 +1209,10 @@ export const translations = {
       anonymizeItem4: "حذف نص تقرير الذكاء الاصطناعي",
       anonymizeItem5: "الحفاظ على درجات التقييم وبيانات الإكمال",
       anonymizeData: "إخفاء البيانات",
+      seeMore: "عرض المزيد",
+      downloadPdf: "تحميل PDF",
+      talentSnapshotReport: "تقرير لمحة المواهب",
+      lastGenerated: "آخر إنشاء",
     },
     // Subscription Page
     subscription: {

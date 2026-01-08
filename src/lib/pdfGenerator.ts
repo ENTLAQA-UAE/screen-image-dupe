@@ -61,6 +61,19 @@ export interface GroupReport {
   aiNarrative?: string;
 }
 
+export interface TalentSnapshotReport {
+  employeeName: string;
+  employeeEmail: string;
+  employeeCode?: string;
+  department?: string;
+  jobTitle?: string;
+  snapshotText: string;
+  generatedAt: string;
+  assessmentCount: number;
+  organization: OrganizationBranding;
+  language?: Language;
+}
+
 // ============= Translations =============
 const translations = {
   en: {
@@ -103,6 +116,10 @@ const translations = {
     started: "Started",
     traitAnalysis: "Trait Analysis",
     poweredBy: "Powered by",
+    talentSnapshotReport: "Talent Snapshot Report",
+    jobTitle: "Job Title",
+    basedOnAssessments: "Based on",
+    assessments: "assessments",
   },
   ar: {
     assessmentReport: "تقرير التقييم",
@@ -144,6 +161,10 @@ const translations = {
     started: "بدأ",
     traitAnalysis: "تحليل السمات",
     poweredBy: "مدعوم من",
+    talentSnapshotReport: "تقرير لمحة المواهب",
+    jobTitle: "المسمى الوظيفي",
+    basedOnAssessments: "بناءً على",
+    assessments: "تقييمات",
   }
 };
 
@@ -616,6 +637,65 @@ export async function generateGroupPDF(report: GroupReport): Promise<void> {
   const pages = [buildPageContainer(page1, lang), buildPageContainer(page2, lang)];
 
   const fileName = `${report.groupName}_group_report.pdf`
+    .replace(/[^a-zA-Z0-9_.-\u0600-\u06FF]/g, "_")
+    .toLowerCase();
+
+  await generatePdfFromPages(pages, fileName, lang);
+}
+
+export async function generateTalentSnapshotPDF(report: TalentSnapshotReport): Promise<void> {
+  const lang = report.language || 'en';
+  const t = getTranslations(lang);
+  const primaryColor = getPrimaryColor(report.organization);
+
+  // Pre-load logo as base64
+  let logoBase64: string | null = null;
+  if (report.organization.logoUrl) {
+    logoBase64 = await imageUrlToBase64(report.organization.logoUrl);
+  }
+
+  // Build info items
+  const infoItems: { label: string; value: string }[] = [
+    { label: t.name, value: report.employeeName || t.anonymous },
+    { label: t.email, value: report.employeeEmail || "-" },
+  ];
+  
+  if (report.employeeCode) {
+    infoItems.push({ label: t.employeeCode, value: report.employeeCode });
+  }
+  if (report.department) {
+    infoItems.push({ label: t.department, value: report.department });
+  }
+  if (report.jobTitle) {
+    infoItems.push({ label: t.jobTitle, value: report.jobTitle });
+  }
+
+  // Build stats
+  const statsItems = [
+    { label: t.basedOnAssessments, value: `${report.assessmentCount} ${t.assessments}` },
+    { label: t.generatedOn, value: formatDate(report.generatedAt, lang, true) },
+  ];
+
+  // Build page 1 (summary)
+  let page1 = buildHeaderHtml(t.talentSnapshotReport, report.organization, lang, logoBase64);
+
+  page1 += `<div class="page-break-inside-avoid" style="margin-bottom: 30px;">`;
+  page1 += buildSectionHeader(t.participantInformation, primaryColor, lang);
+  page1 += buildInfoGrid(infoItems, lang);
+  page1 += `</div>`;
+
+  page1 += `<div class="page-break-inside-avoid" style="margin-bottom: 30px;">`;
+  page1 += buildStatsGrid(statsItems, primaryColor, lang);
+  page1 += `</div>`;
+
+  // Build page 2 (AI snapshot content)
+  let page2 = buildHeaderHtml(t.talentSnapshotReport, report.organization, lang, logoBase64);
+  page2 += buildAiFeedbackSection(report.snapshotText, t.aiGeneratedFeedback, primaryColor, lang);
+  page2 += buildFooterHtml(t, report.organization, lang);
+
+  const pages = [buildPageContainer(page1, lang), buildPageContainer(page2, lang)];
+
+  const fileName = `${report.employeeName || "employee"}_talent_snapshot.pdf`
     .replace(/[^a-zA-Z0-9_.-\u0600-\u06FF]/g, "_")
     .toLowerCase();
 
