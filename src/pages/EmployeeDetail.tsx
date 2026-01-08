@@ -497,18 +497,18 @@ const EmployeeDetail = () => {
           </Button>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards with Circular Progress */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <Card className="h-full bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-0 shadow-md">
+            <Card className="h-full bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-0 shadow-md overflow-hidden">
               <CardContent className="pt-6 pb-5">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-blue-600 dark:text-blue-400">{t.employeeDetail.totalAssessments}</p>
                     <p className="text-4xl font-bold text-blue-700 dark:text-blue-300 mt-1">{stats.totalAssessments}</p>
                   </div>
-                  <div className="w-14 h-14 rounded-2xl bg-blue-500/20 flex items-center justify-center">
-                    <FileText className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
+                    <FileText className="w-8 h-8 text-white" />
                   </div>
                 </div>
               </CardContent>
@@ -516,18 +516,28 @@ const EmployeeDetail = () => {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-            <Card className="h-full bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/30 dark:to-emerald-900/20 border-0 shadow-md">
-              <CardContent className="pt-6 pb-5">
+            <Card className="h-full bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/30 dark:to-emerald-900/20 border-0 shadow-md overflow-hidden">
+              <CardContent className="pt-5 pb-5">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">{t.employeeDetail.completionRate}</p>
-                    <p className="text-4xl font-bold text-emerald-700 dark:text-emerald-300 mt-1">{stats.completionRate}%</p>
                     <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-1">
-                      {stats.completed} {t.employeeDetail.ofCompleted} {stats.totalAssessments}
+                      {stats.completed} / {stats.totalAssessments}
                     </p>
                   </div>
-                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 flex items-center justify-center">
-                    <CheckCircle2 className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+                  <div className="relative">
+                    <svg width="70" height="70" className="-rotate-90">
+                      <circle cx="35" cy="35" r="28" fill="none" strokeWidth="7" className="stroke-emerald-200 dark:stroke-emerald-800/50" />
+                      <circle
+                        cx="35" cy="35" r="28" fill="none" strokeWidth="7" strokeLinecap="round"
+                        strokeDasharray={2 * Math.PI * 28}
+                        strokeDashoffset={2 * Math.PI * 28 * (1 - stats.completionRate / 100)}
+                        className="stroke-emerald-500 transition-all duration-700 ease-out"
+                      />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-emerald-700 dark:text-emerald-300">
+                      {stats.completionRate}%
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -535,17 +545,35 @@ const EmployeeDetail = () => {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <Card className="h-full bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-950/30 dark:to-violet-900/20 border-0 shadow-md">
-              <CardContent className="pt-6 pb-5">
+            <Card className="h-full bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-950/30 dark:to-violet-900/20 border-0 shadow-md overflow-hidden">
+              <CardContent className="pt-5 pb-5">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-violet-600 dark:text-violet-400">{t.employeeDetail.averageScore}</p>
-                    <p className="text-4xl font-bold text-violet-700 dark:text-violet-300 mt-1">
-                      {stats.averageScore !== null ? `${stats.averageScore}%` : "-"}
+                    <p className="text-xs text-violet-600/70 dark:text-violet-400/70 mt-1">
+                      Performance
                     </p>
                   </div>
-                  <div className="w-14 h-14 rounded-2xl bg-violet-500/20 flex items-center justify-center">
-                    <TrendingUp className="w-7 h-7 text-violet-600 dark:text-violet-400" />
+                  <div className="relative">
+                    <svg width="70" height="70" className="-rotate-90">
+                      <defs>
+                        <linearGradient id="avgScoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#8b5cf6" />
+                          <stop offset="100%" stopColor="#a855f7" />
+                        </linearGradient>
+                      </defs>
+                      <circle cx="35" cy="35" r="28" fill="none" strokeWidth="7" className="stroke-violet-200 dark:stroke-violet-800/50" />
+                      <circle
+                        cx="35" cy="35" r="28" fill="none" strokeWidth="7" strokeLinecap="round"
+                        strokeDasharray={2 * Math.PI * 28}
+                        strokeDashoffset={stats.averageScore !== null ? 2 * Math.PI * 28 * (1 - stats.averageScore / 100) : 2 * Math.PI * 28}
+                        stroke="url(#avgScoreGradient)"
+                        className="transition-all duration-700 ease-out"
+                      />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-violet-700 dark:text-violet-300">
+                      {stats.averageScore !== null ? `${stats.averageScore}%` : "-"}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -553,17 +581,35 @@ const EmployeeDetail = () => {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-            <Card className="h-full bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 border-0 shadow-md">
-              <CardContent className="pt-6 pb-5">
+            <Card className="h-full bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 border-0 shadow-md overflow-hidden">
+              <CardContent className="pt-5 pb-5">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-amber-600 dark:text-amber-400">{t.employeeDetail.bestScore}</p>
-                    <p className="text-4xl font-bold text-amber-700 dark:text-amber-300 mt-1">
-                      {stats.highestScore !== null ? `${stats.highestScore}%` : "-"}
+                    <p className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-1">
+                      Top Performance
                     </p>
                   </div>
-                  <div className="w-14 h-14 rounded-2xl bg-amber-500/20 flex items-center justify-center">
-                    <Award className="w-7 h-7 text-amber-600 dark:text-amber-400" />
+                  <div className="relative">
+                    <svg width="70" height="70" className="-rotate-90">
+                      <defs>
+                        <linearGradient id="bestScoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#f59e0b" />
+                          <stop offset="100%" stopColor="#f97316" />
+                        </linearGradient>
+                      </defs>
+                      <circle cx="35" cy="35" r="28" fill="none" strokeWidth="7" className="stroke-amber-200 dark:stroke-amber-800/50" />
+                      <circle
+                        cx="35" cy="35" r="28" fill="none" strokeWidth="7" strokeLinecap="round"
+                        strokeDasharray={2 * Math.PI * 28}
+                        strokeDashoffset={stats.highestScore !== null ? 2 * Math.PI * 28 * (1 - stats.highestScore / 100) : 2 * Math.PI * 28}
+                        stroke="url(#bestScoreGradient)"
+                        className="transition-all duration-700 ease-out"
+                      />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-amber-700 dark:text-amber-300">
+                      {stats.highestScore !== null ? `${stats.highestScore}%` : "-"}
+                    </span>
                   </div>
                 </div>
               </CardContent>

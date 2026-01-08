@@ -489,91 +489,124 @@ const GroupReport = () => {
           </Badge>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Users className="w-6 h-6 text-primary" />
-                  </div>
+        {/* Stats Cards with Circular Progress */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            <Card className="h-full bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-0 shadow-md overflow-hidden">
+              <CardContent className="pt-6 pb-5">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold">{stats.totalParticipants}</p>
-                    <p className="text-sm text-muted-foreground">Total Participants</p>
+                    <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Total Participants</p>
+                    <p className="text-4xl font-bold text-blue-700 dark:text-blue-300 mt-1">{stats.totalParticipants}</p>
+                  </div>
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
+                    <Users className="w-8 h-8 text-white" />
                   </div>
                 </div>
               </CardContent>
             </Card>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-          >
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
-                    <CheckCircle2 className="w-6 h-6 text-success" />
-                  </div>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+            <Card className="h-full bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/30 dark:to-emerald-900/20 border-0 shadow-md overflow-hidden">
+              <CardContent className="pt-5 pb-5">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold">{stats.completionRate}%</p>
-                    <p className="text-sm text-muted-foreground">Completion Rate</p>
+                    <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Completion Rate</p>
+                    <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-1">
+                      {stats.completed} / {stats.totalParticipants}
+                    </p>
+                  </div>
+                  <div className="relative">
+                    <svg width="70" height="70" className="-rotate-90">
+                      <circle cx="35" cy="35" r="28" fill="none" strokeWidth="7" className="stroke-emerald-200 dark:stroke-emerald-800/50" />
+                      <circle
+                        cx="35" cy="35" r="28" fill="none" strokeWidth="7" strokeLinecap="round"
+                        strokeDasharray={2 * Math.PI * 28}
+                        strokeDashoffset={2 * Math.PI * 28 * (1 - stats.completionRate / 100)}
+                        className="stroke-emerald-500 transition-all duration-700 ease-out"
+                      />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-emerald-700 dark:text-emerald-300">
+                      {stats.completionRate}%
+                    </span>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </motion.div>
 
-          {stats.averageScore !== null && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
-                      <TrendingUp className="w-6 h-6 text-accent" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">{stats.averageScore}%</p>
-                      <p className="text-sm text-muted-foreground">Average Score</p>
-                    </div>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            <Card className="h-full bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-950/30 dark:to-violet-900/20 border-0 shadow-md overflow-hidden">
+              <CardContent className="pt-5 pb-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-violet-600 dark:text-violet-400">Average Score</p>
+                    <p className="text-xs text-violet-600/70 dark:text-violet-400/70 mt-1">
+                      Group Performance
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+                  <div className="relative">
+                    <svg width="70" height="70" className="-rotate-90">
+                      <defs>
+                        <linearGradient id="groupAvgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#8b5cf6" />
+                          <stop offset="100%" stopColor="#a855f7" />
+                        </linearGradient>
+                      </defs>
+                      <circle cx="35" cy="35" r="28" fill="none" strokeWidth="7" className="stroke-violet-200 dark:stroke-violet-800/50" />
+                      <circle
+                        cx="35" cy="35" r="28" fill="none" strokeWidth="7" strokeLinecap="round"
+                        strokeDasharray={2 * Math.PI * 28}
+                        strokeDashoffset={stats.averageScore !== null ? 2 * Math.PI * 28 * (1 - stats.averageScore / 100) : 2 * Math.PI * 28}
+                        stroke="url(#groupAvgGradient)"
+                        className="transition-all duration-700 ease-out"
+                      />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-violet-700 dark:text-violet-300">
+                      {stats.averageScore !== null ? `${stats.averageScore}%` : "-"}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          {stats.highestScore !== null && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-            >
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
-                      <Award className="w-6 h-6 text-warning" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">{stats.highestScore}%</p>
-                      <p className="text-sm text-muted-foreground">Highest Score</p>
-                    </div>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+            <Card className="h-full bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 border-0 shadow-md overflow-hidden">
+              <CardContent className="pt-5 pb-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Highest Score</p>
+                    <p className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-1">
+                      Top Performer
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+                  <div className="relative">
+                    <svg width="70" height="70" className="-rotate-90">
+                      <defs>
+                        <linearGradient id="groupHighGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#f59e0b" />
+                          <stop offset="100%" stopColor="#f97316" />
+                        </linearGradient>
+                      </defs>
+                      <circle cx="35" cy="35" r="28" fill="none" strokeWidth="7" className="stroke-amber-200 dark:stroke-amber-800/50" />
+                      <circle
+                        cx="35" cy="35" r="28" fill="none" strokeWidth="7" strokeLinecap="round"
+                        strokeDasharray={2 * Math.PI * 28}
+                        strokeDashoffset={stats.highestScore !== null ? 2 * Math.PI * 28 * (1 - stats.highestScore / 100) : 2 * Math.PI * 28}
+                        stroke="url(#groupHighGradient)"
+                        className="transition-all duration-700 ease-out"
+                      />
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-amber-700 dark:text-amber-300">
+                      {stats.highestScore !== null ? `${stats.highestScore}%` : "-"}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
@@ -585,49 +618,56 @@ const GroupReport = () => {
           <TabsContent value="overview" className="space-y-6">
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Status Distribution */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <BarChart3 className="w-5 h-5" />
-                    Status Distribution
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {statusData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie
-                          data={statusData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={100}
-                          paddingAngle={2}
-                          dataKey="value"
-                          label={({ name, value }) => `${name}: ${value}`}
-                        >
-                          {statusData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Legend />
-                        <Tooltip />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="flex items-center justify-center h-[250px] text-muted-foreground">
-                      No participants yet
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Grade Distribution or Trait Averages */}
-              {group.assessment?.is_graded && stats.gradeDistribution.length > 0 ? (
-                <Card>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+                <Card className="h-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-0 shadow-lg">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
-                      <Award className="w-5 h-5" />
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                        <BarChart3 className="w-5 h-5 text-white" />
+                      </div>
+                      Status Distribution
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {statusData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height={250}>
+                        <PieChart>
+                          <Pie
+                            data={statusData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={100}
+                            paddingAngle={2}
+                            dataKey="value"
+                            label={({ name, value }) => `${name}: ${value}`}
+                          >
+                            {statusData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Legend />
+                          <Tooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="flex items-center justify-center h-[250px] text-muted-foreground">
+                        No participants yet
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Grade Distribution or Trait Averages */}
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+              {group.assessment?.is_graded && stats.gradeDistribution.length > 0 ? (
+                <Card className="h-full bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
+                        <Award className="w-5 h-5 text-white" />
+                      </div>
                       Grade Distribution
                     </CardTitle>
                   </CardHeader>
@@ -644,16 +684,18 @@ const GroupReport = () => {
                             borderRadius: "8px",
                           }}
                         />
-                        <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="count" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </CardContent>
                 </Card>
               ) : stats.traitAverages && stats.traitAverages.length > 0 ? (
-                <Card>
+                <Card className="h-full bg-gradient-to-br from-purple-50 to-fuchsia-50 dark:from-purple-950/30 dark:to-fuchsia-950/20 border-0 shadow-lg">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
-                      <Brain className="w-5 h-5" />
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-fuchsia-500 flex items-center justify-center">
+                        <Brain className="w-5 h-5 text-white" />
+                      </div>
                       Trait Averages
                     </CardTitle>
                     <CardDescription>Average scores across all completed assessments</CardDescription>
@@ -671,16 +713,18 @@ const GroupReport = () => {
                             borderRadius: "8px",
                           }}
                         />
-                        <Bar dataKey="average" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                        <Bar dataKey="average" fill="#a855f7" radius={[0, 4, 4, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </CardContent>
                 </Card>
               ) : (
-                <Card>
+                <Card className="h-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-0 shadow-lg">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
-                      <BarChart3 className="w-5 h-5" />
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-400 to-slate-500 flex items-center justify-center">
+                        <BarChart3 className="w-5 h-5 text-white" />
+                      </div>
                       Score Analysis
                     </CardTitle>
                   </CardHeader>
@@ -693,16 +737,20 @@ const GroupReport = () => {
                   </CardContent>
                 </Card>
               )}
+              </motion.div>
             </div>
 
             {/* AI Group Narrative */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Sparkles className="w-5 h-5 text-primary" />
-                    AI Analysis & Insights
-                  </CardTitle>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+              <Card className="bg-gradient-to-br from-purple-50 via-fuchsia-50 to-pink-50 dark:from-purple-950/30 dark:via-fuchsia-950/20 dark:to-pink-950/20 border-0 shadow-lg">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                        <Sparkles className="w-5 h-5 text-white" />
+                      </div>
+                      AI Analysis & Insights
+                    </CardTitle>
                   <Button
                     variant="outline"
                     size="sm"
@@ -753,6 +801,7 @@ const GroupReport = () => {
                 )}
               </CardContent>
             </Card>
+            </motion.div>
 
             {/* Score Range Summary */}
             {stats.averageScore !== null && (
