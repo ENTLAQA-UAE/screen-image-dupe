@@ -975,11 +975,15 @@ const EmployeeDetail = () => {
                   <Sparkles className="w-4 h-4 text-primary" />
                   {t.employeeDetail.aiGeneratedFeedback}
                 </h3>
-                <div className="prose prose-sm max-w-none bg-gradient-to-br from-primary/5 to-accent/5 p-5 rounded-xl border border-primary/10">
-                  <p
-                    dir={dir}
-                    className={`whitespace-pre-wrap text-foreground leading-relaxed bidi-plaintext ${dir === "rtl" ? "text-right" : "text-left"}`}
-                  >
+                <div
+                  dir={dir}
+                  className={
+                    "rounded-xl border border-border/50 bg-card/50 p-5 " +
+                    (dir === "rtl" ? "text-right" : "text-left")
+                  }
+                  style={{ unicodeBidi: "plaintext" }}
+                >
+                  <p className="whitespace-pre-wrap text-foreground leading-relaxed">
                     {selectedReport.ai_report_text}
                   </p>
                 </div>
