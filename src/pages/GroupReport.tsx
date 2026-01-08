@@ -34,6 +34,7 @@ import {
   FileSpreadsheet,
 } from "lucide-react";
 import { openGroupPrintPreview, openParticipantPrintPreview } from "@/lib/printPreview";
+import { autoDir, autoAlign } from "@/lib/textDirection";
 import {
   BarChart,
   Bar,
@@ -781,10 +782,21 @@ const GroupReport = () => {
               </CardHeader>
               <CardContent>
                 {groupNarrative ? (
-                  <div className="prose prose-sm max-w-none bg-gradient-to-br from-primary/5 to-accent/5 p-5 rounded-xl border border-primary/10">
-                    <p className="whitespace-pre-wrap text-foreground leading-relaxed">
-                      {groupNarrative}
-                    </p>
+                  <div
+                    dir={autoDir(groupNarrative)}
+                    className="prose prose-sm max-w-none bg-gradient-to-br from-primary/5 to-accent/5 p-5 rounded-xl border border-primary/10"
+                    style={{ textAlign: autoAlign(groupNarrative), unicodeBidi: "plaintext" }}
+                  >
+                    {groupNarrative.split("\n\n").map((para, idx) => (
+                      <p
+                        key={idx}
+                        dir={autoDir(para)}
+                        className="text-foreground leading-relaxed mb-2"
+                        style={{ textAlign: autoAlign(para), unicodeBidi: "plaintext" }}
+                      >
+                        {para}
+                      </p>
+                    ))}
                   </div>
                 ) : stats.completed === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
@@ -992,16 +1004,23 @@ const GroupReport = () => {
                   AI-Generated Feedback
                 </h3>
                 <div
-                  dir={dir}
-                  className={
-                    "rounded-xl border border-border/50 bg-card/50 p-5 " +
-                    (dir === "rtl" ? "text-right" : "text-left")
-                  }
-                  style={{ unicodeBidi: "plaintext" }}
+                  dir={autoDir(selectedParticipant.ai_report_text)}
+                  className="rounded-xl border border-border/50 bg-card/50 p-5"
+                  style={{
+                    textAlign: autoAlign(selectedParticipant.ai_report_text),
+                    unicodeBidi: "plaintext",
+                  }}
                 >
-                  <p className="whitespace-pre-wrap text-foreground leading-relaxed">
-                    {selectedParticipant.ai_report_text}
-                  </p>
+                  {selectedParticipant.ai_report_text.split("\n\n").map((para, idx) => (
+                    <p
+                      key={idx}
+                      dir={autoDir(para)}
+                      className="whitespace-pre-wrap text-foreground leading-relaxed mb-2"
+                      style={{ textAlign: autoAlign(para), unicodeBidi: "plaintext" }}
+                    >
+                      {para}
+                    </p>
+                  ))}
                 </div>
               </div>
             )}

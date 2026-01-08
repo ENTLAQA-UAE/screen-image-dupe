@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { generateParticipantPDF } from "@/lib/pdfGenerator";
 import { openTalentSnapshotPrintPreview, openParticipantPrintPreview } from "@/lib/printPreview";
+import { autoDir, autoAlign } from "@/lib/textDirection";
 import {
   ArrowLeft,
   User,
@@ -976,16 +977,23 @@ const EmployeeDetail = () => {
                   {t.employeeDetail.aiGeneratedFeedback}
                 </h3>
                 <div
-                  dir={dir}
-                  className={
-                    "rounded-xl border border-border/50 bg-card/50 p-5 " +
-                    (dir === "rtl" ? "text-right" : "text-left")
-                  }
-                  style={{ unicodeBidi: "plaintext" }}
+                  dir={autoDir(selectedReport.ai_report_text)}
+                  className="rounded-xl border border-border/50 bg-card/50 p-5"
+                  style={{
+                    textAlign: autoAlign(selectedReport.ai_report_text),
+                    unicodeBidi: "plaintext",
+                  }}
                 >
-                  <p className="whitespace-pre-wrap text-foreground leading-relaxed">
-                    {selectedReport.ai_report_text}
-                  </p>
+                  {selectedReport.ai_report_text.split("\n\n").map((para, idx) => (
+                    <p
+                      key={idx}
+                      dir={autoDir(para)}
+                      className="whitespace-pre-wrap text-foreground leading-relaxed mb-2"
+                      style={{ textAlign: autoAlign(para), unicodeBidi: "plaintext" }}
+                    >
+                      {para}
+                    </p>
+                  ))}
                 </div>
               </div>
             )}
@@ -1021,8 +1029,9 @@ const EmployeeDetail = () => {
           <div className="flex-1 overflow-y-auto pr-2">
             {talentSnapshot && (
               <div 
-                dir={dir}
-                className={`prose prose-sm dark:prose-invert max-w-none ${dir === "rtl" ? "text-right" : "text-left"}`}
+                dir={autoDir(talentSnapshot)}
+                className="prose prose-sm dark:prose-invert max-w-none"
+                style={{ textAlign: autoAlign(talentSnapshot) }}
               >
                 <div 
                   className="text-sm text-foreground whitespace-pre-wrap leading-relaxed"
@@ -1033,16 +1042,28 @@ const EmployeeDetail = () => {
                     return (
                       <div key={i} className="mb-4">
                         {title && (
-                          <h4 className="font-semibold text-foreground mb-2">
+                          <h4
+                            dir={autoDir(title)}
+                            className="font-semibold text-foreground mb-2"
+                            style={{ textAlign: autoAlign(title), unicodeBidi: "plaintext" }}
+                          >
                             {title.replace(/\*\*/g, '')}
                           </h4>
                         )}
                         <div className="text-muted-foreground">
-                          {content.join('\n').split('\n').map((line, j) => (
-                            <p key={j} className="mb-1">
-                              {line.replace(/\*\*/g, '').replace(/^\s*[-•]\s*/, '• ')}
-                            </p>
-                          ))}
+                          {content.join('\n').split('\n').map((line, j) => {
+                            const lineText = line.replace(/\*\*/g, '').replace(/^\s*[-•]\s*/, '• ');
+                            return (
+                              <p
+                                key={j}
+                                dir={autoDir(lineText)}
+                                className="mb-1"
+                                style={{ textAlign: autoAlign(lineText), unicodeBidi: "plaintext" }}
+                              >
+                                {lineText}
+                              </p>
+                            );
+                          })}
                         </div>
                       </div>
                     );

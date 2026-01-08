@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
+import { autoDir, autoAlign } from "@/lib/textDirection";
 
 type ReportType = "talent-snapshot" | "participant" | "group";
 
@@ -252,16 +253,6 @@ const PrintPreview = () => {
     const formatStr = includeTime ? "PPP p" : "PP";
     return format(new Date(date), formatStr, { locale: lang === "ar" ? ar : enUS });
   };
-
-  // Detect Arabic text to apply per-block RTL even when report language is English
-  const hasArabic = (text?: string | null) => {
-    if (!text) return false;
-    // Arabic + Arabic supplement + Arabic presentation forms
-    return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(text);
-  };
-
-  const autoDir = (text?: string | null): "rtl" | "ltr" => (hasArabic(text) ? "rtl" : "ltr");
-  const autoAlign = (text?: string | null): "right" | "left" => (hasArabic(text) ? "right" : "left");
 
   const getTypeLabel = (type: string): string => {
     const typeKey = type.toLowerCase() as keyof typeof t;
