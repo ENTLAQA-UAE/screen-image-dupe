@@ -442,9 +442,13 @@ export default function TakeAssessment() {
         return;
       }
 
-      const { data, error } = await supabase
+      // Generate a UUID for the participant before insert
+      const newParticipantId = crypto.randomUUID();
+
+      const { error } = await supabase
         .from("participants")
         .insert({
+          id: newParticipantId,
           group_id: assessmentData.assessmentGroup.id,
           organization_id: assessmentData.assessmentGroup.organizationId,
           full_name: regForm.full_name.trim(),
@@ -454,9 +458,7 @@ export default function TakeAssessment() {
           employee_code: regForm.employee_code.trim(),
           status: "started",
           started_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
+        });
 
       if (error) {
         // Handle unique constraint violation
@@ -470,7 +472,7 @@ export default function TakeAssessment() {
         throw error;
       }
 
-      setParticipantId(data.id);
+      setParticipantId(newParticipantId);
       setPageState("intro");
     } catch (error: any) {
       console.error("Registration error:", error);
