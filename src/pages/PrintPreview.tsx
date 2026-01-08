@@ -195,40 +195,20 @@ const PrintPreview = () => {
   };
 
   const loadReportData = () => {
-    // 1) Try localStorage
-    try {
-      const storedRaw = localStorage.getItem(STORAGE_KEY);
-      if (storedRaw) {
-        const parsed = JSON.parse(storedRaw);
+    let receivedFromPostMessage = false;
+    let fallbackTimeoutId: ReturnType<typeof setTimeout>;
 
-        // Support both legacy shape (payload directly) and wrapped shape { ts, payload }
-        const ts: number | null = typeof parsed?.ts === "number" ? parsed.ts : null;
-        const payload = parsed?.payload ?? parsed;
-
-        if (!ts || Date.now() - ts <= STORAGE_TTL_MS) {
-          console.log("[PrintPreview] loaded from localStorage", payload?.reportType);
-          applyIncomingData(payload);
-          setLoading(false);
-          return;
-        }
-
-        // Expired
-        localStorage.removeItem(STORAGE_KEY);
-      }
-    } catch {
-      // ignore
-    }
-
-    // 2) Wait for postMessage data
+    // Always listen for postMessage data FIRST (fresh data from opener)
     const onMessage = (event: MessageEvent) => {
       const msg = event.data;
       if (!msg || msg.kind !== "printReportData") return;
 
-      console.log("[PrintPreview] received report data", msg?.payload?.reportType);
+      console.log("[PrintPreview] received report data via postMessage", msg?.payload?.reportType);
+      receivedFromPostMessage = true;
       setError(null);
       applyIncomingData(msg.payload);
 
-      // Persist for a while so the tab doesn't turn blank after printing/saving
+      // Persist for recovery if page is refreshed
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify({ ts: Date.now(), payload: msg.payload }));
       } catch {
@@ -236,13 +216,62 @@ const PrintPreview = () => {
       }
 
       window.removeEventListener("message", onMessage);
+      clearTimeout(fallbackTimeoutId);
       setLoading(false);
     };
 
     window.addEventListener("message", onMessage);
 
+    // After a short delay, if no postMessage received, try localStorage as fallback
+    fallbackTimeoutId = setTimeout(() => {
+      if (receivedFromPostMessage) return;
+
+      // Try localStorage as fallback (only for page refresh scenarios)
+      try {
+        const storedRaw = localStorage.getItem(STORAGE_KEY);
+        if (storedRaw) {
+          const parsed = JSON.parse(storedRaw);
+          const ts: number | null = typeof parsed?.ts === "number" ? parsed.ts : null;
+          const payload = parsed?.payload ?? parsed;
+
+          // Only use if very recent (5 seconds) - for page refresh only
+          if (ts && Date.now() - ts <= 5000) {
+            console.log("[PrintPreview] loaded from localStorage (refresh fallback)", payload?.reportType);
+            applyIncomingData(payload);
+            window.removeEventListener("message", onMessage);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }, 500);
+
+    // Final timeout - give up waiting
     setTimeout(() => {
+      if (receivedFromPostMessage) return;
       window.removeEventListener("message", onMessage);
+      
+      // Last attempt: try localStorage even if older
+      try {
+        const storedRaw = localStorage.getItem(STORAGE_KEY);
+        if (storedRaw) {
+          const parsed = JSON.parse(storedRaw);
+          const payload = parsed?.payload ?? parsed;
+          const ts: number | null = typeof parsed?.ts === "number" ? parsed.ts : null;
+          
+          if (!ts || Date.now() - ts <= STORAGE_TTL_MS) {
+            console.log("[PrintPreview] loaded from localStorage (final fallback)", payload?.reportType);
+            applyIncomingData(payload);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch {
+        // ignore
+      }
+      
       setError("No report data found");
       setLoading(false);
     }, 12000);
