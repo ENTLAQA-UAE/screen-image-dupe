@@ -90,11 +90,21 @@ const getAssessmentIcon = (type: string) => {
 
 const getIconColor = (type: string) => {
   switch (type?.toLowerCase()) {
-    case 'cognitive': return "bg-blue-500/10 text-blue-500";
-    case 'personality': return "bg-rose-500/10 text-rose-500";
-    case 'situational': return "bg-amber-500/10 text-amber-500";
-    case 'language': return "bg-violet-500/10 text-violet-500";
-    default: return "bg-accent/10 text-accent";
+    case 'cognitive': return "bg-white/20 text-white";
+    case 'personality': return "bg-white/20 text-white";
+    case 'situational': return "bg-white/20 text-white";
+    case 'language': return "bg-white/20 text-white";
+    default: return "bg-white/20 text-white";
+  }
+};
+
+const getCardGradient = (type: string) => {
+  switch (type?.toLowerCase()) {
+    case 'cognitive': return "bg-gradient-to-br from-blue-500 to-blue-600";
+    case 'personality': return "bg-gradient-to-br from-rose-500 to-rose-600";
+    case 'situational': return "bg-gradient-to-br from-amber-500 to-amber-600";
+    case 'language': return "bg-gradient-to-br from-violet-500 to-violet-600";
+    default: return "bg-gradient-to-br from-slate-500 to-slate-600";
   }
 };
 
@@ -440,6 +450,7 @@ const Assessments = () => {
               const statusConfig = getStatusConfig(t);
               const IconComponent = getAssessmentIcon(assessment.type);
               const iconColor = getIconColor(assessment.type);
+              const cardGradient = getCardGradient(assessment.type);
               const status = statusConfig[assessment.status as keyof typeof statusConfig] || statusConfig.draft;
               const StatusIcon = status.icon;
 
@@ -449,15 +460,15 @@ const Assessments = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="rounded-2xl border border-border bg-card p-6 hover:shadow-lg transition-shadow"
+                  className={`rounded-2xl p-6 hover:shadow-xl transition-all hover:scale-[1.02] ${cardGradient} text-white`}
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${iconColor}`}>
-                      <IconComponent className="w-6 h-6" />
+                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${iconColor} backdrop-blur-sm`}>
+                      <IconComponent className="w-7 h-7" />
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-white/80 hover:text-white hover:bg-white/20">
                           <MoreHorizontal className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -506,24 +517,24 @@ const Assessments = () => {
                     </DropdownMenu>
                   </div>
 
-                  <h3 className="font-semibold text-foreground mb-1 line-clamp-1">
+                  <h3 className="font-semibold text-white text-lg mb-1 line-clamp-1">
                     {assessment.title}
                   </h3>
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                  <p className="text-sm text-white/70 mb-4 line-clamp-2">
                     {assessment.description || t.assessments.noDescription}
                   </p>
 
                   <div className="flex items-center justify-between text-sm">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${status.color}`}>
-                      <StatusIcon className="w-3 h-3 mr-1" />
+                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-white/20 text-white backdrop-blur-sm">
+                      <StatusIcon className="w-3 h-3 mr-1.5" />
                       {status.label}
                     </span>
-                    <span className="text-muted-foreground">
+                    <span className="text-white/80 font-medium">
                       {assessment.questions_count} {t.assessments.questions.toLowerCase()}
                     </span>
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-border text-xs text-muted-foreground">
+                  <div className="mt-4 pt-4 border-t border-white/20 text-xs text-white/60">
                     {t.assessments.created} {formatDate(assessment.created_at)}
                   </div>
                 </motion.div>
