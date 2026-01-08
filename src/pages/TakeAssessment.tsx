@@ -59,6 +59,7 @@ const translations = {
     instruction2: "Select the option that best represents your response",
     instruction3: "You can navigate back to previous questions",
     instruction4: "Your progress is saved as you go",
+    instruction5: "Important: If you close or leave this tab during the assessment, it will be automatically submitted and you will no longer have access to it",
     takingAs: "Taking as",
     startAssessment: "Start Assessment",
     questionOf: "Question {current} of {total}",
@@ -114,6 +115,7 @@ const translations = {
     instruction2: "اختر الخيار الذي يمثل إجابتك بشكل أفضل",
     instruction3: "يمكنك العودة إلى الأسئلة السابقة",
     instruction4: "يتم حفظ تقدمك تلقائياً",
+    instruction5: "تنبيه هام: إذا أغلقت أو غادرت هذه الصفحة أثناء التقييم، سيتم إرساله تلقائياً ولن يكون بإمكانك الوصول إليه مرة أخرى",
     takingAs: "المشارك",
     startAssessment: "بدء التقييم",
     questionOf: "السؤال {current} من {total}",
@@ -861,6 +863,10 @@ export default function TakeAssessment() {
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
                 <span className="text-muted-foreground">{t.instruction4}</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" />
+                <span className="text-warning font-medium">{t.instruction5}</span>
               </li>
             </ul>
           </div>
