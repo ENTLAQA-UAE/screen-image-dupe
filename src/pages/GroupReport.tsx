@@ -33,7 +33,7 @@ import {
   RefreshCw,
   FileSpreadsheet,
 } from "lucide-react";
-import { generateGroupPDF, generateParticipantPDF } from "@/lib/pdfGenerator";
+import { openGroupPrintPreview, openParticipantPrintPreview } from "@/lib/printPreview";
 import {
   BarChart,
   Bar,
@@ -300,21 +300,17 @@ const GroupReport = () => {
     return format(new Date(dateString), "MMM d, yyyy HH:mm");
   };
 
-  const handleExportGroupPDF = async () => {
+  const handleExportGroupPDF = () => {
     if (!group || !stats) return;
     const lang = (organization?.primary_language || 'en') as 'en' | 'ar';
-    try {
-      await generateGroupPDF({
+    
+    openGroupPrintPreview(
+      {
         groupName: group.name,
         assessmentTitle: group.assessment?.title || "Unknown",
         assessmentType: group.assessment?.type || "unknown",
         startDate: group.start_date,
         endDate: group.end_date,
-        organization: {
-          name: organization?.name || "Organization",
-          logoUrl: organization?.logo_url,
-          primaryColor: organization?.primary_color,
-        },
         stats: {
           totalParticipants: stats.totalParticipants,
           completed: stats.completed,
@@ -325,28 +321,23 @@ const GroupReport = () => {
           highestScore: stats.highestScore,
           lowestScore: stats.lowestScore,
         },
-        participants: participants.map((p) => ({
-          name: p.full_name || "",
-          email: p.email || "",
-          status: p.status || "invited",
-          score: p.score_summary?.percentage ?? null,
-          completedAt: p.completed_at,
-        })),
-        language: lang,
         aiNarrative: groupNarrative || undefined,
-      });
-      toast.success("PDF exported successfully");
-    } catch (error) {
-      console.error("Error exporting PDF:", error);
-      toast.error("Failed to export PDF");
-    }
+      },
+      {
+        name: organization?.name || "Organization",
+        logoUrl: organization?.logo_url,
+        primaryColor: organization?.primary_color,
+      },
+      lang
+    );
   };
 
-  const handleExportParticipantPDF = async (participant: ParticipantData) => {
+  const handleExportParticipantPDF = (participant: ParticipantData) => {
     if (!group) return;
     const lang = (organization?.primary_language || 'en') as 'en' | 'ar';
-    try {
-      await generateParticipantPDF({
+    
+    openParticipantPrintPreview(
+      {
         participantName: participant.full_name || "",
         participantEmail: participant.email || "",
         employeeCode: participant.employee_code || undefined,
@@ -357,18 +348,14 @@ const GroupReport = () => {
         completedAt: participant.completed_at,
         scoreSummary: participant.score_summary,
         aiReport: participant.ai_report_text,
-        organization: {
-          name: organization?.name || "Organization",
-          logoUrl: organization?.logo_url,
-          primaryColor: organization?.primary_color,
-        },
-        language: lang,
-      });
-      toast.success("PDF exported successfully");
-    } catch (error) {
-      console.error("Error exporting PDF:", error);
-      toast.error("Failed to export PDF");
-    }
+      },
+      {
+        name: organization?.name || "Organization",
+        logoUrl: organization?.logo_url,
+        primaryColor: organization?.primary_color,
+      },
+      lang
+    );
   };
 
   const handleExportResultsCsv = () => {

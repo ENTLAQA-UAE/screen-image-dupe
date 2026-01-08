@@ -13,7 +13,8 @@ import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { generateParticipantPDF, generateTalentSnapshotPDF } from "@/lib/pdfGenerator";
+import { generateParticipantPDF } from "@/lib/pdfGenerator";
+import { openTalentSnapshotPrintPreview, openParticipantPrintPreview } from "@/lib/printPreview";
 import {
   ArrowLeft,
   User,
@@ -310,27 +311,29 @@ const EmployeeDetail = () => {
     return format(new Date(dateString), "MMM d, yyyy 'at' h:mm a");
   };
 
-  const handleExportPDF = async (assessment: AssessmentHistory) => {
-    if (!employee) return;
-    try {
-      await generateParticipantPDF({
+  const handleExportPDF = (assessment: AssessmentHistory) => {
+    if (!employee || !orgBranding) return;
+    
+    openParticipantPrintPreview(
+      {
         participantName: employee.full_name,
         participantEmail: employee.email,
+        employeeCode: employee.employee_code || undefined,
+        department: employee.department || undefined,
         groupName: assessment.group_name,
         assessmentTitle: assessment.assessment_title,
         assessmentType: assessment.assessment_type,
         completedAt: assessment.completed_at,
         scoreSummary: assessment.score_summary,
         aiReport: assessment.ai_report_text,
-        organization: {
-          name: employee.organization_name,
-        },
-      });
-      toast.success("PDF exported successfully");
-    } catch (error) {
-      console.error("Error exporting PDF:", error);
-      toast.error("Failed to export PDF");
-    }
+      },
+      {
+        name: orgBranding.name,
+        logoUrl: orgBranding.logoUrl,
+        primaryColor: orgBranding.primaryColor,
+      },
+      dir === "rtl" ? "ar" : "en"
+    );
   };
 
   const generateTalentSnapshot = async (forceRegenerate = false) => {
@@ -395,12 +398,11 @@ const EmployeeDetail = () => {
     }
   }, [employee, organizationId]);
 
-  const handleExportSnapshotPDF = async () => {
+  const handleExportSnapshotPDF = () => {
     if (!employee || !talentSnapshot || !orgBranding) return;
 
-    setSnapshotPdfLoading(true);
-    try {
-      await generateTalentSnapshotPDF({
+    openTalentSnapshotPrintPreview(
+      {
         employeeName: employee.full_name,
         employeeEmail: employee.email,
         employeeCode: employee.employee_code || undefined,
@@ -409,20 +411,14 @@ const EmployeeDetail = () => {
         snapshotText: talentSnapshot,
         generatedAt: snapshotGeneratedAt || new Date().toISOString(),
         assessmentCount: stats?.completed || 0,
-        organization: {
-          name: orgBranding.name,
-          logoUrl: orgBranding.logoUrl,
-          primaryColor: orgBranding.primaryColor,
-        },
-        language: dir === "rtl" ? "ar" : "en",
-      });
-      toast.success(t.common.success);
-    } catch (error) {
-      console.error("Error exporting snapshot PDF:", error);
-      toast.error(t.common.error);
-    } finally {
-      setSnapshotPdfLoading(false);
-    }
+      },
+      {
+        name: orgBranding.name,
+        logoUrl: orgBranding.logoUrl,
+        primaryColor: orgBranding.primaryColor,
+      },
+      dir === "rtl" ? "ar" : "en"
+    );
   };
 
   const handleAnonymize = async () => {
@@ -1002,12 +998,8 @@ const EmployeeDetail = () => {
             <Button variant="outline" onClick={() => setIsSnapshotModalOpen(false)}>
               {t.employeeDetail.close}
             </Button>
-            <Button onClick={handleExportSnapshotPDF} disabled={snapshotPdfLoading}>
-              {snapshotPdfLoading ? (
-                <Loader2 className="w-4 h-4 ltr:mr-2 rtl:ml-2 animate-spin" />
-              ) : (
-                <Download className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
-              )}
+            <Button onClick={handleExportSnapshotPDF}>
+              <Download className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
               {t.employeeDetail.downloadPdf}
             </Button>
           </div>

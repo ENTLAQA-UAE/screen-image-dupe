@@ -27,6 +27,7 @@ import SuperAdmin from "./pages/SuperAdmin";
 import UserManagement from "./pages/UserManagement";
 import Subscription from "./pages/Subscription";
 import NotFound from "./pages/NotFound";
+import PrintPreview from "./pages/PrintPreview";
 
 const queryClient = new QueryClient();
 
@@ -165,6 +166,8 @@ const App = () => (
               />
               {/* Public assessment taking page */}
               <Route path="/assess/:token" element={<TakeAssessment />} />
+              {/* Print preview page for PDF export */}
+              <Route path="/print-preview" element={<PrintPreview />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
