@@ -243,13 +243,16 @@ function buildSectionHeader(title: string, primaryColor: string): string {
 function buildInfoGrid(items: { label: string; value: string }[], lang: Language): string {
   const dir = getDirection(lang);
   const textAlign = getTextAlign(lang);
-  
+  const labelStyle = lang === 'ar'
+    ? 'color: #64748b; font-size: 12px; margin-bottom: 4px; letter-spacing: 0.2px;'
+    : 'color: #64748b; font-size: 11px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;';
+
   return `
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; direction: ${dir};">
       ${items.map(item => `
-        <div style="background: #f8fafc; padding: 14px 16px; border-radius: 10px; text-align: ${textAlign};">
-          <div style="color: #64748b; font-size: 11px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">${item.label}</div>
-          <div style="color: #0f172a; font-weight: 600; font-size: 14px;">${item.value}</div>
+        <div style="background: #f8fafc; padding: 14px 16px; border-radius: 10px; text-align: ${textAlign}; unicode-bidi: plaintext;">
+          <div style="${labelStyle}">${item.label}</div>
+          <div style="color: #0f172a; font-weight: 600; font-size: 14px; unicode-bidi: plaintext;">${item.value}</div>
         </div>
       `).join('')}
     </div>
@@ -311,9 +314,37 @@ async function generatePdfFromHtml(htmlContent: string, fileName: string): Promi
   document.body.appendChild(container);
 
   try {
-    const element = container.querySelector('#pdf-content') as HTMLElement;
+    const element = container.querySelector('#pdf-content') as HTMLElement | null;
     if (!element) throw new Error('PDF content not found');
 
+    // Prefer jsPDF's HTML renderer (better paging + fewer mid-section cuts)
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    const canUseHtml = typeof (pdf as any).html === 'function';
+    if (canUseHtml) {
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+
+      await (pdf as any).html(element, {
+        x: 0,
+        y: 0,
+        width: pdfWidth,
+        windowWidth: element.scrollWidth,
+        margin: [10, 10, 10, 10],
+        autoPaging: 'text',
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+        },
+      });
+
+      pdf.save(fileName);
+      return;
+    }
+
+    // Fallback: rasterize whole document and slice (kept for safety)
     const canvas = await html2canvas(element, {
       scale: 2,
       useCORS: true,
@@ -323,42 +354,45 @@ async function generatePdfFromHtml(htmlContent: string, fileName: string): Promi
     });
 
     const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
     const imgWidth = canvas.width;
     const imgHeight = canvas.height;
     const ratio = pdfWidth / imgWidth;
     const scaledHeight = imgHeight * ratio;
-    
+
     if (scaledHeight <= pdfHeight) {
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, scaledHeight);
     } else {
       let remainingHeight = scaledHeight;
       let srcY = 0;
       let pageNum = 0;
-      
+
       while (remainingHeight > 0) {
         if (pageNum > 0) pdf.addPage();
-        
+
+        // Small overlap reduces the chance of cutting through a baseline
+        const overlapMm = 2;
         const sliceHeight = Math.min(pdfHeight, remainingHeight);
-        const srcHeight = sliceHeight / ratio;
-        
+        const sliceHeightWithOverlap = Math.min(pdfHeight, sliceHeight + (pageNum > 0 ? overlapMm : 0));
+
+        const srcHeight = sliceHeightWithOverlap / ratio;
+
         const pageCanvas = document.createElement('canvas');
         pageCanvas.width = imgWidth;
         pageCanvas.height = srcHeight;
         const ctx = pageCanvas.getContext('2d');
         if (ctx) {
           ctx.drawImage(canvas, 0, srcY, imgWidth, srcHeight, 0, 0, imgWidth, srcHeight);
-          pdf.addImage(pageCanvas.toDataURL('image/png'), 'PNG', 0, 0, pdfWidth, sliceHeight);
+          pdf.addImage(pageCanvas.toDataURL('image/png'), 'PNG', 0, 0, pdfWidth, sliceHeightWithOverlap);
         }
-        
-        srcY += srcHeight;
+
+        srcY += srcHeight - (pageNum > 0 ? overlapMm / ratio : 0);
         remainingHeight -= sliceHeight;
         pageNum++;
       }
     }
-    
+
     pdf.save(fileName);
   } finally {
     document.body.removeChild(container);
@@ -368,11 +402,22 @@ async function generatePdfFromHtml(htmlContent: string, fileName: string): Promi
 function buildDocumentContainer(content: string, lang: Language): string {
   const dir = getDirection(lang);
   const textAlign = getTextAlign(lang);
-  const fontFamily = lang === 'ar' 
-    ? "'Segoe UI', 'Tahoma', 'Arial', sans-serif" 
+
+  // Use a proper Arabic font (loaded via Google Fonts) so RTL text renders correctly.
+  const fontFamily = lang === 'ar'
+    ? "'Cairo', 'Noto Naskh Arabic', 'Noto Sans Arabic', 'Tahoma', 'Arial', sans-serif"
     : "'Segoe UI', 'Helvetica Neue', Arial, sans-serif";
-  
+
+  const styleTag = `
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+      #pdf-content { box-sizing: border-box; }
+      #pdf-content * { box-sizing: border-box; }
+    </style>
+  `;
+
   return `
+    ${styleTag}
     <div id="pdf-content" style="
       width: 794px;
       padding: 45px;
@@ -380,6 +425,7 @@ function buildDocumentContainer(content: string, lang: Language): string {
       font-family: ${fontFamily};
       direction: ${dir};
       text-align: ${textAlign};
+      unicode-bidi: plaintext;
       line-height: 1.5;
     ">
       ${content}
