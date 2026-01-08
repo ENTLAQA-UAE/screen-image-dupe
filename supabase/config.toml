@@ -13,7 +13,7 @@ verify_jwt = false
 verify_jwt = true
 
 [functions.generate-talent-snapshot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.register-participant]
 verify_jwt = false

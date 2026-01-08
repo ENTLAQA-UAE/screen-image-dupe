@@ -13,11 +13,35 @@ interface TalentSnapshotRequest {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // Validate auth (verify_jwt is disabled in config.toml)
+    const authHeader = req.headers.get("authorization") || "";
+    const authClient = createClient(supabaseUrl, anonKey, {
+      global: {
+        headers: {
+          Authorization: authHeader,
+        },
+      },
+    });
+
+    const { data: userData, error: userError } = await authClient.auth.getUser();
+    if (userError || !userData?.user?.id) {
+      console.error("Auth validation failed:", userError?.message || "No user");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { employeeEmail, organizationId, forceRegenerate }: TalentSnapshotRequest = await req.json();
 
     if (!employeeEmail || !organizationId) {
@@ -27,18 +51,27 @@ serve(async (req) => {
       );
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+    console.log("Talent snapshot request", {
+      employeeEmail,
+      organizationId,
+      forceRegenerate: !!forceRegenerate,
+      user: userData.user.id,
+    });
 
     // Check for cached snapshot first (unless forceRegenerate is true)
     if (!forceRegenerate) {
       const { data: cachedSnapshot, error: cacheError } = await supabase
         .from("employee_talent_snapshots")
-        .select("*")
+        .select("snapshot_text, assessment_count, generated_at")
         .eq("organization_id", organizationId)
         .eq("employee_email", employeeEmail)
         .maybeSingle();
+
+      if (cacheError) {
+        console.error("Cache lookup error:", cacheError);
+      }
 
       if (!cacheError && cachedSnapshot) {
         console.log("Returning cached snapshot for:", employeeEmail);
@@ -83,7 +116,6 @@ serve(async (req) => {
       );
     }
 
-    // Build assessment summary for the prompt
     const assessmentSummaries = participants.map((p: any) => {
       const assessment = p.assessment_groups?.assessments;
       const summary: any = {
@@ -109,7 +141,6 @@ serve(async (req) => {
     const department = participants[0]?.department || "Not specified";
     const jobTitle = participants[0]?.job_title || "Not specified";
 
-    // Build prompt for AI
     const prompt = `Generate a comprehensive "Talent Snapshot" profile summary for ${employeeName}.
 
 Employee Information:
@@ -118,11 +149,15 @@ Employee Information:
 - Total Assessments Completed: ${participants.length}
 
 Assessment Results:
-${assessmentSummaries.map((s: any, i: number) => `
+${assessmentSummaries
+  .map(
+    (s: any, i: number) => `
 ${i + 1}. ${s.title} (${s.type})
-   ${s.score ? `Score: ${s.score} (Grade: ${s.grade})` : ''}
-   ${s.traits ? `Traits: ${s.traits}` : ''}
-`).join('')}
+   ${s.score ? `Score: ${s.score} (Grade: ${s.grade})` : ""}
+   ${s.traits ? `Traits: ${s.traits}` : ""}
+`
+  )
+  .join("")}
 
 Please provide:
 1. **Executive Summary** (2-3 sentences capturing the overall talent profile)
@@ -142,7 +177,7 @@ Keep the tone professional, constructive, and actionable. Total length should be
       );
     }
 
-    console.log("Generating talent snapshot for:", employeeEmail);
+    console.log("Calling AI gateway for:", employeeEmail);
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -153,9 +188,10 @@ Keep the tone professional, constructive, and actionable. Total length should be
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { 
-            role: "system", 
-            content: "You are an expert HR talent analyst. Generate insightful, professional talent profiles based on assessment data. Format your response with clear sections using markdown headers (##)." 
+          {
+            role: "system",
+            content:
+              "You are an expert HR talent analyst. Generate insightful, professional talent profiles based on assessment data. Format your response with clear sections using markdown headers (##).",
           },
           { role: "user", content: prompt },
         ],
@@ -165,7 +201,7 @@ Keep the tone professional, constructive, and actionable. Total length should be
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
       console.error("AI API error:", aiResponse.status, errorText);
-      
+
       if (aiResponse.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
@@ -178,7 +214,7 @@ Keep the tone professional, constructive, and actionable. Total length should be
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      
+
       return new Response(
         JSON.stringify({ error: "Failed to generate talent snapshot" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -187,40 +223,48 @@ Keep the tone professional, constructive, and actionable. Total length should be
 
     const aiData = await aiResponse.json();
     const snapshot = aiData.choices?.[0]?.message?.content || "";
+
+    if (!snapshot) {
+      console.error("AI response missing expected content:", JSON.stringify(aiData)?.slice(0, 500));
+      return new Response(
+        JSON.stringify({ error: "AI response malformed" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const generatedAt = new Date().toISOString();
 
-    // Cache the snapshot using upsert
     const { error: upsertError } = await supabase
       .from("employee_talent_snapshots")
-      .upsert({
-        organization_id: organizationId,
-        employee_email: employeeEmail,
-        snapshot_text: snapshot,
-        assessment_count: participants.length,
-        generated_at: generatedAt,
-      }, {
-        onConflict: "organization_id,employee_email",
-      });
+      .upsert(
+        {
+          organization_id: organizationId,
+          employee_email: employeeEmail,
+          snapshot_text: snapshot,
+          assessment_count: participants.length,
+          generated_at: generatedAt,
+        },
+        {
+          onConflict: "organization_id,employee_email",
+        }
+      );
 
     if (upsertError) {
       console.error("Error caching snapshot:", upsertError);
-      // Continue even if caching fails
+      // still return snapshot
     } else {
       console.log("Talent snapshot cached successfully");
     }
 
-    console.log("Talent snapshot generated successfully");
-
     return new Response(
-      JSON.stringify({ 
-        snapshot, 
+      JSON.stringify({
+        snapshot,
         assessmentCount: participants.length,
         generatedAt,
         cached: false,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-
   } catch (error) {
     console.error("Error in generate-talent-snapshot:", error);
     return new Response(
