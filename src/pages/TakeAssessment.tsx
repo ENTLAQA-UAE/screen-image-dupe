@@ -1187,7 +1187,13 @@ export default function TakeAssessment() {
                       borderColor: `${resultPrimaryColor}20`
                     }}
                   >
-                    <p className="whitespace-pre-wrap leading-relaxed text-foreground/80">{aiReport}</p>
+                    <p 
+                      dir={isArabic ? "rtl" : "ltr"}
+                      className={`whitespace-pre-wrap leading-relaxed text-foreground/80 ${isArabic ? "text-right" : "text-left"}`}
+                      style={{ unicodeBidi: "plaintext" }}
+                    >
+                      {aiReport}
+                    </p>
                   </div>
                 </div>
               )}
