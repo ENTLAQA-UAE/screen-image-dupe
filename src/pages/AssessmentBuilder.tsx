@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -132,7 +133,7 @@ export default function AssessmentBuilder() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  
+  const { t, language } = useLanguage();
   const [step, setStep] = useState(1);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -582,8 +583,8 @@ export default function AssessmentBuilder() {
       className="space-y-6"
     >
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold mb-2">Choose Assessment Category</h2>
-        <p className="text-muted-foreground">Select the type of assessment you want to create</p>
+        <h2 className="text-2xl font-bold mb-2">{t.builder.chooseCategory}</h2>
+        <p className="text-muted-foreground">{t.builder.selectCategoryDesc}</p>
       </div>
       
       <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
@@ -595,9 +596,9 @@ export default function AssessmentBuilder() {
             <div className="w-16 h-16 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
               <ClipboardCheck className="w-8 h-8 text-primary" />
             </div>
-            <CardTitle>Graded Quiz</CardTitle>
+            <CardTitle>{t.builder.gradedQuiz}</CardTitle>
             <CardDescription>
-              Tests with correct answers and scoring. Perfect for cognitive, language, and knowledge assessments.
+              {t.builder.gradedQuizDesc}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -610,9 +611,9 @@ export default function AssessmentBuilder() {
             <div className="w-16 h-16 mx-auto rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
               <User className="w-8 h-8 text-accent" />
             </div>
-            <CardTitle>Assessment / Profile</CardTitle>
+            <CardTitle>{t.builder.assessmentProfile}</CardTitle>
             <CardDescription>
-              Trait-based profiles without right/wrong answers. Ideal for personality and behavioral assessments.
+              {t.builder.profileDesc}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -628,13 +629,15 @@ export default function AssessmentBuilder() {
       className="space-y-6"
     >
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold mb-2">Select Assessment Type</h2>
-        <p className="text-muted-foreground">Choose the specific type of assessment</p>
+        <h2 className="text-2xl font-bold mb-2">{t.builder.selectAssessmentType}</h2>
+        <p className="text-muted-foreground">{t.builder.selectSpecificType}</p>
       </div>
       
       <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
         {availableTypes.map((type) => {
           const Icon = type.icon;
+          const labelKey = type.value as keyof typeof t.builder;
+          const descKey = `${type.value}Desc` as keyof typeof t.builder;
           return (
             <Card
               key={type.value}
@@ -647,8 +650,8 @@ export default function AssessmentBuilder() {
                     <Icon className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-1">{type.label}</h3>
-                    <p className="text-sm text-muted-foreground">{type.description}</p>
+                    <h3 className="font-semibold mb-1">{(t.builder as any)[labelKey + 'Assessment'] || (t.builder as any)[labelKey + 'Profile'] || (t.builder as any)[labelKey] || type.label}</h3>
+                    <p className="text-sm text-muted-foreground">{(t.builder as any)[descKey] || type.description}</p>
                   </div>
                 </div>
               </CardContent>
@@ -667,8 +670,8 @@ export default function AssessmentBuilder() {
       className="space-y-6"
     >
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold mb-2">Choose Setup Mode</h2>
-        <p className="text-muted-foreground">How much control do you want over the configuration?</p>
+        <h2 className="text-2xl font-bold mb-2">{t.builder.chooseSetupMode}</h2>
+        <p className="text-muted-foreground">{t.builder.setupModeDesc}</p>
       </div>
       
       <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
@@ -680,9 +683,9 @@ export default function AssessmentBuilder() {
             <div className="w-16 h-16 mx-auto rounded-2xl bg-success/10 flex items-center justify-center mb-4">
               <Zap className="w-8 h-8 text-success" />
             </div>
-            <CardTitle>Quick Setup</CardTitle>
+            <CardTitle>{t.builder.quickSetup}</CardTitle>
             <CardDescription>
-              Get started fast with sensible defaults. AI will handle the details based on your description.
+              {t.builder.quickSetupDesc}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -695,9 +698,9 @@ export default function AssessmentBuilder() {
             <div className="w-16 h-16 mx-auto rounded-2xl bg-accent/10 flex items-center justify-center mb-4">
               <Settings2 className="w-8 h-8 text-accent" />
             </div>
-            <CardTitle>Advanced Setup</CardTitle>
+            <CardTitle>{t.builder.advancedSetup}</CardTitle>
             <CardDescription>
-              Fine-tune subdomains, traits, difficulty, and psychometric parameters for precise assessments.
+              {t.builder.advancedSetupDesc}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -713,8 +716,8 @@ export default function AssessmentBuilder() {
       className="space-y-6 max-w-3xl mx-auto"
     >
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold mb-2">Configure Your Assessment</h2>
-        <p className="text-muted-foreground">Provide details and settings for AI to generate questions</p>
+        <h2 className="text-2xl font-bold mb-2">{t.builder.configureAssessment}</h2>
+        <p className="text-muted-foreground">{t.builder.configureDesc}</p>
       </div>
       
       <Card>
@@ -722,26 +725,26 @@ export default function AssessmentBuilder() {
           {/* Basic Info */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Assessment Title *</Label>
+              <Label htmlFor="title">{t.builder.titleRequired}</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="e.g., Cognitive Assessment for IT Managers"
+                placeholder={t.builder.titlePlaceholder}
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="description">Description *</Label>
+              <Label htmlFor="description">{t.builder.descriptionRequired}</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Describe what you want to assess, the target role/level, and any specific focus areas..."
+                placeholder={t.builder.descriptionPlaceholder}
                 rows={4}
               />
               <p className="text-xs text-muted-foreground">
-                This helps the AI understand what questions to generate
+                {t.builder.descriptionHint}
               </p>
             </div>
           </div>
@@ -749,7 +752,7 @@ export default function AssessmentBuilder() {
           {/* Language & Questions */}
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Language</Label>
+              <Label>{t.builder.language}</Label>
               <Select
                 value={formData.language}
                 onValueChange={(value: "en" | "ar") => setFormData({ ...formData, language: value })}
@@ -758,14 +761,14 @@ export default function AssessmentBuilder() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="ar">العربية (Arabic)</SelectItem>
+                  <SelectItem value="en">{t.builder.english}</SelectItem>
+                  <SelectItem value="ar">{t.builder.arabic}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             <div className="space-y-2">
-              <Label>Number of Questions: {formData.questionCount}</Label>
+              <Label>{t.builder.numberOfQuestions}: {formData.questionCount}</Label>
               <Slider
                 value={[formData.questionCount]}
                 onValueChange={([value]) => setFormData({ ...formData, questionCount: value })}
@@ -780,7 +783,7 @@ export default function AssessmentBuilder() {
           {/* Difficulty (for graded) */}
           {category === "graded_quiz" && (
             <div className="space-y-2">
-              <Label>Difficulty Level</Label>
+              <Label>{t.builder.difficultyLevel}</Label>
               <Select
                 value={formData.difficulty}
                 onValueChange={(value: any) => setFormData({ ...formData, difficulty: value })}
@@ -789,10 +792,10 @@ export default function AssessmentBuilder() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="easy">Easy</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="hard">Hard</SelectItem>
-                  <SelectItem value="mixed">Mixed (recommended)</SelectItem>
+                  <SelectItem value="easy">{t.builder.easy}</SelectItem>
+                  <SelectItem value="medium">{t.builder.medium}</SelectItem>
+                  <SelectItem value="hard">{t.builder.hard}</SelectItem>
+                  <SelectItem value="mixed">{t.builder.mixed}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -803,7 +806,7 @@ export default function AssessmentBuilder() {
             <div className="border-t pt-6 space-y-4">
               <h3 className="font-semibold flex items-center gap-2">
                 <Settings2 className="w-4 h-4" />
-                Type-Specific Settings
+                {t.builder.typeSpecificSettings}
               </h3>
               
               {currentTypeConfig.fields.map((field) => (
@@ -867,12 +870,12 @@ export default function AssessmentBuilder() {
 
           {/* Display Settings */}
           <div className="border-t pt-6 space-y-4">
-            <h3 className="font-semibold">Display & Access Settings</h3>
+            <h3 className="font-semibold">{t.builder.displaySettings}</h3>
             
             <div className="flex items-center justify-between">
               <div>
-                <Label>Show results to employees</Label>
-                <p className="text-xs text-muted-foreground">Employees can see their scores after completion</p>
+                <Label>{t.builder.showResultsToEmployees}</Label>
+                <p className="text-xs text-muted-foreground">{t.builder.showResultsDesc}</p>
               </div>
               <Switch
                 checked={formData.showResultsToEmployee}
@@ -882,8 +885,8 @@ export default function AssessmentBuilder() {
             
             <div className="flex items-center justify-between">
               <div>
-                <Label>Allow PDF download for employees</Label>
-                <p className="text-xs text-muted-foreground">Employees can download their report as PDF</p>
+                <Label>{t.builder.allowPdfDownload}</Label>
+                <p className="text-xs text-muted-foreground">{t.builder.pdfDownloadDesc}</p>
               </div>
               <Switch
                 checked={formData.allowEmployeePdfDownload}
@@ -893,8 +896,8 @@ export default function AssessmentBuilder() {
             
             <div className="flex items-center justify-between">
               <div>
-                <Label>Enable AI-generated feedback</Label>
-                <p className="text-xs text-muted-foreground">AI will generate narrative interpretations of results</p>
+                <Label>{t.builder.enableAiFeedback}</Label>
+                <p className="text-xs text-muted-foreground">{t.builder.aiFeedbackDesc}</p>
               </div>
               <Switch
                 checked={formData.aiFeedbackEnabled}
@@ -907,13 +910,13 @@ export default function AssessmentBuilder() {
           <div className="border-t pt-6 space-y-4">
             <h3 className="font-semibold flex items-center gap-2">
               <Timer className="w-4 h-4" />
-              Time Settings
+              {t.builder.timeSettings}
             </h3>
             
             <div className="flex items-center justify-between">
               <div>
-                <Label>Enable time limit</Label>
-                <p className="text-xs text-muted-foreground">Auto-submit when time expires</p>
+                <Label>{t.builder.enableTimeLimit}</Label>
+                <p className="text-xs text-muted-foreground">{t.builder.timeLimitDesc}</p>
               </div>
               <Switch
                 checked={formData.timeLimitEnabled}
@@ -928,8 +931,8 @@ export default function AssessmentBuilder() {
             {formData.timeLimitEnabled && (
               <div className="space-y-2 p-4 bg-muted rounded-lg">
                 <div className="flex items-center justify-between">
-                  <Label>Time limit (minutes)</Label>
-                  <span className="text-sm font-medium">{formData.timeLimit} min</span>
+                  <Label>{t.builder.timeLimitMinutes}</Label>
+                  <span className="text-sm font-medium">{formData.timeLimit} {t.builder.min}</span>
                 </div>
                 <Slider
                   value={[formData.timeLimit]}
@@ -940,9 +943,9 @@ export default function AssessmentBuilder() {
                   className="mt-2"
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>5 min</span>
-                  <span>Recommended: ~{Math.ceil(formData.questionCount * 1.5)} min</span>
-                  <span>180 min</span>
+                  <span>5 {t.builder.min}</span>
+                  <span>{t.builder.recommended}: ~{Math.ceil(formData.questionCount * 1.5)} {t.builder.min}</span>
+                  <span>180 {t.builder.min}</span>
                 </div>
               </div>
             )}
@@ -961,15 +964,15 @@ export default function AssessmentBuilder() {
     >
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold mb-2">Review & Edit Questions</h2>
+            <h2 className="text-2xl font-bold mb-2">{t.builder.reviewQuestions}</h2>
             <p className="text-muted-foreground">
-              {generatedQuestions.length} questions. Drag to reorder, click to edit, or add new ones.
+              {generatedQuestions.length} {t.builder.questionsGenerated}
             </p>
           </div>
           <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={handleOpenImportDialog}>
               <Library className="w-4 h-4 mr-2" />
-              Import from Bank
+              {t.builder.importFromBank}
             </Button>
             <Button 
               variant="outline" 
@@ -977,15 +980,15 @@ export default function AssessmentBuilder() {
               disabled={savingToBank || generatedQuestions.length === 0}
             >
               <Save className="w-4 h-4 mr-2" />
-              {savingToBank ? "Saving..." : "Save All to Bank"}
+              {savingToBank ? t.builder.saving : t.builder.saveAllToBank}
             </Button>
             <Button variant="outline" onClick={handleAddManualQuestion}>
               <Plus className="w-4 h-4 mr-2" />
-              Add Question
+              {t.builder.addManualQuestion}
             </Button>
             <Button variant="outline" onClick={() => setStep(4)}>
               <RefreshCw className="w-4 h-4 mr-2" />
-              Regenerate
+              {t.builder.regenerate}
             </Button>
           </div>
         </div>
@@ -1005,21 +1008,21 @@ export default function AssessmentBuilder() {
                 // Edit Mode
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Badge>Editing Question {index + 1}</Badge>
+                    <Badge>{t.builder.editingQuestion} {index + 1}</Badge>
                     <div className="flex gap-2">
                       <Button size="sm" variant="ghost" onClick={handleCancelEdit}>
                         <X className="w-4 h-4 mr-1" />
-                        Cancel
+                        {t.builder.cancelEdit}
                       </Button>
                       <Button size="sm" onClick={handleSaveEdit}>
                         <Save className="w-4 h-4 mr-1" />
-                        Save
+                        {t.builder.saveEdit}
                       </Button>
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label>Question Text</Label>
+                    <Label>{t.builder.questionText}</Label>
                     <Textarea
                       value={editingQuestion.text}
                       onChange={(e) => handleUpdateEditingQuestion("text", e.target.value)}
@@ -1029,10 +1032,10 @@ export default function AssessmentBuilder() {
                   
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label>Options</Label>
+                      <Label>{t.builder.options}</Label>
                       <Button size="sm" variant="ghost" onClick={handleAddOption}>
                         <Plus className="w-3 h-3 mr-1" />
-                        Add Option
+                        {t.builder.addOption}
                       </Button>
                     </div>
                     {editingQuestion.options.map((option, optIndex) => (
@@ -1219,8 +1222,8 @@ export default function AssessmentBuilder() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">AI Assessment Builder</h1>
-            <p className="text-muted-foreground">Step {step} of 5</p>
+            <h1 className="text-2xl font-bold">{t.builder.aiAssessmentBuilder}</h1>
+            <p className="text-muted-foreground">{t.builder.stepOf} {step} {t.builder.of} 5</p>
           </div>
         </div>
 
@@ -1250,7 +1253,7 @@ export default function AssessmentBuilder() {
         <div className="flex justify-between mt-8 max-w-4xl mx-auto">
           <Button variant="outline" onClick={handleBack}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            {step === 1 ? "Cancel" : "Back"}
+            {step === 1 ? t.builder.cancel : t.builder.back}
           </Button>
           
           {step < 5 ? (
@@ -1258,16 +1261,16 @@ export default function AssessmentBuilder() {
               {generating ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Generating Questions...
+                  {t.builder.generatingQuestions}
                 </>
               ) : step === 4 ? (
                 <>
                   <Sparkles className="w-4 h-4 mr-2" />
-                  Generate Questions
+                  {t.builder.generateQuestions}
                 </>
               ) : (
                 <>
-                  Next
+                  {t.builder.next}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </>
               )}
@@ -1277,12 +1280,12 @@ export default function AssessmentBuilder() {
               {saving ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
+                  {t.builder.savingAssessment}
                 </>
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Save Assessment
+                  {t.builder.saveAssessment}
                 </>
               )}
             </Button>
@@ -1294,9 +1297,9 @@ export default function AssessmentBuilder() {
       <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle>Import from Question Bank</DialogTitle>
+            <DialogTitle>{t.builder.importFromQuestionBank}</DialogTitle>
             <DialogDescription>
-              Select questions to import. Showing {bankQuestions.length} questions matching your assessment type and language.
+              {t.builder.importDialogDesc} {bankQuestions.length} {t.builder.questionsMatching}
             </DialogDescription>
           </DialogHeader>
           
@@ -1307,15 +1310,15 @@ export default function AssessmentBuilder() {
               </div>
             ) : bankQuestions.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No questions found in your bank for this assessment type.
+                {t.builder.noQuestionsInBank}
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-12"></TableHead>
-                    <TableHead>Question</TableHead>
-                    <TableHead>Difficulty</TableHead>
+                    <TableHead>{t.builder.question}</TableHead>
+                    <TableHead>{t.builder.difficulty}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1341,9 +1344,9 @@ export default function AssessmentBuilder() {
           </ScrollArea>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setImportDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setImportDialogOpen(false)}>{t.common.cancel}</Button>
             <Button onClick={handleImportSelectedQuestions} disabled={selectedBankQuestions.size === 0}>
-              Import {selectedBankQuestions.size} Questions
+              {t.builder.importQuestions} {selectedBankQuestions.size} {t.builder.questions}
             </Button>
           </DialogFooter>
         </DialogContent>
