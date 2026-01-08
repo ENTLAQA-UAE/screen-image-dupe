@@ -561,10 +561,18 @@ const PrintPreview = () => {
                       {content.map((line, j) => {
                         const trimmedLine = line.trim();
                         if (!trimmedLine) return null;
-                        if (trimmedLine.startsWith('-') || trimmedLine.startsWith('•')) {
-                          return <p key={j}>• {trimmedLine.replace(/^[-•]\s*/, '').replace(/\*\*/g, '')}</p>;
+                        if (trimmedLine.startsWith("-") || trimmedLine.startsWith("•")) {
+                          return (
+                            <p key={j} className="bidi-plaintext">
+                              • {trimmedLine.replace(/^[-•]\s*/, "").replace(/\*\*/g, "")}
+                            </p>
+                          );
                         }
-                        return <p key={j}>{trimmedLine.replace(/\*\*/g, '')}</p>;
+                        return (
+                          <p key={j} className="bidi-plaintext">
+                            {trimmedLine.replace(/\*\*/g, "")}
+                          </p>
+                        );
                       })}
                     </div>
                   );
@@ -659,8 +667,8 @@ const PrintPreview = () => {
               <div className="avoid-break" style={{ marginTop: 24 }}>
                 <h2 className="section-header">{t.aiGeneratedFeedback}</h2>
                 <div className="ai-content">
-                  {participantData.aiReport.split('\n\n').map((para, i) => (
-                    <p key={i}>{para}</p>
+                  {participantData.aiReport.split("\n\n").map((para, i) => (
+                    <p key={i} className="bidi-plaintext">{para}</p>
                   ))}
                 </div>
               </div>
@@ -719,8 +727,8 @@ const PrintPreview = () => {
               <div className="avoid-break" style={{ marginTop: 24 }}>
                 <h2 className="section-header">{t.aiGeneratedFeedback}</h2>
                 <div className="ai-content">
-                  {groupData.aiNarrative.split('\n\n').map((para, i) => (
-                    <p key={i}>{para}</p>
+                  {groupData.aiNarrative.split("\n\n").map((para, i) => (
+                    <p key={i} className="bidi-plaintext">{para}</p>
                   ))}
                 </div>
               </div>
