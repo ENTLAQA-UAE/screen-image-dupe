@@ -323,14 +323,26 @@ const EmployeeDetail = () => {
 
   const generateTalentSnapshot = async () => {
     if (!employee || !organizationId || snapshotLoading) return;
-    
+
     setSnapshotLoading(true);
     try {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        toast.error("Authentication required. Please sign in again.");
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke("generate-talent-snapshot", {
-        body: { 
+        body: {
           employeeEmail: employee.email,
-          organizationId 
-        }
+          organizationId,
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
 
       if (error) throw error;
@@ -347,6 +359,8 @@ const EmployeeDetail = () => {
         toast.error("AI credits exhausted. Please add credits.");
       } else if (error?.message?.includes("404")) {
         toast.error("No completed assessments found for this employee.");
+      } else if (error?.message?.includes("401") || error?.status === 401) {
+        toast.error("Authentication required. Please sign in again.");
       } else {
         toast.error("Failed to generate talent snapshot");
       }
