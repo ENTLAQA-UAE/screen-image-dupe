@@ -124,6 +124,7 @@ const EmployeeDetail = () => {
   const [stats, setStats] = useState<EmployeeStats | null>(null);
   const [selectedReport, setSelectedReport] = useState<AssessmentHistory | null>(null);
   const [talentSnapshot, setTalentSnapshot] = useState<string | null>(null);
+  const [snapshotGeneratedAt, setSnapshotGeneratedAt] = useState<string | null>(null);
   const [snapshotLoading, setSnapshotLoading] = useState(false);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [isAnonymizeOpen, setIsAnonymizeOpen] = useState(false);
@@ -326,7 +327,7 @@ const EmployeeDetail = () => {
     }
   };
 
-  const generateTalentSnapshot = async () => {
+  const generateTalentSnapshot = async (forceRegenerate = false) => {
     if (!employee || !organizationId || snapshotLoading) return;
 
     setSnapshotLoading(true);
@@ -346,6 +347,7 @@ const EmployeeDetail = () => {
         body: {
           employeeEmail: employee.email,
           organizationId,
+          forceRegenerate,
         },
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -361,8 +363,11 @@ const EmployeeDetail = () => {
 
       if (data?.snapshot) {
         setTalentSnapshot(data.snapshot);
-        setSnapshotDiagnostics({ status: 200, message: "Success", timestamp: new Date() });
-        toast.success("AI Talent Snapshot generated");
+        setSnapshotGeneratedAt(data.generatedAt);
+        setSnapshotDiagnostics({ status: 200, message: data.cached ? "Cached" : "Generated", timestamp: new Date() });
+        if (!data.cached) {
+          toast.success("AI Talent Snapshot generated");
+        }
       }
     } catch (error: any) {
       console.error("Error generating snapshot:", error);
@@ -382,6 +387,13 @@ const EmployeeDetail = () => {
       setSnapshotLoading(false);
     }
   };
+
+  // Load cached snapshot on mount
+  useEffect(() => {
+    if (employee && organizationId && !talentSnapshot && !snapshotLoading) {
+      generateTalentSnapshot(false);
+    }
+  }, [employee, organizationId]);
 
   const handleAnonymize = async () => {
     if (!employee || !organizationId) return;
@@ -602,11 +614,16 @@ const EmployeeDetail = () => {
                       );
                     })}
                   </div>
+                  {snapshotGeneratedAt && (
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Last generated: {new Date(snapshotGeneratedAt).toLocaleString()}
+                    </p>
+                  )}
                   <Button 
                     variant="outline" 
                     size="sm" 
                     className="mt-4 w-full"
-                    onClick={generateTalentSnapshot}
+                    onClick={() => generateTalentSnapshot(true)}
                     disabled={snapshotLoading}
                   >
                     {snapshotLoading ? (
@@ -630,7 +647,7 @@ const EmployeeDetail = () => {
                   </p>
                   <Button 
                     variant="hero" 
-                    onClick={generateTalentSnapshot}
+                    onClick={() => generateTalentSnapshot(false)}
                     disabled={snapshotLoading || stats?.completed === 0}
                   >
                     {snapshotLoading ? (

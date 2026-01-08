@@ -159,6 +159,47 @@ export type Database = {
           },
         ]
       }
+      employee_talent_snapshots: {
+        Row: {
+          assessment_count: number
+          created_at: string
+          employee_email: string
+          generated_at: string
+          id: string
+          organization_id: string
+          snapshot_text: string
+          updated_at: string
+        }
+        Insert: {
+          assessment_count?: number
+          created_at?: string
+          employee_email: string
+          generated_at?: string
+          id?: string
+          organization_id: string
+          snapshot_text: string
+          updated_at?: string
+        }
+        Update: {
+          assessment_count?: number
+          created_at?: string
+          employee_email?: string
+          generated_at?: string
+          id?: string
+          organization_id?: string
+          snapshot_text?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_talent_snapshots_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string

@@ -9,6 +9,7 @@ const corsHeaders = {
 interface TalentSnapshotRequest {
   employeeEmail: string;
   organizationId: string;
+  forceRegenerate?: boolean;
 }
 
 serve(async (req) => {
@@ -17,7 +18,7 @@ serve(async (req) => {
   }
 
   try {
-    const { employeeEmail, organizationId }: TalentSnapshotRequest = await req.json();
+    const { employeeEmail, organizationId, forceRegenerate }: TalentSnapshotRequest = await req.json();
 
     if (!employeeEmail || !organizationId) {
       return new Response(
@@ -29,6 +30,29 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Check for cached snapshot first (unless forceRegenerate is true)
+    if (!forceRegenerate) {
+      const { data: cachedSnapshot, error: cacheError } = await supabase
+        .from("employee_talent_snapshots")
+        .select("*")
+        .eq("organization_id", organizationId)
+        .eq("employee_email", employeeEmail)
+        .maybeSingle();
+
+      if (!cacheError && cachedSnapshot) {
+        console.log("Returning cached snapshot for:", employeeEmail);
+        return new Response(
+          JSON.stringify({
+            snapshot: cachedSnapshot.snapshot_text,
+            assessmentCount: cachedSnapshot.assessment_count,
+            generatedAt: cachedSnapshot.generated_at,
+            cached: true,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
 
     // Fetch all completed assessments for this employee
     const { data: participants, error: fetchError } = await supabase
@@ -163,11 +187,37 @@ Keep the tone professional, constructive, and actionable. Total length should be
 
     const aiData = await aiResponse.json();
     const snapshot = aiData.choices?.[0]?.message?.content || "";
+    const generatedAt = new Date().toISOString();
+
+    // Cache the snapshot using upsert
+    const { error: upsertError } = await supabase
+      .from("employee_talent_snapshots")
+      .upsert({
+        organization_id: organizationId,
+        employee_email: employeeEmail,
+        snapshot_text: snapshot,
+        assessment_count: participants.length,
+        generated_at: generatedAt,
+      }, {
+        onConflict: "organization_id,employee_email",
+      });
+
+    if (upsertError) {
+      console.error("Error caching snapshot:", upsertError);
+      // Continue even if caching fails
+    } else {
+      console.log("Talent snapshot cached successfully");
+    }
 
     console.log("Talent snapshot generated successfully");
 
     return new Response(
-      JSON.stringify({ snapshot, assessmentCount: participants.length }),
+      JSON.stringify({ 
+        snapshot, 
+        assessmentCount: participants.length,
+        generatedAt,
+        cached: false,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
