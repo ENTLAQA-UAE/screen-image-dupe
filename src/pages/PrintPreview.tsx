@@ -335,9 +335,20 @@ const PrintPreview = () => {
             font-family: ${isRtl ? "'Cairo', 'Noto Naskh Arabic', sans-serif" : "'Segoe UI', 'Helvetica Neue', Arial, sans-serif"};
             direction: ${isRtl ? "rtl" : "ltr"};
             text-align: ${isRtl ? "right" : "left"};
-            unicode-bidi: normal;
+            /* Important for Arabic: keep punctuation/numbers in the correct visual order */
+            unicode-bidi: ${isRtl ? "plaintext" : "normal"};
             line-height: 1.6;
             color: #1e293b;
+          }
+
+          /* Force proper bidi handling for dynamic text fields */
+          .print-container .section-header,
+          .print-container .info-label,
+          .print-container .info-value,
+          .print-container .footer,
+          .print-container .trait-name,
+          .print-container .trait-value {
+            unicode-bidi: plaintext;
           }
 
           .bidi-plaintext {
@@ -504,7 +515,7 @@ const PrintPreview = () => {
         `}
       </style>
 
-      <div className="print-container" style={{ padding: "20px" }}>
+      <div className="print-container" dir={isRtl ? "rtl" : "ltr"} lang={lang} style={{ padding: "20px" }}>
         {/* Header */}
         <div className="header-gradient avoid-break">
           {organization?.logoUrl && (
