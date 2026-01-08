@@ -114,7 +114,7 @@ const getIconColor = (type: string) => {
 const AssessmentGroups = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, isSuperAdmin } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { usage, limits, canCreate, refresh: refreshLimits } = useSubscriptionLimits();
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [groups, setGroups] = useState<AssessmentGroup[]>([]);
@@ -225,7 +225,7 @@ const AssessmentGroups = () => {
       setGroups(groupsWithCounts);
     } catch (error) {
       console.error('Error fetching groups:', error);
-      toast.error('Failed to load assessment groups');
+      toast.error(language === 'ar' ? 'فشل في تحميل مجموعات التقييم' : 'Failed to load assessment groups');
     } finally {
       setLoading(false);
     }
@@ -237,13 +237,13 @@ const AssessmentGroups = () => {
 
   const handleCreate = async () => {
     if (!organizationId || !formData.name.trim()) {
-      toast.error('Please enter a group name');
+      toast.error(language === 'ar' ? 'الرجاء إدخال اسم المجموعة' : 'Please enter a group name');
       return;
     }
 
     // Check subscription limit
     if (!canCreate("groups")) {
-      toast.error('You have reached your assessment group limit. Please upgrade your plan.');
+      toast.error(language === 'ar' ? 'لقد وصلت إلى الحد الأقصى لمجموعات التقييم. يرجى ترقية خطتك.' : 'You have reached your assessment group limit. Please upgrade your plan.');
       return;
     }
 
@@ -262,14 +262,14 @@ const AssessmentGroups = () => {
 
       if (error) throw error;
 
-      toast.success('Assessment group created successfully');
+      toast.success(language === 'ar' ? 'تم إنشاء مجموعة التقييم بنجاح' : 'Assessment group created successfully');
       setIsCreateOpen(false);
       resetForm();
       fetchGroups();
-      refreshLimits(); // Refresh usage counts
+      refreshLimits();
     } catch (error: any) {
       console.error('Error creating group:', error);
-      toast.error(error.message || 'Failed to create assessment group');
+      toast.error(error.message || (language === 'ar' ? 'فشل في إنشاء مجموعة التقييم' : 'Failed to create assessment group'));
     } finally {
       setSaving(false);
     }
@@ -277,7 +277,7 @@ const AssessmentGroups = () => {
 
   const handleUpdate = async () => {
     if (!selectedGroup || !formData.name.trim()) {
-      toast.error('Please enter a group name');
+      toast.error(language === 'ar' ? 'الرجاء إدخال اسم المجموعة' : 'Please enter a group name');
       return;
     }
 
@@ -296,14 +296,14 @@ const AssessmentGroups = () => {
 
       if (error) throw error;
 
-      toast.success('Assessment group updated successfully');
+      toast.success(language === 'ar' ? 'تم تحديث مجموعة التقييم بنجاح' : 'Assessment group updated successfully');
       setIsEditOpen(false);
       setSelectedGroup(null);
       resetForm();
       fetchGroups();
     } catch (error: any) {
       console.error('Error updating group:', error);
-      toast.error(error.message || 'Failed to update assessment group');
+      toast.error(error.message || (language === 'ar' ? 'فشل في تحديث مجموعة التقييم' : 'Failed to update assessment group'));
     } finally {
       setSaving(false);
     }
@@ -321,13 +321,13 @@ const AssessmentGroups = () => {
 
       if (error) throw error;
 
-      toast.success('Assessment group deleted successfully');
+      toast.success(language === 'ar' ? 'تم حذف مجموعة التقييم بنجاح' : 'Assessment group deleted successfully');
       setIsDeleteOpen(false);
       setSelectedGroup(null);
       fetchGroups();
     } catch (error: any) {
       console.error('Error deleting group:', error);
-      toast.error(error.message || 'Failed to delete assessment group');
+      toast.error(error.message || (language === 'ar' ? 'فشل في حذف مجموعة التقييم' : 'Failed to delete assessment group'));
     } finally {
       setSaving(false);
     }
@@ -364,7 +364,7 @@ const AssessmentGroups = () => {
     if (group.group_link_token) {
       const link = `${window.location.origin}/assess/${group.group_link_token}?group=true`;
       navigator.clipboard.writeText(link);
-      toast.success('Invite link copied to clipboard');
+      toast.success(t.groups.linkCopied);
     }
   };
 
@@ -372,6 +372,14 @@ const AssessmentGroups = () => {
     if (!group.is_active) return 'draft';
     if (group.end_date && new Date(group.end_date) < new Date()) return 'completed';
     return 'active';
+  };
+
+  const getStatusLabel = (status: 'active' | 'draft' | 'completed') => {
+    switch (status) {
+      case 'active': return language === 'ar' ? 'نشط' : 'Active';
+      case 'draft': return language === 'ar' ? 'مسودة' : 'Draft';
+      case 'completed': return language === 'ar' ? 'مكتمل' : 'Completed';
+    }
   };
 
   const formatDate = (dateString: string | null) => {
@@ -433,7 +441,7 @@ const AssessmentGroups = () => {
           <div className="relative w-80">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search groups..."
+              placeholder={language === 'ar' ? 'البحث في المجموعات...' : 'Search groups...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -448,21 +456,23 @@ const AssessmentGroups = () => {
           </div>
         ) : !organizationId ? (
           <div className="text-center py-20">
-            <p className="text-muted-foreground">You are not assigned to any organization.</p>
+            <p className="text-muted-foreground">{t.assessments.notAssigned}</p>
           </div>
         ) : filteredGroups.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card p-12 text-center">
             <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">
-              {searchQuery ? 'No groups found' : 'No assessment groups yet'}
+              {searchQuery ? (language === 'ar' ? 'لم يتم العثور على مجموعات' : 'No groups found') : t.groups.noGroups}
             </h3>
             <p className="text-muted-foreground mb-4">
-              {searchQuery ? 'Try a different search term.' : 'Create your first group to start inviting participants.'}
+              {searchQuery 
+                ? (language === 'ar' ? 'جرب مصطلح بحث مختلف.' : 'Try a different search term.') 
+                : t.groups.createFirstGroup}
             </p>
             {!searchQuery && (
               <Button variant="hero" onClick={() => setIsCreateOpen(true)}>
                 <Plus className="w-4 h-4 mr-2" />
-                Create Group
+                {t.groups.createGroup}
               </Button>
             )}
           </div>
@@ -471,12 +481,12 @@ const AssessmentGroups = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Group Name</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Assessment</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Status</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Participants</th>
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">Dates</th>
-                  <th className="text-right py-4 px-6 text-sm font-semibold text-foreground">Actions</th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">{t.groups.groupName}</th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">{t.assessments.title}</th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">{t.assessments.status}</th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">{t.groups.participantCount}</th>
+                  <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">{language === 'ar' ? 'التواريخ' : 'Dates'}</th>
+                  <th className="text-right py-4 px-6 text-sm font-semibold text-foreground">{t.common.actions}</th>
                 </tr>
               </thead>
               <tbody>
@@ -502,21 +512,21 @@ const AssessmentGroups = () => {
                         </div>
                       </td>
                       <td className="py-4 px-6 text-muted-foreground">
-                        {group.assessment?.title || 'No assessment assigned'}
+                        {group.assessment?.title || (language === 'ar' ? 'لم يتم تعيين تقييم' : 'No assessment assigned')}
                       </td>
                       <td className="py-4 px-6">
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${statusColors[status]}`}>
                           {status === "active" && <Play className="w-3 h-3 mr-1" />}
                           {status === "completed" && <CheckCircle2 className="w-3 h-3 mr-1" />}
                           {status === "draft" && <Clock className="w-3 h-3 mr-1" />}
-                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                          {getStatusLabel(status)}
                         </span>
                       </td>
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-2">
                           <Users className="w-4 h-4 text-muted-foreground" />
                           <span className="text-foreground">{group.completed_count}/{group.participants_count}</span>
-                          <span className="text-muted-foreground text-sm">completed</span>
+                          <span className="text-muted-foreground text-sm">{t.participants.completed}</span>
                         </div>
                       </td>
                       <td className="py-4 px-6 text-sm text-muted-foreground">
@@ -532,19 +542,19 @@ const AssessmentGroups = () => {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => navigate(`/assessment-groups/${group.id}/report`)}>
                               <BarChart3 className="w-4 h-4 mr-2" />
-                              View Report
+                              {t.groups.viewReport}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => openEditDialog(group)}>
                               <Edit className="w-4 h-4 mr-2" />
-                              Edit
+                              {t.common.edit}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => copyInviteLink(group)}>
                               <LinkIcon className="w-4 h-4 mr-2" />
-                              Copy Invite Link
+                              {t.groups.copyLink}
                             </DropdownMenuItem>
                             <DropdownMenuItem>
                               <UserPlus className="w-4 h-4 mr-2" />
-                              Add Participants
+                              {language === 'ar' ? 'إضافة مشاركين' : 'Add Participants'}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
@@ -552,7 +562,7 @@ const AssessmentGroups = () => {
                               className="text-destructive"
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
-                              Delete
+                              {t.common.delete}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -570,29 +580,29 @@ const AssessmentGroups = () => {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Create Assessment Group</DialogTitle>
+            <DialogTitle>{language === 'ar' ? 'إنشاء مجموعة تقييم' : 'Create Assessment Group'}</DialogTitle>
             <DialogDescription>
-              Create a new group to organize participants for an assessment.
+              {language === 'ar' ? 'أنشئ مجموعة جديدة لتنظيم المشاركين في التقييم.' : 'Create a new group to organize participants for an assessment.'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Group Name *</Label>
+              <Label htmlFor="name">{t.groups.groupName} *</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., Q1 2025 - IT Department"
+                placeholder={language === 'ar' ? 'مثال: الربع الأول 2025 - قسم تقنية المعلومات' : 'e.g., Q1 2025 - IT Department'}
               />
             </div>
             <div className="space-y-2">
-              <Label>Assessment</Label>
+              <Label>{t.assessments.title}</Label>
               <Select
                 value={formData.assessment_id}
                 onValueChange={(value) => setFormData({ ...formData, assessment_id: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select an assessment" />
+                  <SelectValue placeholder={t.groups.selectAssessment} />
                 </SelectTrigger>
                 <SelectContent>
                   {assessments.map((assessment) => (
@@ -605,7 +615,7 @@ const AssessmentGroups = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Start Date</Label>
+                <Label>{t.groups.startDate}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -616,7 +626,7 @@ const AssessmentGroups = () => {
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.start_date ? format(formData.start_date, "PPP") : "Pick a date"}
+                      {formData.start_date ? format(formData.start_date, "PPP") : (language === 'ar' ? 'اختر تاريخ' : 'Pick a date')}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -631,7 +641,7 @@ const AssessmentGroups = () => {
                 </Popover>
               </div>
               <div className="space-y-2">
-                <Label>End Date</Label>
+                <Label>{t.groups.endDate}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -642,7 +652,7 @@ const AssessmentGroups = () => {
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.end_date ? format(formData.end_date, "PPP") : "Pick a date"}
+                      {formData.end_date ? format(formData.end_date, "PPP") : (language === 'ar' ? 'اختر تاريخ' : 'Pick a date')}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -659,9 +669,9 @@ const AssessmentGroups = () => {
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border p-4">
               <div>
-                <Label htmlFor="is_active" className="text-base">Active</Label>
+                <Label htmlFor="is_active" className="text-base">{language === 'ar' ? 'نشط' : 'Active'}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Make this group available for participants
+                  {language === 'ar' ? 'جعل هذه المجموعة متاحة للمشاركين' : 'Make this group available for participants'}
                 </p>
               </div>
               <Switch
@@ -673,11 +683,11 @@ const AssessmentGroups = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button onClick={handleCreate} disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Create Group
+              {t.groups.createGroup}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -687,14 +697,14 @@ const AssessmentGroups = () => {
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Edit Assessment Group</DialogTitle>
+            <DialogTitle>{language === 'ar' ? 'تعديل مجموعة التقييم' : 'Edit Assessment Group'}</DialogTitle>
             <DialogDescription>
-              Update group settings and configuration.
+              {language === 'ar' ? 'تحديث إعدادات وتكوين المجموعة.' : 'Update group settings and configuration.'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-name">Group Name *</Label>
+              <Label htmlFor="edit-name">{t.groups.groupName} *</Label>
               <Input
                 id="edit-name"
                 value={formData.name}
@@ -702,13 +712,13 @@ const AssessmentGroups = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label>Assessment</Label>
+              <Label>{t.assessments.title}</Label>
               <Select
                 value={formData.assessment_id}
                 onValueChange={(value) => setFormData({ ...formData, assessment_id: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select an assessment" />
+                  <SelectValue placeholder={t.groups.selectAssessment} />
                 </SelectTrigger>
                 <SelectContent>
                   {assessments.map((assessment) => (
@@ -721,7 +731,7 @@ const AssessmentGroups = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Start Date</Label>
+                <Label>{t.groups.startDate}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -732,7 +742,7 @@ const AssessmentGroups = () => {
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.start_date ? format(formData.start_date, "PPP") : "Pick a date"}
+                      {formData.start_date ? format(formData.start_date, "PPP") : (language === 'ar' ? 'اختر تاريخ' : 'Pick a date')}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -747,7 +757,7 @@ const AssessmentGroups = () => {
                 </Popover>
               </div>
               <div className="space-y-2">
-                <Label>End Date</Label>
+                <Label>{t.groups.endDate}</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -758,7 +768,7 @@ const AssessmentGroups = () => {
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {formData.end_date ? format(formData.end_date, "PPP") : "Pick a date"}
+                      {formData.end_date ? format(formData.end_date, "PPP") : (language === 'ar' ? 'اختر تاريخ' : 'Pick a date')}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -775,9 +785,9 @@ const AssessmentGroups = () => {
             </div>
             <div className="flex items-center justify-between rounded-lg border border-border p-4">
               <div>
-                <Label htmlFor="edit-is_active" className="text-base">Active</Label>
+                <Label htmlFor="edit-is_active" className="text-base">{language === 'ar' ? 'نشط' : 'Active'}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Make this group available for participants
+                  {language === 'ar' ? 'جعل هذه المجموعة متاحة للمشاركين' : 'Make this group available for participants'}
                 </p>
               </div>
               <Switch
@@ -789,11 +799,11 @@ const AssessmentGroups = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button onClick={handleUpdate} disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Save Changes
+              {t.settings.saveChanges}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -803,18 +813,20 @@ const AssessmentGroups = () => {
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Assessment Group</DialogTitle>
+            <DialogTitle>{language === 'ar' ? 'حذف مجموعة التقييم' : 'Delete Assessment Group'}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete "{selectedGroup?.name}"? This will also remove all associated participants and their responses. This action cannot be undone.
+              {language === 'ar' 
+                ? `هل أنت متأكد من حذف "${selectedGroup?.name}"؟ سيتم حذف جميع المشاركين المرتبطين وإجاباتهم. لا يمكن التراجع عن هذا الإجراء.`
+                : `Are you sure you want to delete "${selectedGroup?.name}"? This will also remove all associated participants and their responses. This action cannot be undone.`}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteOpen(false)}>
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Delete
+              {t.common.delete}
             </Button>
           </DialogFooter>
         </DialogContent>

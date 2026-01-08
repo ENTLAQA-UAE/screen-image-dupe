@@ -62,7 +62,7 @@ const PLAN_LIMITS: Record<string, { assessments: number; assessmentGroups: numbe
 export default function OrganizationSettings() {
   const navigate = useNavigate();
   const { user, isOrgAdmin, isSuperAdmin } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [orgUsers, setOrgUsers] = useState<OrgUser[]>([]);
@@ -110,7 +110,7 @@ export default function OrganizationSettings() {
       .single();
     
     if (error) {
-      toast.error("Failed to load organization");
+      toast.error(language === 'ar' ? 'فشل في تحميل المنظمة' : 'Failed to load organization');
       return;
     }
     
@@ -139,7 +139,7 @@ export default function OrganizationSettings() {
       .eq("organization_id", profile.organization_id);
     
     if (profilesError) {
-      toast.error("Failed to load users");
+      toast.error(language === 'ar' ? 'فشل في تحميل المستخدمين' : 'Failed to load users');
       return;
     }
 
@@ -204,11 +204,11 @@ export default function OrganizationSettings() {
     setSaving(false);
     
     if (error) {
-      toast.error("Failed to save changes");
+      toast.error(language === 'ar' ? 'فشل في حفظ التغييرات' : 'Failed to save changes');
       return;
     }
     
-    toast.success("Organization settings saved");
+    toast.success(language === 'ar' ? 'تم حفظ إعدادات المنظمة' : 'Organization settings saved');
     fetchOrganization();
   };
 
@@ -217,12 +217,12 @@ export default function OrganizationSettings() {
     if (!file || !organization) return;
     
     if (!file.type.startsWith("image/")) {
-      toast.error("Please upload an image file");
+      toast.error(language === 'ar' ? 'الرجاء رفع ملف صورة' : 'Please upload an image file');
       return;
     }
     
     if (file.size > 2 * 1024 * 1024) {
-      toast.error("Image must be less than 2MB");
+      toast.error(language === 'ar' ? 'يجب أن تكون الصورة أقل من 2 ميجابايت' : 'Image must be less than 2MB');
       return;
     }
     
@@ -243,7 +243,7 @@ export default function OrganizationSettings() {
     
     if (uploadError) {
       setUploadingLogo(false);
-      toast.error("Failed to upload logo");
+      toast.error(language === 'ar' ? 'فشل في رفع الشعار' : 'Failed to upload logo');
       return;
     }
     
@@ -262,11 +262,11 @@ export default function OrganizationSettings() {
     setUploadingLogo(false);
     
     if (updateError) {
-      toast.error("Failed to update logo URL");
+      toast.error(language === 'ar' ? 'فشل في تحديث رابط الشعار' : 'Failed to update logo URL');
       return;
     }
     
-    toast.success("Logo uploaded successfully");
+    toast.success(language === 'ar' ? 'تم رفع الشعار بنجاح' : 'Logo uploaded successfully');
     fetchOrganization();
   };
 
@@ -282,11 +282,11 @@ export default function OrganizationSettings() {
       .eq("id", organization.id);
     
     if (error) {
-      toast.error("Failed to remove logo");
+      toast.error(language === 'ar' ? 'فشل في إزالة الشعار' : 'Failed to remove logo');
       return;
     }
     
-    toast.success("Logo removed");
+    toast.success(language === 'ar' ? 'تم إزالة الشعار' : 'Logo removed');
     fetchOrganization();
   };
 
@@ -325,7 +325,7 @@ export default function OrganizationSettings() {
     setInviteDialogOpen(false);
     setInviteEmail("");
     setInviteFullName("");
-    toast.success("User invited! They will receive an email to set their password.");
+    toast.success(language === 'ar' ? 'تم دعوة المستخدم! سيتلقى بريدًا إلكترونيًا لتعيين كلمة المرور.' : 'User invited! They will receive an email to set their password.');
     fetchOrgUsers();
   };
 
@@ -368,7 +368,7 @@ export default function OrganizationSettings() {
             </TabsTrigger>
             <TabsTrigger value="competencies" className="gap-2">
               <Target className="h-4 w-4" />
-              Competencies
+              {language === 'ar' ? 'الكفاءات' : 'Competencies'}
             </TabsTrigger>
             <TabsTrigger value="users" className="gap-2">
               <Users className="h-4 w-4" />
@@ -469,7 +469,7 @@ export default function OrganizationSettings() {
                       className="h-10 px-4 rounded flex items-center justify-center text-white text-sm font-medium"
                       style={{ backgroundColor: primaryColor }}
                     >
-                      Preview
+                      {language === 'ar' ? 'معاينة' : 'Preview'}
                     </div>
                   </div>
                 </div>
@@ -516,45 +516,45 @@ export default function OrganizationSettings() {
                   <DialogTrigger asChild>
                     <Button>
                       <UserPlus className="h-4 w-4 mr-2" />
-                      Invite User
+                      {t.settings.inviteUser}
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Invite HR Admin</DialogTitle>
+                      <DialogTitle>{language === 'ar' ? 'دعوة مدير موارد بشرية' : 'Invite HR Admin'}</DialogTitle>
                       <DialogDescription>
-                        Invite a new user to manage assessments for your organization
+                        {language === 'ar' ? 'دعوة مستخدم جديد لإدارة التقييمات لمنظمتك' : 'Invite a new user to manage assessments for your organization'}
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
-                        <Label htmlFor="invite-name">Full Name</Label>
+                        <Label htmlFor="invite-name">{t.settings.fullName}</Label>
                         <Input
                           id="invite-name"
                           value={inviteFullName}
                           onChange={(e) => setInviteFullName(e.target.value)}
-                          placeholder="John Doe"
+                          placeholder={language === 'ar' ? 'أحمد محمد' : 'John Doe'}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="invite-email">Email Address</Label>
+                        <Label htmlFor="invite-email">{t.settings.email}</Label>
                         <Input
                           id="invite-email"
                           type="email"
                           value={inviteEmail}
                           onChange={(e) => setInviteEmail(e.target.value)}
-                          placeholder="john@company.com"
+                          placeholder={language === 'ar' ? 'ahmed@company.com' : 'john@company.com'}
                         />
                       </div>
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
-                        Cancel
+                        {t.common.cancel}
                       </Button>
                       <Button onClick={handleInviteUser} disabled={inviting || !inviteEmail || !inviteFullName}>
                         {inviting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                         <Mail className="h-4 w-4 mr-2" />
-                        Send Invite
+                        {language === 'ar' ? 'إرسال الدعوة' : 'Send Invite'}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -564,27 +564,27 @@ export default function OrganizationSettings() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Joined</TableHead>
+                      <TableHead>{t.participants.name}</TableHead>
+                      <TableHead>{t.settings.role}</TableHead>
+                      <TableHead>{t.settings.joined}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {orgUsers.map((orgUser) => (
                       <TableRow key={orgUser.id}>
                         <TableCell className="font-medium">
-                          {orgUser.full_name || "Unnamed User"}
+                          {orgUser.full_name || (language === 'ar' ? 'مستخدم بدون اسم' : 'Unnamed User')}
                           {orgUser.id === user?.id && (
-                            <Badge variant="secondary" className="ml-2">You</Badge>
+                            <Badge variant="secondary" className="ml-2">{language === 'ar' ? 'أنت' : 'You'}</Badge>
                           )}
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">
-                            {orgUser.role === "org_admin" ? "Org Admin" : "HR Admin"}
+                            {orgUser.role === "org_admin" ? (language === 'ar' ? 'مدير المنظمة' : 'Org Admin') : (language === 'ar' ? 'مدير الموارد البشرية' : 'HR Admin')}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {new Date(orgUser.created_at).toLocaleDateString()}
+                          {new Date(orgUser.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -597,18 +597,18 @@ export default function OrganizationSettings() {
           <TabsContent value="usage" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Subscription Usage</CardTitle>
+                <CardTitle>{language === 'ar' ? 'استخدام الاشتراك' : 'Subscription Usage'}</CardTitle>
                 <CardDescription>
-                  Monitor your organization's resource consumption
+                  {language === 'ar' ? 'مراقبة استهلاك موارد منظمتك' : "Monitor your organization's resource consumption"}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex items-center gap-3 mb-6">
                   <Badge variant="secondary" className="text-base px-3 py-1">
-                    {organization?.plan?.toUpperCase() || "FREE"} Plan
+                    {organization?.plan?.toUpperCase() || "FREE"} {language === 'ar' ? 'خطة' : 'Plan'}
                   </Badge>
                   <span className="text-muted-foreground text-sm">
-                    Contact Jadarat to upgrade your plan
+                    {language === 'ar' ? 'تواصل مع جدارات لترقية خطتك' : 'Contact Jadarat to upgrade your plan'}
                   </span>
                 </div>
 
@@ -617,9 +617,9 @@ export default function OrganizationSettings() {
                     {/* Assessments */}
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="font-medium">Assessments</span>
+                        <span className="font-medium">{t.assessments.title}</span>
                         <span className={getUsageColor(getUsagePercentage(usageStats.assessments, usageStats.planLimits.assessments))}>
-                          {usageStats.assessments} / {usageStats.planLimits.assessments === -1 ? "Unlimited" : usageStats.planLimits.assessments}
+                          {usageStats.assessments} / {usageStats.planLimits.assessments === -1 ? (language === 'ar' ? 'غير محدود' : 'Unlimited') : usageStats.planLimits.assessments}
                         </span>
                       </div>
                       {usageStats.planLimits.assessments !== -1 && (
@@ -630,9 +630,9 @@ export default function OrganizationSettings() {
                     {/* Assessment Groups */}
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="font-medium">Assessment Groups</span>
+                        <span className="font-medium">{t.groups.title}</span>
                         <span className={getUsageColor(getUsagePercentage(usageStats.assessmentGroups, usageStats.planLimits.assessmentGroups))}>
-                          {usageStats.assessmentGroups} / {usageStats.planLimits.assessmentGroups === -1 ? "Unlimited" : usageStats.planLimits.assessmentGroups}
+                          {usageStats.assessmentGroups} / {usageStats.planLimits.assessmentGroups === -1 ? (language === 'ar' ? 'غير محدود' : 'Unlimited') : usageStats.planLimits.assessmentGroups}
                         </span>
                       </div>
                       {usageStats.planLimits.assessmentGroups !== -1 && (
@@ -643,9 +643,9 @@ export default function OrganizationSettings() {
                     {/* Participants */}
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="font-medium">Total Participants</span>
+                        <span className="font-medium">{t.hrDashboard.totalParticipants}</span>
                         <span className={getUsageColor(getUsagePercentage(usageStats.participants, usageStats.planLimits.participants))}>
-                          {usageStats.participants} / {usageStats.planLimits.participants === -1 ? "Unlimited" : usageStats.planLimits.participants}
+                          {usageStats.participants} / {usageStats.planLimits.participants === -1 ? (language === 'ar' ? 'غير محدود' : 'Unlimited') : usageStats.planLimits.participants}
                         </span>
                       </div>
                       {usageStats.planLimits.participants !== -1 && (

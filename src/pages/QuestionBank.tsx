@@ -77,7 +77,7 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 
 export default function QuestionBank() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [questions, setQuestions] = useState<QuestionBankItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
@@ -146,7 +146,7 @@ export default function QuestionBank() {
       })));
     } catch (error: any) {
       console.error("Error fetching questions:", error);
-      toast.error("Failed to load question bank");
+      toast.error(language === 'ar' ? 'فشل في تحميل بنك الأسئلة' : 'Failed to load question bank');
     } finally {
       setLoading(false);
     }
@@ -187,12 +187,12 @@ export default function QuestionBank() {
         .eq("id", selectedQuestion.id);
 
       if (error) throw error;
-      toast.success("Question updated successfully");
+      toast.success(language === 'ar' ? 'تم تحديث السؤال بنجاح' : 'Question updated successfully');
       setEditDialogOpen(false);
       fetchQuestions();
     } catch (error: any) {
       console.error("Error updating question:", error);
-      toast.error("Failed to update question");
+      toast.error(language === 'ar' ? 'فشل في تحديث السؤال' : 'Failed to update question');
     }
   };
 
@@ -205,12 +205,12 @@ export default function QuestionBank() {
         .eq("id", selectedQuestion.id);
 
       if (error) throw error;
-      toast.success("Question deleted from bank");
+      toast.success(language === 'ar' ? 'تم حذف السؤال من البنك' : 'Question deleted from bank');
       setDeleteDialogOpen(false);
       fetchQuestions();
     } catch (error: any) {
       console.error("Error deleting question:", error);
-      toast.error("Failed to delete question");
+      toast.error(language === 'ar' ? 'فشل في حذف السؤال' : 'Failed to delete question');
     }
   };
 
@@ -256,6 +256,15 @@ export default function QuestionBank() {
   const getTypeIcon = (type: string | null) => {
     const Icon = ASSESSMENT_TYPE_ICONS[type || ""] || FileText;
     return <Icon className="w-4 h-4" />;
+  };
+
+  const getDifficultyLabel = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy': return t.questionBank.easy;
+      case 'medium': return t.questionBank.medium;
+      case 'hard': return t.questionBank.hard;
+      default: return difficulty;
+    }
   };
 
   return (
@@ -304,8 +313,8 @@ export default function QuestionBank() {
                   <SelectItem value="behavioral">{t.assessments.behavioral}</SelectItem>
                   <SelectItem value="situational">{t.assessments.situational}</SelectItem>
                   <SelectItem value="language">{t.assessments.languageAssessment}</SelectItem>
-                  <SelectItem value="generic_quiz">Generic Quiz</SelectItem>
-                  <SelectItem value="generic_profile">Generic Profile</SelectItem>
+                  <SelectItem value="generic_quiz">{language === 'ar' ? 'اختبار عام' : 'Generic Quiz'}</SelectItem>
+                  <SelectItem value="generic_profile">{language === 'ar' ? 'ملف شخصي عام' : 'Generic Profile'}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -335,7 +344,7 @@ export default function QuestionBank() {
               <div className="relative w-48">
                 <Tag className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Filter by tag..."
+                  placeholder={language === 'ar' ? 'تصفية حسب الوسم...' : 'Filter by tag...'}
                   value={filterTag}
                   onChange={(e) => setFilterTag(e.target.value)}
                   className="pl-10"
@@ -361,23 +370,23 @@ export default function QuestionBank() {
             ) : filteredQuestions.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 text-center">
                 <Library className="w-12 h-12 text-muted-foreground/40 mb-4" />
-                <h3 className="font-semibold text-lg mb-2">No questions found</h3>
+                <h3 className="font-semibold text-lg mb-2">{language === 'ar' ? 'لم يتم العثور على أسئلة' : 'No questions found'}</h3>
                 <p className="text-muted-foreground text-sm max-w-md">
                   {questions.length === 0
-                    ? "Your question bank is empty. Save questions from the Assessment Builder to build your library."
-                    : "No questions match your current filters. Try adjusting your search criteria."}
+                    ? (language === 'ar' ? 'بنك الأسئلة فارغ. احفظ الأسئلة من منشئ التقييمات لبناء مكتبتك.' : 'Your question bank is empty. Save questions from the Assessment Builder to build your library.')
+                    : (language === 'ar' ? 'لا توجد أسئلة تطابق الفلاتر الحالية. جرب تعديل معايير البحث.' : 'No questions match your current filters. Try adjusting your search criteria.')}
                 </p>
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[40%]">Question</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Difficulty</TableHead>
-                    <TableHead>Language</TableHead>
-                    <TableHead>Tags</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="w-[40%]">{t.builder.question}</TableHead>
+                    <TableHead>{t.assessments.type}</TableHead>
+                    <TableHead>{t.builder.difficulty}</TableHead>
+                    <TableHead>{t.assessments.language}</TableHead>
+                    <TableHead>{language === 'ar' ? 'الوسوم' : 'Tags'}</TableHead>
+                    <TableHead className="text-right">{t.common.actions}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -388,7 +397,7 @@ export default function QuestionBank() {
                           <p className="font-medium truncate">{question.text}</p>
                           {question.subdomain && (
                             <p className="text-xs text-muted-foreground mt-1">
-                              Subdomain: {question.subdomain}
+                              {language === 'ar' ? 'المجال الفرعي:' : 'Subdomain:'} {question.subdomain}
                             </p>
                           )}
                         </div>
@@ -407,7 +416,7 @@ export default function QuestionBank() {
                             variant="outline"
                             className={DIFFICULTY_COLORS[question.difficulty]}
                           >
-                            {question.difficulty}
+                            {getDifficultyLabel(question.difficulty)}
                           </Badge>
                         ) : (
                           "—"
@@ -466,15 +475,15 @@ export default function QuestionBank() {
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Edit Question</DialogTitle>
+              <DialogTitle>{language === 'ar' ? 'تعديل السؤال' : 'Edit Question'}</DialogTitle>
               <DialogDescription>
-                Update the question details and metadata
+                {language === 'ar' ? 'تحديث تفاصيل السؤال والبيانات الوصفية' : 'Update the question details and metadata'}
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>Question Text</Label>
+                <Label>{language === 'ar' ? 'نص السؤال' : 'Question Text'}</Label>
                 <Textarea
                   value={editForm.text}
                   onChange={(e) => setEditForm({ ...editForm, text: e.target.value })}
@@ -484,7 +493,7 @@ export default function QuestionBank() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Question Type</Label>
+                  <Label>{language === 'ar' ? 'نوع السؤال' : 'Question Type'}</Label>
                   <Select
                     value={editForm.type}
                     onValueChange={(v) => setEditForm({ ...editForm, type: v })}
@@ -493,31 +502,31 @@ export default function QuestionBank() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="mcq_single">Multiple Choice (Single)</SelectItem>
-                      <SelectItem value="mcq_multi">Multiple Choice (Multi)</SelectItem>
-                      <SelectItem value="likert">Likert Scale</SelectItem>
-                      <SelectItem value="open_text">Open Text</SelectItem>
+                      <SelectItem value="mcq_single">{language === 'ar' ? 'اختيار متعدد (واحد)' : 'Multiple Choice (Single)'}</SelectItem>
+                      <SelectItem value="mcq_multi">{language === 'ar' ? 'اختيار متعدد (متعدد)' : 'Multiple Choice (Multi)'}</SelectItem>
+                      <SelectItem value="likert">{language === 'ar' ? 'مقياس ليكرت' : 'Likert Scale'}</SelectItem>
+                      <SelectItem value="open_text">{language === 'ar' ? 'نص مفتوح' : 'Open Text'}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Assessment Type</Label>
+                  <Label>{language === 'ar' ? 'نوع التقييم' : 'Assessment Type'}</Label>
                   <Select
                     value={editForm.assessment_type}
                     onValueChange={(v) => setEditForm({ ...editForm, assessment_type: v })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder={language === 'ar' ? 'اختر النوع' : 'Select type'} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="cognitive">Cognitive</SelectItem>
-                      <SelectItem value="personality">Personality</SelectItem>
-                      <SelectItem value="behavioral">Behavioral</SelectItem>
-                      <SelectItem value="situational">Situational</SelectItem>
-                      <SelectItem value="language">Language</SelectItem>
-                      <SelectItem value="generic_quiz">Generic Quiz</SelectItem>
-                      <SelectItem value="generic_profile">Generic Profile</SelectItem>
+                      <SelectItem value="cognitive">{t.assessments.cognitive}</SelectItem>
+                      <SelectItem value="personality">{t.assessments.personality}</SelectItem>
+                      <SelectItem value="behavioral">{t.assessments.behavioral}</SelectItem>
+                      <SelectItem value="situational">{t.assessments.situational}</SelectItem>
+                      <SelectItem value="language">{t.assessments.languageAssessment}</SelectItem>
+                      <SelectItem value="generic_quiz">{language === 'ar' ? 'اختبار عام' : 'Generic Quiz'}</SelectItem>
+                      <SelectItem value="generic_profile">{language === 'ar' ? 'ملف شخصي عام' : 'Generic Profile'}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -525,7 +534,7 @@ export default function QuestionBank() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Difficulty</Label>
+                  <Label>{t.builder.difficulty}</Label>
                   <Select
                     value={editForm.difficulty}
                     onValueChange={(v) => setEditForm({ ...editForm, difficulty: v })}
@@ -534,15 +543,15 @@ export default function QuestionBank() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="easy">Easy</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="hard">Hard</SelectItem>
+                      <SelectItem value="easy">{t.questionBank.easy}</SelectItem>
+                      <SelectItem value="medium">{t.questionBank.medium}</SelectItem>
+                      <SelectItem value="hard">{t.questionBank.hard}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Language</Label>
+                  <Label>{t.assessments.language}</Label>
                   <Select
                     value={editForm.language}
                     onValueChange={(v) => setEditForm({ ...editForm, language: v })}
@@ -552,32 +561,32 @@ export default function QuestionBank() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="ar">Arabic</SelectItem>
+                      <SelectItem value="ar">العربية</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label>Subdomain</Label>
+                <Label>{language === 'ar' ? 'المجال الفرعي' : 'Subdomain'}</Label>
                 <Input
                   value={editForm.subdomain}
                   onChange={(e) => setEditForm({ ...editForm, subdomain: e.target.value })}
-                  placeholder="e.g., numerical, verbal, grammar..."
+                  placeholder={language === 'ar' ? 'مثال: رقمي، لفظي، قواعد...' : 'e.g., numerical, verbal, grammar...'}
                 />
               </div>
 
               {/* Options */}
               {editForm.type !== "open_text" && (
                 <div className="space-y-2">
-                  <Label>Answer Options</Label>
+                  <Label>{language === 'ar' ? 'خيارات الإجابة' : 'Answer Options'}</Label>
                   <div className="space-y-2">
                     {editForm.options.map((opt, idx) => (
                       <div key={idx} className="flex items-center gap-2">
                         <Input
                           value={opt.text || ""}
                           onChange={(e) => updateOption(idx, e.target.value)}
-                          placeholder={`Option ${idx + 1}`}
+                          placeholder={`${language === 'ar' ? 'الخيار' : 'Option'} ${idx + 1}`}
                         />
                         {editForm.type === "mcq_single" && (
                           <Button
@@ -604,7 +613,7 @@ export default function QuestionBank() {
                     ))}
                     <Button variant="outline" size="sm" onClick={addOption}>
                       <Plus className="w-4 h-4 mr-2" />
-                      Add Option
+                      {t.builder.addOption}
                     </Button>
                   </div>
                 </div>
@@ -612,7 +621,7 @@ export default function QuestionBank() {
 
               {/* Tags */}
               <div className="space-y-2">
-                <Label>Tags</Label>
+                <Label>{language === 'ar' ? 'الوسوم' : 'Tags'}</Label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {editForm.tags.map((tag) => (
                     <Badge key={tag} variant="secondary" className="gap-1">
@@ -628,11 +637,11 @@ export default function QuestionBank() {
                   <Input
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
-                    placeholder="Add a tag..."
+                    placeholder={language === 'ar' ? 'أضف وسم...' : 'Add a tag...'}
                     onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
                   />
                   <Button variant="outline" onClick={addTag}>
-                    Add
+                    {language === 'ar' ? 'إضافة' : 'Add'}
                   </Button>
                 </div>
               </div>
@@ -640,9 +649,9 @@ export default function QuestionBank() {
 
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-                Cancel
+                {t.common.cancel}
               </Button>
-              <Button onClick={handleSaveEdit}>Save Changes</Button>
+              <Button onClick={handleSaveEdit}>{t.settings.saveChanges}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -651,18 +660,19 @@ export default function QuestionBank() {
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Delete Question</DialogTitle>
+              <DialogTitle>{language === 'ar' ? 'حذف السؤال' : 'Delete Question'}</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete this question from your bank? This action cannot
-                be undone.
+                {language === 'ar' 
+                  ? 'هل أنت متأكد من حذف هذا السؤال من بنك الأسئلة؟ لا يمكن التراجع عن هذا الإجراء.'
+                  : 'Are you sure you want to delete this question from your bank? This action cannot be undone.'}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-                Cancel
+                {t.common.cancel}
               </Button>
               <Button variant="destructive" onClick={handleDelete}>
-                Delete
+                {t.common.delete}
               </Button>
             </DialogFooter>
           </DialogContent>

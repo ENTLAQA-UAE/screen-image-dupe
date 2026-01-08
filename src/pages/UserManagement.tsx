@@ -29,7 +29,7 @@ interface OrgUser {
 export default function UserManagement() {
   const navigate = useNavigate();
   const { user, isOrgAdmin, isSuperAdmin, loading: authLoading } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [organizationName, setOrganizationName] = useState<string>("");
@@ -146,7 +146,7 @@ export default function UserManagement() {
       setOrgUsers(users);
     } catch (error) {
       console.error("Error fetching users:", error);
-      toast.error("Failed to load users");
+      toast.error(language === 'ar' ? 'فشل في تحميل المستخدمين' : 'Failed to load users');
     } finally {
       setLoading(false);
     }
@@ -158,7 +158,7 @@ export default function UserManagement() {
     // Check limit
     const hrAdminCount = orgUsers.filter(u => u.role === "hr_admin").length;
     if (inviteRole === "hr_admin" && hrAdminCount >= maxHrAdmins) {
-      toast.error(`You have reached the maximum of ${maxHrAdmins} HR admins for your plan.`);
+      toast.error(language === 'ar' ? `لقد وصلت إلى الحد الأقصى ${maxHrAdmins} من مديري الموارد البشرية لخطتك.` : `You have reached the maximum of ${maxHrAdmins} HR admins for your plan.`);
       return;
     }
     
@@ -180,7 +180,7 @@ export default function UserManagement() {
       if (error) throw error;
       
       if (!data.user) {
-        throw new Error("Failed to create user");
+        throw new Error(language === 'ar' ? 'فشل في إنشاء المستخدم' : 'Failed to create user');
       }
 
       const newUserId = data.user.id;
@@ -204,7 +204,7 @@ export default function UserManagement() {
         
         if (profileError) {
           console.error("Profile creation error:", profileError);
-          throw new Error("Failed to create user profile");
+          throw new Error(language === 'ar' ? 'فشل في إنشاء ملف المستخدم' : 'Failed to create user profile');
         }
       } else if (!existingProfile.organization_id) {
         const { error: updateError } = await supabase
@@ -225,7 +225,7 @@ export default function UserManagement() {
       
       if (roleError) {
         console.error("Role assignment error:", roleError);
-        throw new Error("Failed to assign role. Please try again.");
+        throw new Error(language === 'ar' ? 'فشل في تعيين الدور. يرجى المحاولة مرة أخرى.' : 'Failed to assign role. Please try again.');
       }
       
       // Show created credentials
@@ -234,9 +234,9 @@ export default function UserManagement() {
     } catch (error: any) {
       console.error("Error creating user:", error);
       if (error.message?.includes("already registered")) {
-        toast.error("This email is already registered.");
+        toast.error(language === 'ar' ? 'هذا البريد الإلكتروني مسجل بالفعل.' : 'This email is already registered.');
       } else {
-        toast.error(error.message || "Failed to create user");
+        toast.error(error.message || (language === 'ar' ? 'فشل في إنشاء المستخدم' : 'Failed to create user'));
       }
     } finally {
       setInviting(false);
@@ -283,11 +283,11 @@ export default function UserManagement() {
       
       if (profileError) throw profileError;
       
-      toast.success("User removed successfully");
+      toast.success(language === 'ar' ? 'تمت إزالة المستخدم بنجاح' : 'User removed successfully');
       fetchOrgUsers();
     } catch (error: any) {
       console.error("Error removing user:", error);
-      toast.error("Failed to remove user");
+      toast.error(language === 'ar' ? 'فشل في إزالة المستخدم' : 'Failed to remove user');
     } finally {
       setDeletingUserId(null);
     }
@@ -333,14 +333,14 @@ export default function UserManagement() {
         if (roleError) throw roleError;
       }
       
-      toast.success("User updated successfully");
+      toast.success(language === 'ar' ? 'تم تحديث المستخدم بنجاح' : 'User updated successfully');
       setEditDialogOpen(false);
       setEditingUser(null);
       setEditFullName("");
       fetchOrgUsers();
     } catch (error: any) {
       console.error("Error updating user:", error);
-      toast.error("Failed to update user");
+      toast.error(language === 'ar' ? 'فشل في تحديث المستخدم' : 'Failed to update user');
     } finally {
       setIsUpdating(false);
     }
@@ -348,7 +348,7 @@ export default function UserManagement() {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -398,27 +398,27 @@ export default function UserManagement() {
               <DialogTrigger asChild>
                 <Button onClick={() => setCreateDialogOpen(true)}>
                   <UserPlus className="w-4 h-4 me-2" />
-                  Create User
+                  {language === 'ar' ? 'إنشاء مستخدم' : 'Create User'}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Create New User</DialogTitle>
+                  <DialogTitle>{language === 'ar' ? 'إنشاء مستخدم جديد' : 'Create New User'}</DialogTitle>
                   <DialogDescription>
-                    Create a new user for your organization with a temporary password.
+                    {language === 'ar' ? 'إنشاء مستخدم جديد لمنظمتك بكلمة مرور مؤقتة.' : 'Create a new user for your organization with a temporary password.'}
                   </DialogDescription>
                 </DialogHeader>
                 
                 {createdCredentials ? (
                   <div className="space-y-4 py-4">
                     <div className="p-4 bg-success/10 rounded-lg border border-success/20">
-                      <p className="text-success font-medium mb-2">User created successfully!</p>
+                      <p className="text-success font-medium mb-2">{language === 'ar' ? 'تم إنشاء المستخدم بنجاح!' : 'User created successfully!'}</p>
                       <p className="text-sm text-muted-foreground mb-4">
-                        Share these credentials with the user. They should change their password after first login.
+                        {language === 'ar' ? 'شارك هذه البيانات مع المستخدم. يجب عليه تغيير كلمة المرور بعد أول تسجيل دخول.' : 'Share these credentials with the user. They should change their password after first login.'}
                       </p>
                       <div className="space-y-3">
                         <div className="flex items-center gap-2">
-                          <Label className="w-20 shrink-0">Email:</Label>
+                          <Label className="w-20 shrink-0">{language === 'ar' ? 'البريد:' : 'Email:'}</Label>
                           <code className="flex-1 bg-muted px-3 py-2 rounded text-sm">{createdCredentials.email}</code>
                           <Button
                             variant="ghost"
@@ -433,7 +433,7 @@ export default function UserManagement() {
                           </Button>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Label className="w-20 shrink-0">Password:</Label>
+                          <Label className="w-20 shrink-0">{language === 'ar' ? 'كلمة المرور:' : 'Password:'}</Label>
                           <code className="flex-1 bg-muted px-3 py-2 rounded text-sm">{createdCredentials.password}</code>
                           <Button
                             variant="ghost"
@@ -450,20 +450,20 @@ export default function UserManagement() {
                       </div>
                     </div>
                     <Button onClick={handleCloseCreateDialog} className="w-full">
-                      Done
+                      {language === 'ar' ? 'تم' : 'Done'}
                     </Button>
                   </div>
                 ) : (
                   <div className="space-y-4 py-4">
                     <div className="space-y-2">
-                      <Label htmlFor="role">Role</Label>
+                      <Label htmlFor="role">{t.settings.role}</Label>
                       <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as AppRole)}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select role" />
+                          <SelectValue placeholder={language === 'ar' ? 'اختر الدور' : 'Select role'} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="hr_admin">HR Admin</SelectItem>
-                          <SelectItem value="org_admin">Organization Admin</SelectItem>
+                          <SelectItem value="hr_admin">{language === 'ar' ? 'مدير الموارد البشرية' : 'HR Admin'}</SelectItem>
+                          <SelectItem value="org_admin">{language === 'ar' ? 'مدير المنظمة' : 'Organization Admin'}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -487,14 +487,14 @@ export default function UserManagement() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="password">Temporary Password</Label>
+                      <Label htmlFor="password">{language === 'ar' ? 'كلمة مرور مؤقتة' : 'Temporary Password'}</Label>
                       <div className="relative">
                         <Input
                           id="password"
                           type={showPassword ? "text" : "password"}
                           value={invitePassword}
                           onChange={(e) => setInvitePassword(e.target.value)}
-                          placeholder="Enter a temporary password"
+                          placeholder={language === 'ar' ? 'أدخل كلمة مرور مؤقتة' : 'Enter a temporary password'}
                           className="pr-10"
                         />
                         <Button
@@ -512,7 +512,7 @@ export default function UserManagement() {
                         </Button>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Min 6 characters. This will be shown after creation.
+                        {language === 'ar' ? 'الحد الأدنى 6 أحرف. سيتم عرضها بعد الإنشاء.' : 'Min 6 characters. This will be shown after creation.'}
                       </p>
                     </div>
                     <DialogFooter>
@@ -524,7 +524,7 @@ export default function UserManagement() {
                         disabled={inviting || !inviteEmail || !inviteFullName || !invitePassword || invitePassword.length < 6}
                       >
                         {inviting && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-                        Create User
+                        {language === 'ar' ? 'إنشاء مستخدم' : 'Create User'}
                       </Button>
                     </DialogFooter>
                   </div>
@@ -555,10 +555,10 @@ export default function UserManagement() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="w-5 h-5" />
-                Organization Users
+                {language === 'ar' ? 'مستخدمو المنظمة' : 'Organization Users'}
               </CardTitle>
               <CardDescription>
-                Manage users and their roles within your organization
+                {language === 'ar' ? 'إدارة المستخدمين وأدوارهم داخل منظمتك' : 'Manage users and their roles within your organization'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -573,7 +573,7 @@ export default function UserManagement() {
                   </p>
                   <Button onClick={() => setCreateDialogOpen(true)}>
                     <UserPlus className="w-4 h-4 me-2" />
-                    Create First User
+                    {language === 'ar' ? 'إنشاء أول مستخدم' : 'Create First User'}
                   </Button>
                 </div>
               ) : (
@@ -600,17 +600,17 @@ export default function UserManagement() {
                             </div>
                             <div>
                               <p className="font-medium">
-                                {userItem.full_name || "Unknown"}
+                                {userItem.full_name || (language === 'ar' ? 'غير معروف' : 'Unknown')}
                               </p>
                               {userItem.id === user?.id && (
-                                <p className="text-xs text-muted-foreground">You</p>
+                                <p className="text-xs text-muted-foreground">{language === 'ar' ? 'أنت' : 'You'}</p>
                               )}
                             </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className={getRoleBadgeColor(userItem.role)}>
-                            {userItem.role === "org_admin" ? "Org Admin" : "HR Admin"}
+                            {userItem.role === "org_admin" ? (language === 'ar' ? 'مدير المنظمة' : 'Org Admin') : (language === 'ar' ? 'مدير الموارد البشرية' : 'HR Admin')}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -647,10 +647,11 @@ export default function UserManagement() {
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle>Remove User</AlertDialogTitle>
+                                    <AlertDialogTitle>{language === 'ar' ? 'إزالة المستخدم' : 'Remove User'}</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      Are you sure you want to remove {userItem.full_name || "this user"} from your organization? 
-                                      They will lose access to all organization resources.
+                                      {language === 'ar' 
+                                        ? `هل أنت متأكد من إزالة ${userItem.full_name || 'هذا المستخدم'} من منظمتك؟ سيفقد الوصول إلى جميع موارد المنظمة.`
+                                        : `Are you sure you want to remove ${userItem.full_name || "this user"} from your organization? They will lose access to all organization resources.`}
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
@@ -680,9 +681,9 @@ export default function UserManagement() {
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Edit User</DialogTitle>
+              <DialogTitle>{language === 'ar' ? 'تعديل المستخدم' : 'Edit User'}</DialogTitle>
               <DialogDescription>
-                Update user details and role assignment.
+                {language === 'ar' ? 'تحديث تفاصيل المستخدم وتعيين الدور.' : 'Update user details and role assignment.'}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -696,14 +697,14 @@ export default function UserManagement() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-role">Role</Label>
+                <Label htmlFor="edit-role">{t.settings.role}</Label>
                 <Select value={editRole} onValueChange={(v) => setEditRole(v as AppRole)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
+                    <SelectValue placeholder={language === 'ar' ? 'اختر الدور' : 'Select role'} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="hr_admin">HR Admin</SelectItem>
-                    <SelectItem value="org_admin">Organization Admin</SelectItem>
+                    <SelectItem value="hr_admin">{language === 'ar' ? 'مدير الموارد البشرية' : 'HR Admin'}</SelectItem>
+                    <SelectItem value="org_admin">{language === 'ar' ? 'مدير المنظمة' : 'Organization Admin'}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
