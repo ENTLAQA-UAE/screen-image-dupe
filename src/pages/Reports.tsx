@@ -91,7 +91,7 @@ interface EmployeeSummary {
   lastCompleted: string | null;
 }
 
-const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
+const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"];
 
 const getTypeIcon = (type: string) => {
   switch (type?.toLowerCase()) {

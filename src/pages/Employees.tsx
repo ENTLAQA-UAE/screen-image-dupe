@@ -282,10 +282,19 @@ const Employees = () => {
               {t.employees.description}
             </p>
           </div>
-          <Badge variant="secondary" className="text-base px-4 py-2">
-            <Users className="w-4 h-4 mr-2" />
-            {employees.length} {t.employees.title}
-          </Badge>
+          <div className="flex items-center gap-4">
+            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-0 shadow-md px-4 py-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
+                  <Users className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{employees.length}</p>
+                  <p className="text-xs text-blue-600/70 dark:text-blue-400/70">{t.employees.title}</p>
+                </div>
+              </div>
+            </Card>
+          </div>
         </div>
 
         {/* Filters */}
@@ -342,7 +351,7 @@ const Employees = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <Card>
+            <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-0 shadow-lg">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -363,8 +372,8 @@ const Employees = () => {
                     >
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            <User className="w-5 h-5 text-primary" />
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-md">
+                            <User className="w-5 h-5 text-white" />
                           </div>
                           <div>
                             <p className="font-medium">{employee.full_name || (language === 'ar' ? 'غير معروف' : 'Unknown')}</p>
@@ -377,9 +386,9 @@ const Employees = () => {
                       </TableCell>
                       <TableCell>
                         {employee.department ? (
-                          <div className="flex items-center gap-2">
-                            <Building2 className="w-4 h-4 text-muted-foreground" />
-                            {employee.department}
+                          <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 w-fit">
+                            <Building2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            <span className="text-sm text-emerald-700 dark:text-emerald-300">{employee.department}</span>
                           </div>
                         ) : (
                           <span className="text-muted-foreground">-</span>
@@ -387,19 +396,19 @@ const Employees = () => {
                       </TableCell>
                       <TableCell>
                         {employee.job_title ? (
-                          <div className="flex items-center gap-2">
-                            <Briefcase className="w-4 h-4 text-muted-foreground" />
-                            {employee.job_title}
+                          <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-violet-50 dark:bg-violet-950/30 w-fit">
+                            <Briefcase className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                            <span className="text-sm text-violet-700 dark:text-violet-300">{employee.job_title}</span>
                           </div>
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
                       <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <FileText className="w-4 h-4 text-muted-foreground" />
-                          <span>{employee.completed_count}</span>
-                          <span className="text-muted-foreground">/ {employee.assessment_count}</span>
+                        <div className="flex items-center justify-center gap-2 px-3 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/30 w-fit mx-auto">
+                          <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                          <span className="font-semibold text-blue-700 dark:text-blue-300">{employee.completed_count}</span>
+                          <span className="text-blue-600/60 dark:text-blue-400/60">/ {employee.assessment_count}</span>
                         </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
