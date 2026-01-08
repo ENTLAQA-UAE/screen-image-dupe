@@ -325,6 +325,22 @@ export default function TakeAssessment() {
     return () => clearInterval(interval);
   }, [timerActive, timeRemaining, shownWarnings, isArabic]);
 
+  // Beforeunload warning when assessment is in progress
+  useEffect(() => {
+    if (pageState !== "questions") return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      const message = "Are you sure you want to leave? Your assessment will be submitted.";
+      e.preventDefault();
+      e.returnValue = message;
+      return message;
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [pageState]);
+
+
   const loadAssessment = async () => {
     try {
       const funcUrl = `https://ephwmhikhiiyrnikvrwp.supabase.co/functions/v1/get-assessment?token=${token}&isGroupLink=${isGroupLink}`;
@@ -536,6 +552,21 @@ export default function TakeAssessment() {
       setPageState("questions");
     }
   }, [assessmentData, participantId, answers]);
+
+  // Auto-submit on visibility change (tab switch/hide)
+  useEffect(() => {
+    if (pageState !== "questions") return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        toast.info(isArabic ? "تم إرسال التقييم تلقائياً بسبب مغادرة الصفحة" : "Assessment auto-submitted due to leaving the page");
+        handleSubmit();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [pageState, handleSubmit, isArabic]);
 
   // Format timer display
   const formatTime = (seconds: number): string => {
