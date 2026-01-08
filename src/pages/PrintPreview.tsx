@@ -253,6 +253,16 @@ const PrintPreview = () => {
     return format(new Date(date), formatStr, { locale: lang === "ar" ? ar : enUS });
   };
 
+  // Detect Arabic text to apply per-block RTL even when report language is English
+  const hasArabic = (text?: string | null) => {
+    if (!text) return false;
+    // Arabic + Arabic supplement + Arabic presentation forms
+    return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(text);
+  };
+
+  const autoDir = (text?: string | null): "rtl" | "ltr" => (hasArabic(text) ? "rtl" : "ltr");
+  const autoAlign = (text?: string | null): "right" | "left" => (hasArabic(text) ? "right" : "left");
+
   const getTypeLabel = (type: string): string => {
     const typeKey = type.toLowerCase() as keyof typeof t;
     return (t[typeKey] as string) || type;
@@ -591,20 +601,28 @@ const PrintPreview = () => {
                   const [title, ...content] = section.split('\n');
                   return (
                     <div key={i}>
-                      {title && <h4>{title.replace(/\*\*/g, '')}</h4>}
+                      {title && (
+                        <h4
+                          dir={autoDir(title)}
+                          style={{ textAlign: autoAlign(title), unicodeBidi: "plaintext" as any }}
+                        >
+                          {title.replace(/\*\*/g, "")}
+                        </h4>
+                      )}
                       {content.map((line, j) => {
                         const trimmedLine = line.trim();
                         if (!trimmedLine) return null;
-                        if (trimmedLine.startsWith("-") || trimmedLine.startsWith("•")) {
-                          return (
-                            <p key={j} className="bidi-plaintext">
-                              • {trimmedLine.replace(/^[-•]\s*/, "").replace(/\*\*/g, "")}
-                            </p>
-                          );
-                        }
+                        const displayText = trimmedLine.startsWith("-") || trimmedLine.startsWith("•")
+                          ? `• ${trimmedLine.replace(/^[-•]\s*/, "").replace(/\*\*/g, "")}`
+                          : trimmedLine.replace(/\*\*/g, "");
                         return (
-                          <p key={j} className="bidi-plaintext">
-                            {trimmedLine.replace(/\*\*/g, "")}
+                          <p
+                            key={j}
+                            className="bidi-plaintext"
+                            dir={autoDir(displayText)}
+                            style={{ textAlign: autoAlign(displayText) }}
+                          >
+                            {displayText}
                           </p>
                         );
                       })}
@@ -702,7 +720,14 @@ const PrintPreview = () => {
                 <h2 className="section-header">{t.aiGeneratedFeedback}</h2>
                 <div className="ai-content">
                   {participantData.aiReport.split("\n\n").map((para, i) => (
-                    <p key={i} className="bidi-plaintext">{para}</p>
+                    <p
+                      key={i}
+                      className="bidi-plaintext"
+                      dir={autoDir(para)}
+                      style={{ textAlign: autoAlign(para) }}
+                    >
+                      {para}
+                    </p>
                   ))}
                 </div>
               </div>
@@ -762,7 +787,14 @@ const PrintPreview = () => {
                 <h2 className="section-header">{t.aiGeneratedFeedback}</h2>
                 <div className="ai-content">
                   {groupData.aiNarrative.split("\n\n").map((para, i) => (
-                    <p key={i} className="bidi-plaintext">{para}</p>
+                    <p
+                      key={i}
+                      className="bidi-plaintext"
+                      dir={autoDir(para)}
+                      style={{ textAlign: autoAlign(para) }}
+                    >
+                      {para}
+                    </p>
                   ))}
                 </div>
               </div>
