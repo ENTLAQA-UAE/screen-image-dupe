@@ -99,16 +99,16 @@ const getTypeIcon = (type: string) => {
   }
 };
 
-const getStatusConfig = (status: string) => {
+const getStatusConfig = (status: string, t: any) => {
   switch (status) {
     case "completed":
-      return { icon: CheckCircle2, color: "text-success", bg: "bg-success/10", label: "Completed" };
+      return { icon: CheckCircle2, color: "text-success", bg: "bg-success/10", label: t.employeeDetail.completed || "Completed" };
     case "started":
-      return { icon: Clock, color: "text-warning", bg: "bg-warning/10", label: "In Progress" };
+      return { icon: Clock, color: "text-warning", bg: "bg-warning/10", label: t.employeeDetail.inProgress || "In Progress" };
     case "expired":
-      return { icon: XCircle, color: "text-destructive", bg: "bg-destructive/10", label: "Expired" };
+      return { icon: XCircle, color: "text-destructive", bg: "bg-destructive/10", label: t.employeeDetail.expired || "Expired" };
     default:
-      return { icon: Clock, color: "text-muted-foreground", bg: "bg-muted", label: "Invited" };
+      return { icon: Clock, color: "text-muted-foreground", bg: "bg-muted", label: t.participants?.invited || "Invited" };
   }
 };
 
@@ -417,7 +417,7 @@ const EmployeeDetail = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-2xl font-display font-bold text-foreground"
             >
-              {employee.full_name || "Employee Profile"}
+              {employee.full_name || t.employeeDetail.employeeProfile}
             </motion.h1>
             <p className="text-muted-foreground">{employee.email}</p>
           </div>
@@ -426,8 +426,8 @@ const EmployeeDetail = () => {
             className="text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={() => setIsAnonymizeOpen(true)}
           >
-            <UserX className="w-4 h-4 mr-2" />
-            Anonymize
+            <UserX className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
+            {t.common?.delete || "Anonymize"}
           </Button>
         </div>
 
@@ -438,7 +438,7 @@ const EmployeeDetail = () => {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Assessments</p>
+                    <p className="text-sm text-muted-foreground">{t.employeeDetail.totalAssessments}</p>
                     <p className="text-3xl font-bold">{stats.totalAssessments}</p>
                   </div>
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -454,7 +454,7 @@ const EmployeeDetail = () => {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Completion Rate</p>
+                    <p className="text-sm text-muted-foreground">{t.employeeDetail.completionRate}</p>
                     <p className="text-3xl font-bold">{stats.completionRate}%</p>
                   </div>
                   <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
@@ -462,7 +462,7 @@ const EmployeeDetail = () => {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  {stats.completed} of {stats.totalAssessments} completed
+                  {stats.completed} {t.employeeDetail.ofCompleted} {stats.totalAssessments} {t.employeeDetail.completed}
                 </p>
               </CardContent>
             </Card>
@@ -473,7 +473,7 @@ const EmployeeDetail = () => {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Average Score</p>
+                    <p className="text-sm text-muted-foreground">{t.employeeDetail.averageScore}</p>
                     <p className="text-3xl font-bold">
                       {stats.averageScore !== null ? `${stats.averageScore}%` : "-"}
                     </p>
@@ -491,7 +491,7 @@ const EmployeeDetail = () => {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground">Best Score</p>
+                    <p className="text-sm text-muted-foreground">{t.employeeDetail.bestScore}</p>
                     <p className="text-3xl font-bold">
                       {stats.highestScore !== null ? `${stats.highestScore}%` : "-"}
                     </p>
@@ -519,27 +519,27 @@ const EmployeeDetail = () => {
               {employee.employee_code && (
                 <div className="flex items-center gap-3 text-sm">
                   <Hash className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Employee Code:</span>
+                  <span className="text-muted-foreground">{t.employeeDetail.employeeCode}:</span>
                   <span className="font-medium">{employee.employee_code}</span>
                 </div>
               )}
               {employee.department && (
                 <div className="flex items-center gap-3 text-sm">
                   <Building2 className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Department:</span>
+                  <span className="text-muted-foreground">{t.employeeDetail.department}:</span>
                   <span className="font-medium">{employee.department}</span>
                 </div>
               )}
               {employee.job_title && (
                 <div className="flex items-center gap-3 text-sm">
                   <Briefcase className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Job Title:</span>
+                  <span className="text-muted-foreground">{t.employeeDetail.jobTitle}:</span>
                   <span className="font-medium">{employee.job_title}</span>
                 </div>
               )}
               <div className="flex items-center gap-3 text-sm">
                 <Calendar className="w-4 h-4 text-muted-foreground" />
-                <span className="text-muted-foreground">First Assessment:</span>
+                <span className="text-muted-foreground">{t.employeeDetail.firstAssessment}:</span>
                 <span className="font-medium">{formatDate(employee.first_seen)}</span>
               </div>
             </CardContent>
@@ -550,10 +550,10 @@ const EmployeeDetail = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-accent" />
-                AI Talent Snapshot
+                {t.employeeDetail.aiTalentSnapshot}
               </CardTitle>
               <CardDescription>
-                AI-generated talent profile based on assessment data
+                {t.employeeDetail.aiTalentDesc}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -583,13 +583,13 @@ const EmployeeDetail = () => {
                   >
                     {snapshotLoading ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Regenerating...
+                        <Loader2 className="w-4 h-4 ltr:mr-2 rtl:ml-2 animate-spin" />
+                        {t.employeeDetail.regenerating}
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Regenerate Snapshot
+                        <Sparkles className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
+                        {t.employeeDetail.regenerateSnapshot}
                       </>
                     )}
                   </Button>
@@ -598,7 +598,7 @@ const EmployeeDetail = () => {
                 <div className="text-center py-6">
                   <Sparkles className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
                   <p className="text-sm text-muted-foreground mb-4">
-                    Generate an AI-powered talent profile based on all assessment results
+                    {t.employeeDetail.generateTalentProfile}
                   </p>
                   <Button 
                     variant="hero" 
@@ -607,19 +607,19 @@ const EmployeeDetail = () => {
                   >
                     {snapshotLoading ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Generating...
+                        <Loader2 className="w-4 h-4 ltr:mr-2 rtl:ml-2 animate-spin" />
+                        {t.employeeDetail.generating}
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Generate Talent Snapshot
+                        <Sparkles className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
+                        {t.employeeDetail.generateTalentSnapshot}
                       </>
                     )}
                   </Button>
                   {stats?.completed === 0 && (
                     <p className="text-xs text-muted-foreground mt-2">
-                      Requires at least one completed assessment
+                      {t.employeeDetail.requiresCompleted}
                     </p>
                   )}
                 </div>
@@ -632,14 +632,14 @@ const EmployeeDetail = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="w-5 h-5" />
-                Performance Overview
+                {t.employeeDetail.performanceOverview}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="scores" className="space-y-4">
                 <TabsList>
-                  <TabsTrigger value="scores">Scores by Type</TabsTrigger>
-                  {stats.traitAverages.length > 0 && <TabsTrigger value="traits">Trait Profile</TabsTrigger>}
+                  <TabsTrigger value="scores">{t.employeeDetail.scoresByType}</TabsTrigger>
+                  {stats.traitAverages.length > 0 && <TabsTrigger value="traits">{t.employeeDetail.traitProfile}</TabsTrigger>}
                 </TabsList>
 
                 <TabsContent value="scores">
@@ -655,14 +655,14 @@ const EmployeeDetail = () => {
                             border: "1px solid hsl(var(--border))",
                             borderRadius: "8px",
                           }}
-                          formatter={(value: number) => [`${value}%`, "Score"]}
+                          formatter={(value: number) => [`${value}%`, t.employeeDetail.score]}
                         />
                         <Bar dataKey="score" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
                     <div className="flex items-center justify-center h-[250px] text-muted-foreground">
-                      No graded assessments completed yet
+                      {t.employeeDetail.noGradedCompleted}
                     </div>
                   )}
                 </TabsContent>
@@ -675,7 +675,7 @@ const EmployeeDetail = () => {
                         <PolarAngleAxis dataKey="trait" className="text-xs" />
                         <PolarRadiusAxis angle={30} domain={[0, 5]} />
                         <Radar
-                          name="Score"
+                          name={t.employeeDetail.score}
                           dataKey="score"
                           stroke="hsl(var(--primary))"
                           fill="hsl(var(--primary))"
@@ -696,18 +696,18 @@ const EmployeeDetail = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5" />
-              Assessment History
+              {t.employeeDetail.assessmentHistory}
             </CardTitle>
-            <CardDescription>All assessments this employee has participated in</CardDescription>
+            <CardDescription>{t.employeeDetail.allAssessmentsParticipated}</CardDescription>
           </CardHeader>
           <CardContent>
             {assessments.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">No assessments found</div>
+              <div className="text-center py-8 text-muted-foreground">{t.employeeDetail.noAssessmentsFound}</div>
             ) : (
               <div className="space-y-3">
                 {assessments.map((assessment, index) => {
                   const TypeIcon = getTypeIcon(assessment.assessment_type);
-                  const statusConfig = getStatusConfig(assessment.status);
+                  const statusConfig = getStatusConfig(assessment.status, t);
                   const StatusIcon = statusConfig.icon;
                   const isGraded = assessment.score_summary?.percentage !== undefined;
 
@@ -742,7 +742,7 @@ const EmployeeDetail = () => {
                             <div className="text-2xl font-bold text-primary">
                               {assessment.score_summary.percentage}%
                             </div>
-                            <div className="text-xs text-muted-foreground">Score</div>
+                            <div className="text-xs text-muted-foreground">{t.employeeDetail.score}</div>
                           </div>
                         )}
 
@@ -787,7 +787,7 @@ const EmployeeDetail = () => {
               {selectedReport?.assessment_title}
             </DialogTitle>
             <DialogDescription>
-              {selectedReport?.group_name} • Completed {formatDateTime(selectedReport?.completed_at || null)}
+              {selectedReport?.group_name} • {t.employeeDetail.completed} {formatDateTime(selectedReport?.completed_at || null)}
             </DialogDescription>
           </DialogHeader>
 
@@ -795,19 +795,18 @@ const EmployeeDetail = () => {
             {/* Score Summary */}
             {selectedReport?.score_summary && (
               <div>
-                <h3 className="font-semibold mb-3">Results</h3>
+                <h3 className="font-semibold mb-3">{t.employeeDetail.results}</h3>
                 {selectedReport.score_summary.percentage !== undefined ? (
                   <div className="text-center p-6 bg-muted rounded-xl">
                     <div className="text-5xl font-bold text-primary mb-2">
                       {selectedReport.score_summary.percentage}%
                     </div>
                     <p className="text-muted-foreground">
-                      {selectedReport.score_summary.correctCount} of {selectedReport.score_summary.totalPossible}{" "}
-                      correct
+                      {selectedReport.score_summary.correctCount} {t.groupReport?.correct || "of"} {selectedReport.score_summary.totalPossible}
                     </p>
                     {selectedReport.score_summary.grade && (
                       <Badge className="mt-3" variant="secondary">
-                        Grade: {selectedReport.score_summary.grade}
+                        {t.groupReport?.grade || "Grade"}: {selectedReport.score_summary.grade}
                       </Badge>
                     )}
                   </div>
@@ -836,7 +835,7 @@ const EmployeeDetail = () => {
               <div>
                 <h3 className="font-semibold mb-3 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-primary" />
-                  AI-Generated Feedback
+                  {t.employeeDetail.aiGeneratedFeedback}
                 </h3>
                 <div className="prose prose-sm max-w-none bg-gradient-to-br from-primary/5 to-accent/5 p-5 rounded-xl border border-primary/10">
                   <p className="whitespace-pre-wrap text-foreground leading-relaxed">
@@ -849,12 +848,12 @@ const EmployeeDetail = () => {
 
           <div className="flex justify-end gap-2 pt-4 border-t">
             <Button variant="outline" onClick={() => setSelectedReport(null)}>
-              Close
+              {t.employeeDetail.close}
             </Button>
             {selectedReport && (
               <Button onClick={() => handleExportPDF(selectedReport)}>
-                <Download className="w-4 h-4 mr-2" />
-                Export PDF
+                <Download className="w-4 h-4 ltr:mr-2 rtl:ml-2" />
+                {t.employeeDetail.exportPdf}
               </Button>
             )}
           </div>
@@ -867,32 +866,31 @@ const EmployeeDetail = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <UserX className="w-5 h-5" />
-              Anonymize Employee Data
+              {t.employeeDetail.anonymizeTitle}
             </DialogTitle>
             <DialogDescription>
-              This will permanently anonymize all personal data for <strong>{employee?.full_name || employee?.email}</strong>. 
-              Their assessment results will be preserved but all identifying information will be removed.
+              {t.employeeDetail.anonymizeDesc}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 text-sm">
-              <p className="font-medium text-destructive mb-2">This action will:</p>
+              <p className="font-medium text-destructive mb-2">{t.employeeDetail.anonymizeWarning}</p>
               <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                <li>Replace name with an anonymous identifier</li>
-                <li>Replace email with an anonymized email</li>
-                <li>Remove employee code, department, and job title</li>
-                <li>Delete AI-generated report text</li>
-                <li>Preserve assessment scores and completion data</li>
+                <li>{t.employeeDetail.anonymizeItem1}</li>
+                <li>{t.employeeDetail.anonymizeItem2}</li>
+                <li>{t.employeeDetail.anonymizeItem3}</li>
+                <li>{t.employeeDetail.anonymizeItem4}</li>
+                <li>{t.employeeDetail.anonymizeItem5}</li>
               </ul>
             </div>
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setIsAnonymizeOpen(false)}>
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button variant="destructive" onClick={handleAnonymize} disabled={anonymizing}>
-              {anonymizing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Anonymize Data
+              {anonymizing && <Loader2 className="w-4 h-4 ltr:mr-2 rtl:ml-2 animate-spin" />}
+              {t.employeeDetail.anonymizeData}
             </Button>
           </div>
         </DialogContent>

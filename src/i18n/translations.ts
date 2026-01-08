@@ -495,6 +495,16 @@ export const translations = {
       aiGeneratedFeedback: "AI-Generated Feedback",
       close: "Close",
       exportPdf: "Export PDF",
+      anonymize: "Anonymize",
+      anonymizeTitle: "Anonymize Employee Data",
+      anonymizeDesc: "This will permanently anonymize all personal data. Assessment results will be preserved but all identifying information will be removed.",
+      anonymizeWarning: "This action will:",
+      anonymizeItem1: "Replace name with an anonymous identifier",
+      anonymizeItem2: "Replace email with an anonymized email",
+      anonymizeItem3: "Remove employee code, department, and job title",
+      anonymizeItem4: "Delete AI-generated report text",
+      anonymizeItem5: "Preserve assessment scores and completion data",
+      anonymizeData: "Anonymize Data",
     },
     // Subscription Page
     subscription: {
@@ -1067,6 +1077,16 @@ export const translations = {
       aiGeneratedFeedback: "ملاحظات الذكاء الاصطناعي",
       close: "إغلاق",
       exportPdf: "تصدير PDF",
+      anonymize: "إخفاء الهوية",
+      anonymizeTitle: "إخفاء هوية بيانات الموظف",
+      anonymizeDesc: "سيتم إخفاء جميع البيانات الشخصية بشكل دائم. سيتم الحفاظ على نتائج التقييم ولكن ستتم إزالة جميع المعلومات التعريفية.",
+      anonymizeWarning: "هذا الإجراء سيقوم بـ:",
+      anonymizeItem1: "استبدال الاسم بمعرف مجهول",
+      anonymizeItem2: "استبدال البريد الإلكتروني ببريد مجهول",
+      anonymizeItem3: "إزالة رقم الموظف والقسم والمسمى الوظيفي",
+      anonymizeItem4: "حذف نص تقرير الذكاء الاصطناعي",
+      anonymizeItem5: "الحفاظ على درجات التقييم وبيانات الإكمال",
+      anonymizeData: "إخفاء البيانات",
     },
     // Subscription Page
     subscription: {
