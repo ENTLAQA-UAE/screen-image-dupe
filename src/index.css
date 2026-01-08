@@ -312,6 +312,11 @@
     box-shadow: var(--shadow-glow);
   }
 
+  /* Text direction helpers (handles mixed Arabic/Latin + numbers) */
+  .bidi-plaintext {
+    unicode-bidi: plaintext;
+  }
+
   /* RTL-aware spacing utilities */
   .start-0 {
     inset-inline-start: 0;

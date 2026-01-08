@@ -116,7 +116,7 @@ const EmployeeDetail = () => {
   const { email } = useParams<{ email: string }>();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { t } = useLanguage();
+  const { t, dir } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [employee, setEmployee] = useState<EmployeeData | null>(null);
@@ -884,7 +884,10 @@ const EmployeeDetail = () => {
                   {t.employeeDetail.aiGeneratedFeedback}
                 </h3>
                 <div className="prose prose-sm max-w-none bg-gradient-to-br from-primary/5 to-accent/5 p-5 rounded-xl border border-primary/10">
-                  <p className="whitespace-pre-wrap text-foreground leading-relaxed">
+                  <p
+                    dir={dir}
+                    className={`whitespace-pre-wrap text-foreground leading-relaxed bidi-plaintext ${dir === "rtl" ? "text-right" : "text-left"}`}
+                  >
                     {selectedReport.ai_report_text}
                   </p>
                 </div>
