@@ -670,26 +670,6 @@ const EmployeeDetail = () => {
                 </div>
               )}
 
-              {/* Diagnostics Panel */}
-              {snapshotDiagnostics.timestamp && (
-                <div className="mt-4 p-3 rounded-lg bg-muted/50 border text-xs">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium">Last Request:</span>
-                    <Badge
-                      variant={snapshotDiagnostics.status === 200 ? "default" : "destructive"}
-                      className="text-xs"
-                    >
-                      {snapshotDiagnostics.status}
-                    </Badge>
-                    <span className="text-muted-foreground">
-                      {snapshotDiagnostics.timestamp.toLocaleTimeString()}
-                    </span>
-                  </div>
-                  {snapshotDiagnostics.message && snapshotDiagnostics.status !== 200 && (
-                    <p className="text-destructive break-words whitespace-pre-wrap">{snapshotDiagnostics.message}</p>
-                  )}
-                </div>
-              )}
             </CardContent>
           </Card>
 
