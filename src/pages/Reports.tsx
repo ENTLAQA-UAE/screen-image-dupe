@@ -631,24 +631,32 @@ const Reports = () => {
                   </CardHeader>
                   <CardContent>
                     {typeStats.length > 0 ? (
-                      <ResponsiveContainer width="100%" height={250}>
+                      <ResponsiveContainer width="100%" height={280}>
                         <RechartsPie>
                           <Pie
                             data={typeStats}
                             cx="50%"
-                            cy="50%"
+                            cy="45%"
                             innerRadius={60}
                             outerRadius={100}
-                            paddingAngle={2}
+                            paddingAngle={3}
                             dataKey="count"
                             nameKey="type"
-                            label={({ type, count }) => `${type}: ${count}`}
+                            labelLine={{ stroke: '#888', strokeWidth: 1 }}
+                            label={({ type, count, cx, x }) => {
+                              const textAnchor = x > cx ? 'start' : 'end';
+                              return `${type}: ${count}`;
+                            }}
                           >
                             {typeStats.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
-                          <Legend />
+                          <Legend 
+                            verticalAlign="bottom" 
+                            height={36}
+                            wrapperStyle={{ paddingTop: '20px' }}
+                          />
                           <Tooltip />
                         </RechartsPie>
                       </ResponsiveContainer>
