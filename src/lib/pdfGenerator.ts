@@ -323,18 +323,31 @@ function buildAiFeedbackSection(content: string, title: string, primaryColor: st
   const dir = getDirection(lang);
   const textAlign = getTextAlign(lang);
   const hsl = hexToHsl(primaryColor);
-  
+
   // Split content into paragraphs to avoid page breaks mid-paragraph
-  const paragraphs = content.split('\n\n').filter(p => p.trim());
-  const formattedContent = paragraphs.map(p => 
-    `<p style="margin: 0 0 12px 0; text-align: ${textAlign};">${p.trim()}</p>`
-  ).join('');
-  
+  const paragraphs = content.split("\n\n").filter((p) => p.trim());
+  const formattedContent = paragraphs
+    .map(
+      (p) =>
+        `<p class="bidi-plaintext" style="margin: 0 0 12px 0; text-align: ${textAlign};">${p.trim()}</p>`
+    )
+    .join("");
+
   return `
-    <div style="margin-bottom: 30px; direction: ${dir};">
+    <div style="margin-bottom: 30px; direction: ${dir}; text-align: ${textAlign};">
       ${buildSectionHeader(title, primaryColor, lang)}
-      <div style="background: linear-gradient(135deg, hsl(${hsl.h}, 40%, 97%) 0%, hsl(${hsl.h}, 35%, 94%) 100%); border: 1px solid hsl(${hsl.h}, 50%, 85%); padding: 24px; border-radius: 12px; line-height: 1.8; color: #1e293b; font-size: 14px;">
-        ${formattedContent}
+      <div class="bidi-plaintext" style="
+        background: linear-gradient(135deg, hsl(${hsl.h}, 40%, 97%) 0%, hsl(${hsl.h}, 35%, 94%) 100%);
+        border: 1px solid hsl(${hsl.h}, 50%, 85%);
+        padding: 24px;
+        border-radius: 12px;
+        line-height: 1.8;
+        color: #1e293b;
+        font-size: 14px;
+        direction: ${dir};
+        unicode-bidi: plaintext;
+      ">
+        ${formattedContent || `<p class="bidi-plaintext" style="margin:0; text-align:${textAlign};">-</p>`}
       </div>
     </div>
   `;
@@ -413,7 +426,7 @@ async function renderPageToCanvas(pageHtml: string, lang: Language): Promise<HTM
     );
 
     // Delay helps Arabic shaping apply before rasterization
-    await new Promise((resolve) => setTimeout(resolve, lang === 'ar' ? 250 : 80));
+    await new Promise((resolve) => setTimeout(resolve, lang === 'ar' ? 650 : 80));
 
     return await html2canvas(element, {
       scale: 2,
@@ -463,10 +476,11 @@ function buildPageContainer(content: string, lang: Language): string {
   const styleTag = `
     <style>
       #pdf-page { box-sizing: border-box; }
-      #pdf-page * { box-sizing: border-box; }
+      #pdf-page * { box-sizing: border-box; font-family: ${fontFamily}; }
 
-      /* Improve Arabic RTL shaping/ordering */
-      #pdf-page { unicode-bidi: plaintext; }
+      /* Use per-block BiDi handling (prevents double-processing) */
+      #pdf-page { unicode-bidi: normal; }
+      .bidi-plaintext { unicode-bidi: plaintext; }
 
       /* Make tables respect RTL alignment */
       #pdf-page table { width: 100%; border-collapse: collapse; direction: ${dir}; }
