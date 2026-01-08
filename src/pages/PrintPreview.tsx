@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
@@ -149,6 +149,10 @@ const PrintPreview = () => {
   const isRtl = lang === "ar";
   const t = translations[lang];
 
+  const STORAGE_KEY = "printReportData";
+  const STORAGE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+  const didAutoPrintRef = useRef(false);
+
   useEffect(() => {
     // Tell opener we're ready (handshake)
     try {
@@ -163,8 +167,10 @@ const PrintPreview = () => {
 
   useEffect(() => {
     // Auto-trigger print dialog when data is loaded
-    if (!loading && !error && (talentData || participantData || groupData)) {
+    if (!loading && !error && (talentData || participantData || groupData) && !didAutoPrintRef.current) {
+      didAutoPrintRef.current = true;
       setTimeout(() => {
+        // Print (and keep the page stable; data stays in localStorage for TTL)
         window.print();
       }, 500);
     }
@@ -190,14 +196,23 @@ const PrintPreview = () => {
   const loadReportData = () => {
     // 1) Try localStorage
     try {
-      const storedData = localStorage.getItem("printReportData");
-      if (storedData) {
-        const data = JSON.parse(storedData);
-        console.log("[PrintPreview] loaded from localStorage", data?.reportType);
-        applyIncomingData(data);
-        localStorage.removeItem("printReportData");
-        setLoading(false);
-        return;
+      const storedRaw = localStorage.getItem(STORAGE_KEY);
+      if (storedRaw) {
+        const parsed = JSON.parse(storedRaw);
+
+        // Support both legacy shape (payload directly) and wrapped shape { ts, payload }
+        const ts: number | null = typeof parsed?.ts === "number" ? parsed.ts : null;
+        const payload = parsed?.payload ?? parsed;
+
+        if (!ts || Date.now() - ts <= STORAGE_TTL_MS) {
+          console.log("[PrintPreview] loaded from localStorage", payload?.reportType);
+          applyIncomingData(payload);
+          setLoading(false);
+          return;
+        }
+
+        // Expired
+        localStorage.removeItem(STORAGE_KEY);
       }
     } catch {
       // ignore
@@ -211,6 +226,14 @@ const PrintPreview = () => {
       console.log("[PrintPreview] received report data", msg?.payload?.reportType);
       setError(null);
       applyIncomingData(msg.payload);
+
+      // Persist for a while so the tab doesn't turn blank after printing/saving
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ts: Date.now(), payload: msg.payload }));
+      } catch {
+        // ignore
+      }
+
       window.removeEventListener("message", onMessage);
       setLoading(false);
     };
