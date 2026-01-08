@@ -157,46 +157,62 @@ const PrintPreview = () => {
   useEffect(() => {
     // Auto-trigger print dialog when data is loaded
     if (!loading && !error && (talentData || participantData || groupData)) {
-      // Small delay to ensure fonts/images are loaded
       setTimeout(() => {
         window.print();
       }, 500);
     }
   }, [loading, error, talentData, participantData, groupData]);
 
-  const loadReportData = async () => {
+  const applyIncomingData = (data: any) => {
+    setOrganization(data.organization);
+
+    const incomingType: ReportType = (data.reportType || reportType) as ReportType;
+    switch (incomingType) {
+      case "talent-snapshot":
+        setTalentData(data.reportData);
+        break;
+      case "participant":
+        setParticipantData(data.reportData);
+        break;
+      case "group":
+        setGroupData(data.reportData);
+        break;
+    }
+  };
+
+  const loadReportData = () => {
+    // 1) Try localStorage (works in many browsers)
     try {
-      // Get data from localStorage (set by the calling page)
       const storedData = localStorage.getItem("printReportData");
-      if (!storedData) {
-        setError("No report data found");
+      if (storedData) {
+        const data = JSON.parse(storedData);
+        applyIncomingData(data);
+        localStorage.removeItem("printReportData");
         setLoading(false);
         return;
       }
-
-      const data = JSON.parse(storedData);
-      setOrganization(data.organization);
-
-      // Clean up localStorage after reading
-      localStorage.removeItem("printReportData");
-
-      switch (reportType) {
-        case "talent-snapshot":
-          setTalentData(data.reportData);
-          break;
-        case "participant":
-          setParticipantData(data.reportData);
-          break;
-        case "group":
-          setGroupData(data.reportData);
-          break;
-      }
-    } catch (err) {
-      console.error("Error loading report data:", err);
-      setError("Failed to load report data");
-    } finally {
-      setLoading(false);
+    } catch {
+      // ignore
     }
+
+    // 2) Fallback: listen for postMessage from opener (works even with storage partitioning)
+    const onMessage = (event: MessageEvent) => {
+      const msg = event.data;
+      if (!msg || msg.kind !== "printReportData") return;
+
+      applyIncomingData(msg.payload);
+      window.removeEventListener("message", onMessage);
+      setLoading(false);
+    };
+
+    window.addEventListener("message", onMessage);
+
+    // Give the opener a moment to post the data
+    setTimeout(() => {
+      window.removeEventListener("message", onMessage);
+      setError("No report data found");
+      setLoading(false);
+    }, 1500);
   };
 
   const formatDate = (date: string | null, includeTime = false): string => {

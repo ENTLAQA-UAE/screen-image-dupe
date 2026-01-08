@@ -54,15 +54,36 @@ export function openTalentSnapshotPrintPreview(
   organization: OrganizationBranding,
   language: "en" | "ar" = "en"
 ): void {
-  // Store data in localStorage for the print preview page to access
-  // Use localStorage instead of sessionStorage as it works across tabs
-  localStorage.setItem("printReportData", JSON.stringify({
-    organization,
-    reportData: data,
-  }));
-  
-  // Open print preview in new tab
-  window.open(`/print-preview?type=talent-snapshot&lang=${language}`, "_blank");
+  const url = `/print-preview?type=talent-snapshot&lang=${language}`;
+
+  // Fallback storage (may not be shared between iframe/new tab due to browser partitioning)
+  try {
+    localStorage.setItem(
+      "printReportData",
+      JSON.stringify({ organization, reportData: data, reportType: "talent-snapshot" })
+    );
+  } catch {
+    // ignore
+  }
+
+  const win = window.open(url, "_blank");
+  if (!win) return;
+
+  const message = { kind: "printReportData", payload: { organization, reportData: data, reportType: "talent-snapshot" } };
+
+  // Post immediately and again shortly after to avoid timing issues
+  try {
+    win.postMessage(message, "*");
+    setTimeout(() => {
+      try {
+        win.postMessage(message, "*");
+      } catch {
+        // ignore
+      }
+    }, 250);
+  } catch {
+    // ignore
+  }
 }
 
 export function openParticipantPrintPreview(
@@ -70,12 +91,34 @@ export function openParticipantPrintPreview(
   organization: OrganizationBranding,
   language: "en" | "ar" = "en"
 ): void {
-  localStorage.setItem("printReportData", JSON.stringify({
-    organization,
-    reportData: data,
-  }));
-  
-  window.open(`/print-preview?type=participant&lang=${language}`, "_blank");
+  const url = `/print-preview?type=participant&lang=${language}`;
+
+  try {
+    localStorage.setItem(
+      "printReportData",
+      JSON.stringify({ organization, reportData: data, reportType: "participant" })
+    );
+  } catch {
+    // ignore
+  }
+
+  const win = window.open(url, "_blank");
+  if (!win) return;
+
+  const message = { kind: "printReportData", payload: { organization, reportData: data, reportType: "participant" } };
+
+  try {
+    win.postMessage(message, "*");
+    setTimeout(() => {
+      try {
+        win.postMessage(message, "*");
+      } catch {
+        // ignore
+      }
+    }, 250);
+  } catch {
+    // ignore
+  }
 }
 
 export function openGroupPrintPreview(
@@ -83,10 +126,32 @@ export function openGroupPrintPreview(
   organization: OrganizationBranding,
   language: "en" | "ar" = "en"
 ): void {
-  localStorage.setItem("printReportData", JSON.stringify({
-    organization,
-    reportData: data,
-  }));
-  
-  window.open(`/print-preview?type=group&lang=${language}`, "_blank");
+  const url = `/print-preview?type=group&lang=${language}`;
+
+  try {
+    localStorage.setItem(
+      "printReportData",
+      JSON.stringify({ organization, reportData: data, reportType: "group" })
+    );
+  } catch {
+    // ignore
+  }
+
+  const win = window.open(url, "_blank");
+  if (!win) return;
+
+  const message = { kind: "printReportData", payload: { organization, reportData: data, reportType: "group" } };
+
+  try {
+    win.postMessage(message, "*");
+    setTimeout(() => {
+      try {
+        win.postMessage(message, "*");
+      } catch {
+        // ignore
+      }
+    }, 250);
+  } catch {
+    // ignore
+  }
 }
