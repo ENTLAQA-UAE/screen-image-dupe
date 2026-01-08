@@ -58,9 +58,9 @@ type PrintPayload = {
 };
 
 function openWithHandshake(url: string, payload: PrintPayload) {
-  // Fallback storage (may not be shared between iframe/new tab due to browser partitioning)
+  // Fallback storage (used if postMessage isn't delivered)
   try {
-    localStorage.setItem("printReportData", JSON.stringify(payload));
+    localStorage.setItem("printReportData", JSON.stringify({ ts: Date.now(), payload }));
   } catch {
     // ignore
   }
