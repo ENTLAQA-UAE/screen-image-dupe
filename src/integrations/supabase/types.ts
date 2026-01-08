@@ -159,6 +159,53 @@ export type Database = {
           },
         ]
       }
+      email_templates: {
+        Row: {
+          body_ar: string
+          body_en: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          organization_id: string
+          subject_ar: string
+          subject_en: string
+          template_type: string
+          updated_at: string
+        }
+        Insert: {
+          body_ar: string
+          body_en: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          organization_id: string
+          subject_ar: string
+          subject_en: string
+          template_type: string
+          updated_at?: string
+        }
+        Update: {
+          body_ar?: string
+          body_en?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          organization_id?: string
+          subject_ar?: string
+          subject_en?: string
+          template_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_talent_snapshots: {
         Row: {
           assessment_count: number
@@ -235,6 +282,50 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      organization_email_settings: {
+        Row: {
+          created_at: string
+          email_language: string | null
+          from_email: string | null
+          from_name: string | null
+          id: string
+          is_enabled: boolean | null
+          organization_id: string
+          resend_api_key: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email_language?: string | null
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          organization_id: string
+          resend_api_key?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email_language?: string | null
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          organization_id?: string
+          resend_api_key?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_email_settings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       organizations: {
         Row: {

@@ -23,7 +23,7 @@ import {
   Timer,
   Building2,
 } from "lucide-react";
-import { generateParticipantPDF } from "@/lib/pdfGenerator";
+import { openParticipantPrintPreview } from "@/lib/printPreview";
 
 // Bilingual translations
 const translations = {
@@ -1241,9 +1241,9 @@ export default function TakeAssessment() {
                     variant="outline" 
                     size="lg" 
                     className="transition-smooth"
-                    onClick={async () => {
-                      try {
-                        await generateParticipantPDF({
+                    onClick={() => {
+                      openParticipantPrintPreview(
+                        {
                           participantName,
                           participantEmail,
                           employeeCode: completedData?.participant?.employee_code,
@@ -1254,18 +1254,14 @@ export default function TakeAssessment() {
                           completedAt,
                           scoreSummary: scoreSummary || null,
                           aiReport: aiReport || null,
-                          organization: {
-                            name: orgName,
-                            logoUrl: orgLogo,
-                            primaryColor: resultPrimaryColor,
-                          },
-                          language: isArabic ? 'ar' : 'en',
-                        });
-                        toast.success(isArabic ? "تم تصدير التقرير بنجاح" : "PDF exported successfully");
-                      } catch (error) {
-                        console.error("Error exporting PDF:", error);
-                        toast.error(isArabic ? "فشل تصدير التقرير" : "Failed to export PDF");
-                      }
+                        },
+                        {
+                          name: orgName,
+                          logoUrl: orgLogo,
+                          primaryColor: resultPrimaryColor,
+                        },
+                        isArabic ? 'ar' : 'en'
+                      );
                     }}
                   >
                     <Download className={`w-4 h-4 ${isArabic ? "ml-2" : "mr-2"}`} />
