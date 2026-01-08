@@ -577,23 +577,39 @@ export default function TakeAssessment() {
 
   // Render components
   const renderLoading = () => (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-        <p className="text-muted-foreground">{t.loading}</p>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="text-center"
+      >
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mx-auto mb-6 shadow-xl">
+          <Loader2 className="w-10 h-10 animate-spin text-white" />
+        </div>
+        <p className="text-lg font-medium text-slate-600">{t.loading}</p>
+      </motion.div>
     </div>
   );
 
   const renderError = () => (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="max-w-md w-full text-center shadow-elegant">
-        <CardContent className="pt-8 pb-8">
-          <XCircle className="w-16 h-16 text-destructive mx-auto mb-4" />
-          <h1 className="text-2xl font-bold mb-2 font-display">{t.unableToLoad}</h1>
-          <p className="text-muted-foreground">{errorMessage}</p>
-        </CardContent>
-      </Card>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-rose-50 to-pink-100 p-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-md w-full"
+      >
+        <Card className="text-center shadow-2xl border-0 overflow-hidden">
+          <div className="bg-gradient-to-r from-red-500 to-rose-500 p-6">
+            <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto">
+              <XCircle className="w-8 h-8 text-white" />
+            </div>
+          </div>
+          <CardContent className="pt-6 pb-8">
+            <h1 className="text-2xl font-bold mb-2 font-display text-slate-800">{t.unableToLoad}</h1>
+            <p className="text-slate-500">{errorMessage}</p>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 
@@ -602,49 +618,54 @@ export default function TakeAssessment() {
     const assessmentTitle = errorAssessment?.title;
     
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4" dir={isArabic ? "rtl" : "ltr"}>
-        <Card className="max-w-md w-full text-center shadow-elegant overflow-hidden">
-          {orgData && (
-            <div 
-              className="p-4 border-b"
-              style={{ 
-                background: orgData.primaryColor ? `${orgData.primaryColor}10` : undefined,
-                borderColor: orgData.primaryColor ? `${orgData.primaryColor}30` : undefined
-              }}
-            >
-              {orgData.logoUrl ? (
-                <img src={orgData.logoUrl} alt={orgData.name} className="h-10 mx-auto object-contain" />
-              ) : (
-                <div className="flex items-center justify-center gap-2">
-                  <Building2 className="w-5 h-5" style={{ color: orgData.primaryColor }} />
-                  <span className="font-semibold">{orgData.name}</span>
-                </div>
-              )}
-            </div>
-          )}
-          <CardContent className="pt-8 pb-8">
-            <div className="w-16 h-16 rounded-full bg-highlight/10 flex items-center justify-center mx-auto mb-4">
-              <Clock className="w-8 h-8 text-highlight" />
-            </div>
-            <h1 className="text-2xl font-bold mb-2 font-display">{t.notYetOpen}</h1>
-            {assessmentTitle && (
-              <p className="text-sm text-muted-foreground mb-3">{assessmentTitle}</p>
+      <div 
+        className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-100 p-4" 
+        dir={isArabic ? "rtl" : "ltr"}
+      >
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md w-full"
+        >
+          <Card className="text-center shadow-2xl border-0 overflow-hidden">
+            {orgData && (
+              <div 
+                className="p-4 bg-gradient-to-r from-amber-500 to-orange-500"
+              >
+                {orgData.logoUrl ? (
+                  <img src={orgData.logoUrl} alt={orgData.name} className="h-10 mx-auto object-contain brightness-0 invert" />
+                ) : (
+                  <div className="flex items-center justify-center gap-2 text-white">
+                    <Building2 className="w-5 h-5" />
+                    <span className="font-semibold">{orgData.name}</span>
+                  </div>
+                )}
+              </div>
             )}
-            <p className="text-muted-foreground">
-              {t.notYetOpenDesc}{" "}
-              <span className="font-semibold">
-                {startDate ? new Date(startDate).toLocaleDateString(isArabic ? "ar-SA" : "en-US", {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }) : t.soon}
-              </span>
-            </p>
-          </CardContent>
-        </Card>
+            <CardContent className="pt-8 pb-8">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Clock className="w-8 h-8 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold mb-2 font-display text-slate-800">{t.notYetOpen}</h1>
+              {assessmentTitle && (
+                <p className="text-sm text-slate-500 mb-3 font-medium">{assessmentTitle}</p>
+              )}
+              <p className="text-slate-600">
+                {t.notYetOpenDesc}{" "}
+                <span className="font-semibold text-amber-600">
+                  {startDate ? new Date(startDate).toLocaleDateString(isArabic ? "ar-SA" : "en-US", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }) : t.soon}
+                </span>
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     );
   };
@@ -654,47 +675,50 @@ export default function TakeAssessment() {
     const assessmentTitle = errorAssessment?.title;
     
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4" dir={isArabic ? "rtl" : "ltr"}>
-        <Card className="max-w-md w-full text-center shadow-elegant overflow-hidden">
-          {orgData && (
-            <div 
-              className="p-4 border-b"
-              style={{ 
-                background: orgData.primaryColor ? `${orgData.primaryColor}10` : undefined,
-                borderColor: orgData.primaryColor ? `${orgData.primaryColor}30` : undefined
-              }}
-            >
-              {orgData.logoUrl ? (
-                <img src={orgData.logoUrl} alt={orgData.name} className="h-10 mx-auto object-contain" />
-              ) : (
-                <div className="flex items-center justify-center gap-2">
-                  <Building2 className="w-5 h-5" style={{ color: orgData.primaryColor }} />
-                  <span className="font-semibold">{orgData.name}</span>
-                </div>
+      <div 
+        className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-rose-50 to-pink-100 p-4" 
+        dir={isArabic ? "rtl" : "ltr"}
+      >
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md w-full"
+        >
+          <Card className="text-center shadow-2xl border-0 overflow-hidden">
+            {orgData && (
+              <div className="p-4 bg-gradient-to-r from-red-500 to-rose-500">
+                {orgData.logoUrl ? (
+                  <img src={orgData.logoUrl} alt={orgData.name} className="h-10 mx-auto object-contain brightness-0 invert" />
+                ) : (
+                  <div className="flex items-center justify-center gap-2 text-white">
+                    <Building2 className="w-5 h-5" />
+                    <span className="font-semibold">{orgData.name}</span>
+                  </div>
+                )}
+              </div>
+            )}
+            <CardContent className="pt-8 pb-8">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-400 to-rose-500 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <AlertTriangle className="w-8 h-8 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold mb-2 font-display text-slate-800">{t.assessmentEnded}</h1>
+              {assessmentTitle && (
+                <p className="text-sm text-slate-500 mb-3 font-medium">{assessmentTitle}</p>
               )}
-            </div>
-          )}
-          <CardContent className="pt-8 pb-8">
-            <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
-              <AlertTriangle className="w-8 h-8 text-destructive" />
-            </div>
-            <h1 className="text-2xl font-bold mb-2 font-display">{t.assessmentEnded}</h1>
-            {assessmentTitle && (
-              <p className="text-sm text-muted-foreground mb-3">{assessmentTitle}</p>
-            )}
-            <p className="text-muted-foreground">{t.assessmentEndedDesc}</p>
-            {endDate && (
-              <p className="text-xs text-muted-foreground mt-3">
-                {isArabic ? "انتهى في" : "Ended on"}{" "}
-                {new Date(endDate).toLocaleDateString(isArabic ? "ar-SA" : "en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+              <p className="text-slate-600">{t.assessmentEndedDesc}</p>
+              {endDate && (
+                <p className="text-xs text-slate-400 mt-3">
+                  {isArabic ? "انتهى في" : "Ended on"}{" "}
+                  {new Date(endDate).toLocaleDateString(isArabic ? "ar-SA" : "en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     );
   };
@@ -704,236 +728,295 @@ export default function TakeAssessment() {
     const assessmentTitle = errorAssessment?.title;
     
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4" dir={isArabic ? "rtl" : "ltr"}>
-        <Card className="max-w-md w-full text-center shadow-elegant overflow-hidden">
-          {orgData && (
-            <div 
-              className="p-4 border-b"
-              style={{ 
-                background: orgData.primaryColor ? `${orgData.primaryColor}10` : undefined,
-                borderColor: orgData.primaryColor ? `${orgData.primaryColor}30` : undefined
-              }}
-            >
-              {orgData.logoUrl ? (
-                <img src={orgData.logoUrl} alt={orgData.name} className="h-10 mx-auto object-contain" />
-              ) : (
-                <div className="flex items-center justify-center gap-2">
-                  <Building2 className="w-5 h-5" style={{ color: orgData.primaryColor }} />
-                  <span className="font-semibold">{orgData.name}</span>
-                </div>
-              )}
-            </div>
-          )}
-          <CardContent className="pt-8 pb-8">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-              <XCircle className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <h1 className="text-2xl font-bold mb-2 font-display">{t.assessmentClosed}</h1>
-            {assessmentTitle && (
-              <p className="text-sm text-muted-foreground mb-3">{assessmentTitle}</p>
+      <div 
+        className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 via-gray-100 to-zinc-200 p-4" 
+        dir={isArabic ? "rtl" : "ltr"}
+      >
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md w-full"
+        >
+          <Card className="text-center shadow-2xl border-0 overflow-hidden">
+            {orgData && (
+              <div className="p-4 bg-gradient-to-r from-slate-500 to-gray-600">
+                {orgData.logoUrl ? (
+                  <img src={orgData.logoUrl} alt={orgData.name} className="h-10 mx-auto object-contain brightness-0 invert" />
+                ) : (
+                  <div className="flex items-center justify-center gap-2 text-white">
+                    <Building2 className="w-5 h-5" />
+                    <span className="font-semibold">{orgData.name}</span>
+                  </div>
+                )}
+              </div>
             )}
-            <p className="text-muted-foreground">{t.assessmentClosedDesc}</p>
-          </CardContent>
-        </Card>
+            <CardContent className="pt-8 pb-8">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-400 to-gray-500 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <XCircle className="w-8 h-8 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold mb-2 font-display text-slate-800">{t.assessmentClosed}</h1>
+              {assessmentTitle && (
+                <p className="text-sm text-slate-500 mb-3 font-medium">{assessmentTitle}</p>
+              )}
+              <p className="text-slate-600">{t.assessmentClosedDesc}</p>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     );
   };
 
   const renderRegister = () => (
     <div 
-      className="min-h-screen flex items-center justify-center p-4 gradient-subtle" 
+      className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-100" 
       dir={isArabic ? "rtl" : "ltr"}
     >
-      <Card className="max-w-lg w-full shadow-elegant">
-        <CardHeader className="text-center pb-2">
-          {organization?.logoUrl ? (
-            <img src={organization.logoUrl} alt={organization.name} className="h-14 mx-auto mb-4 object-contain" />
-          ) : organization?.name ? (
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Building2 className="w-6 h-6 text-primary" />
-              <span className="font-semibold text-lg">{organization.name}</span>
-            </div>
-          ) : null}
-          <CardTitle className="text-xl font-display">{assessmentData?.assessment.title}</CardTitle>
-          <CardDescription>{t.provideInfo}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Employee Code - First and Required */}
-          <div className="space-y-2">
-            <Label htmlFor="employee_code" className="flex items-center gap-1">
-              {t.employeeCode} <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="employee_code"
-              value={regForm.employee_code}
-              onChange={(e) => setRegForm({ ...regForm, employee_code: e.target.value })}
-              placeholder={isArabic ? "أدخل رقم الموظف" : "Enter employee code"}
-              className="transition-smooth"
-            />
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-lg w-full"
+      >
+        <Card className="shadow-2xl border-0 overflow-hidden">
+          <div 
+            className="p-6 text-center text-white"
+            style={{ 
+              background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6, #6366f1)'
+            }}
+          >
+            {organization?.logoUrl ? (
+              <img src={organization.logoUrl} alt={organization.name} className="h-14 mx-auto mb-4 object-contain brightness-0 invert" />
+            ) : organization?.name ? (
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <Building2 className="w-6 h-6" />
+                <span className="font-semibold text-lg">{organization.name}</span>
+              </div>
+            ) : null}
+            <h2 className="text-xl font-display font-bold">{assessmentData?.assessment.title}</h2>
+            <p className="text-white/80 mt-1">{t.provideInfo}</p>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="full_name" className="flex items-center gap-1">
-              {t.fullName} <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="full_name"
-              value={regForm.full_name}
-              onChange={(e) => setRegForm({ ...regForm, full_name: e.target.value })}
-              placeholder={isArabic ? "أدخل اسمك الكامل" : "Enter your full name"}
-              className="transition-smooth"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email" className="flex items-center gap-1">
-              {t.email} <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              value={regForm.email}
-              onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
-              placeholder={isArabic ? "بريدك@الشركة.com" : "your.email@company.com"}
-              className="transition-smooth"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
+          <CardContent className="p-6 space-y-4">
+            {/* Employee Code - First and Required */}
             <div className="space-y-2">
-              <Label htmlFor="department">{t.department}</Label>
+              <Label htmlFor="employee_code" className="flex items-center gap-1 text-slate-700">
+                {t.employeeCode} <span className="text-red-500">*</span>
+              </Label>
               <Input
-                id="department"
-                value={regForm.department}
-                onChange={(e) => setRegForm({ ...regForm, department: e.target.value })}
-                placeholder={isArabic ? "مثال: تقنية المعلومات" : "e.g., IT"}
-                className="transition-smooth"
+                id="employee_code"
+                value={regForm.employee_code}
+                onChange={(e) => setRegForm({ ...regForm, employee_code: e.target.value })}
+                placeholder={isArabic ? "أدخل رقم الموظف" : "Enter employee code"}
+                className="border-slate-200 focus:border-blue-400 transition-all"
+                style={{ textAlign: isArabic ? 'right' : 'left' }}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="job_title">{t.jobTitle}</Label>
+              <Label htmlFor="full_name" className="flex items-center gap-1 text-slate-700">
+                {t.fullName} <span className="text-red-500">*</span>
+              </Label>
               <Input
-                id="job_title"
-                value={regForm.job_title}
-                onChange={(e) => setRegForm({ ...regForm, job_title: e.target.value })}
-                placeholder={isArabic ? "مثال: مدير" : "e.g., Manager"}
-                className="transition-smooth"
+                id="full_name"
+                value={regForm.full_name}
+                onChange={(e) => setRegForm({ ...regForm, full_name: e.target.value })}
+                placeholder={isArabic ? "أدخل اسمك الكامل" : "Enter your full name"}
+                className="border-slate-200 focus:border-blue-400 transition-all"
+                style={{ textAlign: isArabic ? 'right' : 'left' }}
               />
             </div>
-          </div>
-          <Button className="w-full mt-4 transition-smooth" size="lg" onClick={handleRegister}>
-            {t.continue}
-            <ArrowRight className={`w-4 h-4 ${isArabic ? "mr-2 rotate-180" : "ml-2"}`} />
-          </Button>
-        </CardContent>
-      </Card>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="flex items-center gap-1 text-slate-700">
+                {t.email} <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                value={regForm.email}
+                onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
+                placeholder={isArabic ? "بريدك@الشركة.com" : "your.email@company.com"}
+                className="border-slate-200 focus:border-blue-400 transition-all"
+                style={{ textAlign: isArabic ? 'right' : 'left', direction: 'ltr' }}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="department" className="text-slate-700">{t.department}</Label>
+                <Input
+                  id="department"
+                  value={regForm.department}
+                  onChange={(e) => setRegForm({ ...regForm, department: e.target.value })}
+                  placeholder={isArabic ? "مثال: تقنية المعلومات" : "e.g., IT"}
+                  className="border-slate-200 focus:border-blue-400 transition-all"
+                  style={{ textAlign: isArabic ? 'right' : 'left' }}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="job_title" className="text-slate-700">{t.jobTitle}</Label>
+                <Input
+                  id="job_title"
+                  value={regForm.job_title}
+                  onChange={(e) => setRegForm({ ...regForm, job_title: e.target.value })}
+                  placeholder={isArabic ? "مثال: مدير" : "e.g., Manager"}
+                  className="border-slate-200 focus:border-blue-400 transition-all"
+                  style={{ textAlign: isArabic ? 'right' : 'left' }}
+                />
+              </div>
+            </div>
+            <Button 
+              className="w-full mt-4 h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all" 
+              size="lg" 
+              onClick={handleRegister}
+              style={{ 
+                background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6, #6366f1)'
+              }}
+            >
+              {t.continue}
+              <ArrowRight className={`w-5 h-5 ${isArabic ? "mr-2 rotate-180" : "ml-2"}`} />
+            </Button>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 
   const renderIntro = () => (
     <div 
-      className="min-h-screen flex items-center justify-center p-4 gradient-subtle" 
+      className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-100" 
       dir={isArabic ? "rtl" : "ltr"}
     >
-      <Card className="max-w-2xl w-full shadow-elegant">
-        <CardHeader className="text-center pb-4">
-          {organization?.logoUrl ? (
-            <img src={organization.logoUrl} alt={organization.name} className="h-14 mx-auto mb-4 object-contain" />
-          ) : organization?.name ? (
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <Building2 className="w-6 h-6 text-primary" />
-              <span className="font-semibold text-lg">{organization.name}</span>
-            </div>
-          ) : null}
-          <CardTitle className="text-2xl font-display">{assessmentData?.assessment.title}</CardTitle>
-          <CardDescription className="text-base mt-2">
-            {assessmentData?.assessment.description || t.welcome}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Assessment Info */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-muted rounded-xl">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-primary" />
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-2xl w-full"
+      >
+        <Card className="shadow-2xl border-0 overflow-hidden">
+          {/* Header with gradient */}
+          <div 
+            className="p-6 text-center text-white"
+            style={{ 
+              background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6, #6366f1)'
+            }}
+          >
+            {organization?.logoUrl ? (
+              <img src={organization.logoUrl} alt={organization.name} className="h-14 mx-auto mb-4 object-contain brightness-0 invert" />
+            ) : organization?.name ? (
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <Building2 className="w-6 h-6" />
+                <span className="font-semibold text-lg">{organization.name}</span>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">{t.questions}</p>
-                <p className="font-semibold">{assessmentData?.questions.length}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  {assessmentData?.assessment.config?.timeLimit ? t.timeLimit : t.estimatedTime}
-                </p>
-                <p className="font-semibold">
-                  {assessmentData?.assessment.config?.timeLimit || 
-                   Math.ceil((assessmentData?.questions.length || 20) * 0.5)} {t.minutes}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Instructions */}
-          <div className="space-y-3">
-            <h3 className="font-semibold font-display">{t.instructions}</h3>
-            <ul className={`space-y-2 ${isArabic ? "pr-5" : "pl-5"}`}>
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
-                <span className="text-muted-foreground">{t.instruction1}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
-                <span className="text-muted-foreground">{t.instruction2}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
-                <span className="text-muted-foreground">{t.instruction3}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <CheckCircle2 className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
-                <span className="text-muted-foreground">{t.instruction4}</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 text-warning mt-0.5 flex-shrink-0" />
-                <span className="text-warning font-medium">{t.instruction5}</span>
-              </li>
-            </ul>
-          </div>
-
-          {/* Timer warning */}
-          {timeRemaining !== null && (
-            <div className="flex items-center gap-3 p-4 bg-warning/10 border border-warning/20 rounded-xl">
-              <div className="w-10 h-10 rounded-lg bg-warning/20 flex items-center justify-center flex-shrink-0">
-                <Timer className="w-5 h-5 text-warning" />
-              </div>
-              <div>
-                <p className="font-semibold text-warning">
-                  {isArabic ? "تقييم محدد بوقت" : "Timed Assessment"}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {isArabic 
-                    ? `لديك ${Math.floor(timeRemaining / 60)} دقيقة لإكمال هذا التقييم. سيتم الإرسال تلقائياً عند انتهاء الوقت.`
-                    : `You have ${Math.floor(timeRemaining / 60)} minutes to complete this assessment. It will auto-submit when time expires.`
-                  }
-                </p>
-              </div>
-            </div>
-          )}
-
-          {assessmentData?.participant && (
-            <p className="text-sm text-muted-foreground text-center">
-              {t.takingAs}: <strong>{assessmentData.participant.full_name}</strong>
+            ) : null}
+            <h2 className="text-2xl font-display font-bold">{assessmentData?.assessment.title}</h2>
+            <p className="text-white/80 mt-2 max-w-lg mx-auto">
+              {assessmentData?.assessment.description || t.welcome}
             </p>
-          )}
+          </div>
 
-          <Button className="w-full transition-smooth" size="lg" onClick={handleStartAssessment}>
-            {t.startAssessment}
-            <ArrowRight className={`w-5 h-5 ${isArabic ? "mr-2 rotate-180" : "ml-2"}`} />
-          </Button>
-        </CardContent>
-      </Card>
+          <CardContent className="p-6 space-y-6">
+            {/* Assessment Info - Colorful Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg">
+                <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-sm text-white/80">{t.questions}</p>
+                  <p className="text-2xl font-bold">{assessmentData?.questions.length}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg">
+                <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <Clock className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-sm text-white/80">
+                    {assessmentData?.assessment.config?.timeLimit ? t.timeLimit : t.estimatedTime}
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {assessmentData?.assessment.config?.timeLimit || 
+                     Math.ceil((assessmentData?.questions.length || 20) * 0.5)} <span className="text-base font-normal">{t.minutes}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Instructions */}
+            <div className="space-y-3 bg-slate-50 rounded-xl p-5">
+              <h3 className="font-semibold font-display text-slate-800 flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold">i</div>
+                {t.instructions}
+              </h3>
+              <ul className={`space-y-3 ${isArabic ? "pr-2" : "pl-2"}`}>
+                <li className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  </div>
+                  <span className="text-slate-600">{t.instruction1}</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  </div>
+                  <span className="text-slate-600">{t.instruction2}</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  </div>
+                  <span className="text-slate-600">{t.instruction3}</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  </div>
+                  <span className="text-slate-600">{t.instruction4}</span>
+                </li>
+                <li className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                  <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-amber-700 font-medium">{t.instruction5}</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Timer warning */}
+            {timeRemaining !== null && (
+              <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl text-white shadow-lg">
+                <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+                  <Timer className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="font-semibold">
+                    {isArabic ? "تقييم محدد بوقت" : "Timed Assessment"}
+                  </p>
+                  <p className="text-sm text-white/90">
+                    {isArabic 
+                      ? `لديك ${Math.floor(timeRemaining / 60)} دقيقة لإكمال هذا التقييم. سيتم الإرسال تلقائياً عند انتهاء الوقت.`
+                      : `You have ${Math.floor(timeRemaining / 60)} minutes to complete this assessment. It will auto-submit when time expires.`
+                    }
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {assessmentData?.participant && (
+              <div className="text-center p-3 bg-slate-100 rounded-xl">
+                <p className="text-sm text-slate-600">
+                  {t.takingAs}: <strong className="text-slate-800">{assessmentData.participant.full_name}</strong>
+                </p>
+              </div>
+            )}
+
+            <Button 
+              className="w-full h-14 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all" 
+              size="lg" 
+              onClick={handleStartAssessment}
+              style={{ 
+                background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6, #6366f1)'
+              }}
+            >
+              {t.startAssessment}
+              <ArrowRight className={`w-6 h-6 ${isArabic ? "mr-2 rotate-180" : "ml-2"}`} />
+            </Button>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 
@@ -946,38 +1029,47 @@ export default function TakeAssessment() {
     const isMultiSelect = question.type === "mcq_multi";
 
     return (
-      <div className="min-h-screen bg-background" dir={isArabic ? "rtl" : "ltr"}>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100" dir={isArabic ? "rtl" : "ltr"}>
         {/* Header with progress and timer */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b">
-          <div className="max-w-3xl mx-auto px-4 py-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground font-medium">
+        <div 
+          className="sticky top-0 z-10 backdrop-blur-md border-b border-white/20 shadow-sm"
+          style={{ 
+            background: primaryColor ? `linear-gradient(135deg, ${primaryColor}ee, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6ee, #6366f1dd)'
+          }}
+        >
+          <div className="max-w-3xl mx-auto px-4 py-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm text-white/90 font-medium">
                 {t.questionOf
                   .replace("{current}", String(currentQuestionIndex + 1))
                   .replace("{total}", String(assessmentData.questions.length))}
               </span>
               {timeRemaining !== null && (
                 <motion.div 
-                  className={`flex items-center gap-2 px-3 py-1 rounded-full ${
-                    timeRemaining < 60 ? "bg-destructive/10 text-destructive" : 
-                    timeRemaining < 300 ? "bg-warning/10 text-warning" : 
-                    "bg-primary/10 text-primary"
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold ${
+                    timeRemaining < 60 ? "bg-red-500 text-white" : 
+                    timeRemaining < 300 ? "bg-amber-400 text-amber-900" : 
+                    "bg-white/20 text-white backdrop-blur-sm"
                   }`}
                   animate={timeRemaining < 60 ? { scale: [1, 1.05, 1] } : {}}
                   transition={{ repeat: Infinity, duration: 1 }}
                 >
                   <Timer className={`w-4 h-4 ${timeRemaining < 60 ? "animate-pulse" : ""}`} />
-                  <span className="font-mono font-semibold text-sm">{formatTime(timeRemaining)}</span>
-                  {timeRemaining < 300 && timeRemaining >= 60 && (
-                    <span className="text-xs hidden sm:inline">{t.timeRemaining}</span>
-                  )}
+                  <span className="font-mono text-sm">{formatTime(timeRemaining)}</span>
                   {timeRemaining < 60 && (
                     <AlertTriangle className="w-4 h-4 animate-pulse" />
                   )}
                 </motion.div>
               )}
             </div>
-            <Progress value={progress} className="h-2" />
+            <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+              <motion.div 
+                className="h-full bg-white rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
           </div>
         </div>
 
@@ -991,9 +1083,26 @@ export default function TakeAssessment() {
               exit={{ opacity: 0, x: isArabic ? 20 : -20 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className="shadow-elegant">
-                <CardContent className="pt-8 pb-8" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                  <h2 className={`text-xl font-semibold mb-8 font-display leading-relaxed ${isArabic ? 'text-right' : 'text-left'}`}>{question.text}</h2>
+              <Card className="shadow-2xl border-0 overflow-hidden">
+                <CardContent className="p-8" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div 
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg"
+                      style={{ 
+                        background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6, #6366f1)'
+                      }}
+                    >
+                      {currentQuestionIndex + 1}
+                    </div>
+                    <div className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent" />
+                  </div>
+                  
+                  <h2 
+                    className={`text-xl font-semibold mb-8 font-display leading-relaxed text-slate-800 ${isArabic ? 'text-right' : 'text-left'}`}
+                    style={{ unicodeBidi: 'plaintext' }}
+                  >
+                    {question.text}
+                  </h2>
 
                   {isMultiSelect ? (
                     <div className="space-y-3">
@@ -1001,19 +1110,29 @@ export default function TakeAssessment() {
                         const optionValue = option.value ?? index;
                         const isChecked = (answers[question.id] || []).includes(optionValue);
                         return (
-                          <div 
-                            key={index} 
-                            className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-smooth ${
-                              isChecked ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                          <motion.div 
+                            key={index}
+                            whileHover={{ scale: 1.01 }}
+                            whileTap={{ scale: 0.99 }}
+                            className={`flex items-center gap-4 p-5 rounded-xl border-2 cursor-pointer transition-all ${
+                              isChecked 
+                                ? "border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-md" 
+                                : "border-slate-200 hover:border-blue-300 hover:bg-slate-50"
                             }`}
                             onClick={() => handleMultiAnswer(question.id, optionValue, !isChecked)}
                           >
                             <Checkbox
                               checked={isChecked}
                               onCheckedChange={(checked) => handleMultiAnswer(question.id, optionValue, !!checked)}
+                              className="w-5 h-5"
                             />
-                            <Label className={`flex-1 cursor-pointer text-base ${isArabic ? 'text-right' : 'text-left'}`}>{option.text}</Label>
-                          </div>
+                            <Label 
+                              className={`flex-1 cursor-pointer text-base text-slate-700 ${isArabic ? 'text-right' : 'text-left'}`}
+                              style={{ unicodeBidi: 'plaintext' }}
+                            >
+                              {option.text}
+                            </Label>
+                          </motion.div>
                         );
                       })}
                     </div>
@@ -1029,21 +1148,30 @@ export default function TakeAssessment() {
                         const optionValue = option.value ?? index;
                         const isSelected = answers[question.id] === optionValue;
                         return (
-                          <div 
-                            key={index} 
-                            className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-smooth ${
-                              isSelected ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"
+                          <motion.div 
+                            key={index}
+                            whileHover={{ scale: 1.01 }}
+                            whileTap={{ scale: 0.99 }}
+                            className={`flex items-center gap-4 p-5 rounded-xl border-2 cursor-pointer transition-all ${
+                              isSelected 
+                                ? "border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-md" 
+                                : "border-slate-200 hover:border-blue-300 hover:bg-slate-50"
                             }`}
                             onClick={() => handleAnswer(question.id, optionValue)}
                           >
                             <RadioGroupItem
                               value={optionValue.toString()}
                               id={`option-${index}`}
+                              className="w-5 h-5"
                             />
-                            <Label htmlFor={`option-${index}`} className={`flex-1 cursor-pointer text-base ${isArabic ? 'text-right' : 'text-left'}`}>
+                            <Label 
+                              htmlFor={`option-${index}`} 
+                              className={`flex-1 cursor-pointer text-base text-slate-700 ${isArabic ? 'text-right' : 'text-left'}`}
+                              style={{ unicodeBidi: 'plaintext' }}
+                            >
                               {option.text}
                             </Label>
-                          </div>
+                          </motion.div>
                         );
                       })}
                     </RadioGroup>
@@ -1054,19 +1182,25 @@ export default function TakeAssessment() {
           </AnimatePresence>
 
           {/* Navigation */}
-          <div className="flex justify-between mt-6 gap-4">
+          <div className="flex justify-between mt-8 gap-4">
             <Button
               variant="outline"
               onClick={handlePrevious}
               disabled={currentQuestionIndex === 0}
-              className="transition-smooth"
+              className="h-12 px-6 bg-white shadow-lg hover:shadow-xl border-slate-200"
             >
-              <ArrowLeft className={`w-4 h-4 ${isArabic ? "ml-2 rotate-180" : "mr-2"}`} />
+              <ArrowLeft className={`w-5 h-5 ${isArabic ? "ml-2 rotate-180" : "mr-2"}`} />
               {t.previous}
             </Button>
-            <Button onClick={handleNext} className="transition-smooth">
+            <Button 
+              onClick={handleNext} 
+              className="h-12 px-8 shadow-lg hover:shadow-xl"
+              style={{ 
+                background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6, #6366f1)'
+              }}
+            >
               {isLast ? t.submit : t.next}
-              <ArrowRight className={`w-4 h-4 ${isArabic ? "mr-2 rotate-180" : "ml-2"}`} />
+              <ArrowRight className={`w-5 h-5 ${isArabic ? "mr-2 rotate-180" : "ml-2"}`} />
             </Button>
           </div>
         </div>
@@ -1075,12 +1209,23 @@ export default function TakeAssessment() {
   };
 
   const renderSubmitting = () => (
-    <div className="min-h-screen flex items-center justify-center bg-background" dir={isArabic ? "rtl" : "ltr"}>
-      <div className="text-center">
-        <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-        <p className="text-lg font-medium font-display">{t.submitting}</p>
-        <p className="text-muted-foreground">{t.pleaseWait}</p>
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-100" dir={isArabic ? "rtl" : "ltr"}>
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="text-center"
+      >
+        <div 
+          className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl"
+          style={{ 
+            background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6, #6366f1)'
+          }}
+        >
+          <Loader2 className="w-12 h-12 animate-spin text-white" />
+        </div>
+        <p className="text-xl font-semibold font-display text-slate-800">{t.submitting}</p>
+        <p className="text-slate-500 mt-1">{t.pleaseWait}</p>
+      </motion.div>
     </div>
   );
 
@@ -1090,24 +1235,32 @@ export default function TakeAssessment() {
     const orgName = orgData?.name;
     
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4" dir={isArabic ? "rtl" : "ltr"}>
-        <Card className="max-w-md w-full text-center shadow-elegant">
-          <CardContent className="pt-10 pb-10">
-            {orgLogo ? (
-              <img src={orgLogo} alt={orgName} className="h-12 mx-auto mb-6 object-contain" />
-            ) : orgName ? (
-              <div className="flex items-center justify-center gap-2 mb-6">
-                <Building2 className="w-5 h-5 text-primary" />
-                <span className="font-semibold">{orgName}</span>
-              </div>
-            ) : null}
-            <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="w-10 h-10 text-success" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-green-50 to-teal-100 p-4" dir={isArabic ? "rtl" : "ltr"}>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md w-full"
+        >
+          <Card className="text-center shadow-2xl border-0 overflow-hidden">
+            <div className="p-6 bg-gradient-to-r from-emerald-500 to-green-500">
+              {orgLogo ? (
+                <img src={orgLogo} alt={orgName} className="h-12 mx-auto object-contain brightness-0 invert" />
+              ) : orgName ? (
+                <div className="flex items-center justify-center gap-2 text-white">
+                  <Building2 className="w-5 h-5" />
+                  <span className="font-semibold">{orgName}</span>
+                </div>
+              ) : null}
             </div>
-            <h1 className="text-3xl font-bold mb-3 font-display">{t.thankYou}</h1>
-            <p className="text-muted-foreground">{t.submittedSuccess}</p>
-          </CardContent>
-        </Card>
+            <CardContent className="pt-8 pb-10">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center mx-auto mb-6 shadow-xl">
+                <CheckCircle2 className="w-10 h-10 text-white" />
+              </div>
+              <h1 className="text-3xl font-bold mb-3 font-display text-slate-800">{t.thankYou}</h1>
+              <p className="text-slate-500">{t.submittedSuccess}</p>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     );
   };
