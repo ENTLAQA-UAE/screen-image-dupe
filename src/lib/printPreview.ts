@@ -49,19 +49,18 @@ export interface OrganizationBranding {
   primaryColor?: string | null;
 }
 
-export function openTalentSnapshotPrintPreview(
-  data: TalentSnapshotPrintData,
-  organization: OrganizationBranding,
-  language: "en" | "ar" = "en"
-): void {
-  const url = `/print-preview?type=talent-snapshot&lang=${language}`;
+type ReportType = "talent-snapshot" | "participant" | "group";
 
+type PrintPayload = {
+  organization: OrganizationBranding;
+  reportData: TalentSnapshotPrintData | ParticipantPrintData | GroupPrintData;
+  reportType: ReportType;
+};
+
+function openWithHandshake(url: string, payload: PrintPayload) {
   // Fallback storage (may not be shared between iframe/new tab due to browser partitioning)
   try {
-    localStorage.setItem(
-      "printReportData",
-      JSON.stringify({ organization, reportData: data, reportType: "talent-snapshot" })
-    );
+    localStorage.setItem("printReportData", JSON.stringify(payload));
   } catch {
     // ignore
   }
@@ -69,21 +68,45 @@ export function openTalentSnapshotPrintPreview(
   const win = window.open(url, "_blank");
   if (!win) return;
 
-  const message = { kind: "printReportData", payload: { organization, reportData: data, reportType: "talent-snapshot" } };
+  const sendData = () => {
+    try {
+      win.postMessage({ kind: "printReportData", payload }, "*");
+      console.log("[printPreview] sent report data", payload.reportType);
+    } catch (e) {
+      console.log("[printPreview] failed to postMessage", e);
+    }
+  };
 
-  // Post immediately and again shortly after to avoid timing issues
-  try {
-    win.postMessage(message, "*");
-    setTimeout(() => {
-      try {
-        win.postMessage(message, "*");
-      } catch {
-        // ignore
-      }
-    }, 250);
-  } catch {
-    // ignore
-  }
+  const onMessage = (event: MessageEvent) => {
+    if (event.source !== win) return;
+    const msg = event.data;
+    if (!msg || msg.kind !== "printPreviewReady") return;
+
+    console.log("[printPreview] received ready from new tab");
+    window.removeEventListener("message", onMessage);
+    sendData();
+  };
+
+  window.addEventListener("message", onMessage);
+
+  // Also attempt sending a couple times in case the ready signal is missed.
+  setTimeout(sendData, 300);
+  setTimeout(sendData, 900);
+
+  // Cleanup listener after a while
+  setTimeout(() => {
+    window.removeEventListener("message", onMessage);
+  }, 15000);
+}
+
+export function openTalentSnapshotPrintPreview(
+  data: TalentSnapshotPrintData,
+  organization: OrganizationBranding,
+  language: "en" | "ar" = "en"
+): void {
+  openWithHandshake(`/print-preview?type=talent-snapshot&lang=${language}`,
+    { organization, reportData: data, reportType: "talent-snapshot" }
+  );
 }
 
 export function openParticipantPrintPreview(
@@ -91,34 +114,9 @@ export function openParticipantPrintPreview(
   organization: OrganizationBranding,
   language: "en" | "ar" = "en"
 ): void {
-  const url = `/print-preview?type=participant&lang=${language}`;
-
-  try {
-    localStorage.setItem(
-      "printReportData",
-      JSON.stringify({ organization, reportData: data, reportType: "participant" })
-    );
-  } catch {
-    // ignore
-  }
-
-  const win = window.open(url, "_blank");
-  if (!win) return;
-
-  const message = { kind: "printReportData", payload: { organization, reportData: data, reportType: "participant" } };
-
-  try {
-    win.postMessage(message, "*");
-    setTimeout(() => {
-      try {
-        win.postMessage(message, "*");
-      } catch {
-        // ignore
-      }
-    }, 250);
-  } catch {
-    // ignore
-  }
+  openWithHandshake(`/print-preview?type=participant&lang=${language}`,
+    { organization, reportData: data, reportType: "participant" }
+  );
 }
 
 export function openGroupPrintPreview(
@@ -126,32 +124,7 @@ export function openGroupPrintPreview(
   organization: OrganizationBranding,
   language: "en" | "ar" = "en"
 ): void {
-  const url = `/print-preview?type=group&lang=${language}`;
-
-  try {
-    localStorage.setItem(
-      "printReportData",
-      JSON.stringify({ organization, reportData: data, reportType: "group" })
-    );
-  } catch {
-    // ignore
-  }
-
-  const win = window.open(url, "_blank");
-  if (!win) return;
-
-  const message = { kind: "printReportData", payload: { organization, reportData: data, reportType: "group" } };
-
-  try {
-    win.postMessage(message, "*");
-    setTimeout(() => {
-      try {
-        win.postMessage(message, "*");
-      } catch {
-        // ignore
-      }
-    }, 250);
-  } catch {
-    // ignore
-  }
+  openWithHandshake(`/print-preview?type=group&lang=${language}`,
+    { organization, reportData: data, reportType: "group" }
+  );
 }

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
-import { supabase } from "@/integrations/supabase/client";
 
 type ReportType = "talent-snapshot" | "participant" | "group";
 
@@ -151,6 +150,14 @@ const PrintPreview = () => {
   const t = translations[lang];
 
   useEffect(() => {
+    // Tell opener we're ready (handshake)
+    try {
+      window.opener?.postMessage({ kind: "printPreviewReady" }, "*");
+      console.log("[PrintPreview] sent ready to opener");
+    } catch {
+      // ignore
+    }
+
     loadReportData();
   }, []);
 
@@ -181,11 +188,12 @@ const PrintPreview = () => {
   };
 
   const loadReportData = () => {
-    // 1) Try localStorage (works in many browsers)
+    // 1) Try localStorage
     try {
       const storedData = localStorage.getItem("printReportData");
       if (storedData) {
         const data = JSON.parse(storedData);
+        console.log("[PrintPreview] loaded from localStorage", data?.reportType);
         applyIncomingData(data);
         localStorage.removeItem("printReportData");
         setLoading(false);
@@ -195,11 +203,13 @@ const PrintPreview = () => {
       // ignore
     }
 
-    // 2) Fallback: listen for postMessage from opener (works even with storage partitioning)
+    // 2) Wait for postMessage data
     const onMessage = (event: MessageEvent) => {
       const msg = event.data;
       if (!msg || msg.kind !== "printReportData") return;
 
+      console.log("[PrintPreview] received report data", msg?.payload?.reportType);
+      setError(null);
       applyIncomingData(msg.payload);
       window.removeEventListener("message", onMessage);
       setLoading(false);
@@ -207,12 +217,11 @@ const PrintPreview = () => {
 
     window.addEventListener("message", onMessage);
 
-    // Give the opener a moment to post the data
     setTimeout(() => {
       window.removeEventListener("message", onMessage);
       setError("No report data found");
       setLoading(false);
-    }, 1500);
+    }, 12000);
   };
 
   const formatDate = (date: string | null, includeTime = false): string => {
