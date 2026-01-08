@@ -55,7 +55,7 @@ interface Employee {
 const Employees = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading, isSuperAdmin } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -171,7 +171,7 @@ const Employees = () => {
       setDepartments(Array.from(deptSet).sort());
     } catch (error) {
       console.error("Error fetching employees:", error);
-      toast.error("Failed to load employees");
+      toast.error(language === 'ar' ? 'فشل في تحميل الموظفين' : 'Failed to load employees');
     } finally {
       setLoading(false);
     }
@@ -203,7 +203,7 @@ const Employees = () => {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString("en-US", {
+    return new Date(dateString).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -245,13 +245,13 @@ const Employees = () => {
 
       if (error) throw error;
 
-      toast.success("Employee data anonymized successfully");
+      toast.success(language === 'ar' ? 'تم إخفاء بيانات الموظف بنجاح' : 'Employee data anonymized successfully');
       setIsAnonymizeOpen(false);
       setSelectedEmployee(null);
       fetchEmployees();
     } catch (error: any) {
       console.error("Error anonymizing employee:", error);
-      toast.error(error.message || "Failed to anonymize employee");
+      toast.error(error.message || (language === 'ar' ? 'فشل في إخفاء بيانات الموظف' : 'Failed to anonymize employee'));
     } finally {
       setAnonymizing(false);
     }
@@ -301,10 +301,10 @@ const Employees = () => {
           </div>
           <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
             <SelectTrigger className="w-48">
-              <SelectValue placeholder="All Departments" />
+              <SelectValue placeholder={language === 'ar' ? 'جميع الأقسام' : 'All Departments'} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Departments</SelectItem>
+              <SelectItem value="all">{language === 'ar' ? 'جميع الأقسام' : 'All Departments'}</SelectItem>
               {departments.map((dept) => (
                 <SelectItem key={dept} value={dept}>
                   {dept}
@@ -321,18 +321,20 @@ const Employees = () => {
           </div>
         ) : !organizationId ? (
           <div className="text-center py-20">
-            <p className="text-muted-foreground">You are not assigned to any organization.</p>
+            <p className="text-muted-foreground">{t.assessments.notAssigned}</p>
           </div>
         ) : filteredEmployees.length === 0 ? (
           <Card className="p-12 text-center">
             <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">
-              {searchQuery || departmentFilter !== "all" ? "No employees found" : "No employees yet"}
+              {searchQuery || departmentFilter !== "all" 
+                ? (language === 'ar' ? 'لم يتم العثور على موظفين' : 'No employees found') 
+                : (language === 'ar' ? 'لا يوجد موظفون بعد' : 'No employees yet')}
             </h3>
             <p className="text-muted-foreground">
               {searchQuery || departmentFilter !== "all"
-                ? "Try adjusting your filters."
-                : "Employees will appear here once they participate in assessments."}
+                ? (language === 'ar' ? 'جرب تعديل الفلاتر.' : 'Try adjusting your filters.')
+                : (language === 'ar' ? 'سيظهر الموظفون هنا بمجرد مشاركتهم في التقييمات.' : 'Employees will appear here once they participate in assessments.')}
             </p>
           </Card>
         ) : (
@@ -344,11 +346,11 @@ const Employees = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Job Title</TableHead>
-                    <TableHead className="text-center">Assessments</TableHead>
-                    <TableHead>Last Assessment</TableHead>
+                    <TableHead>{language === 'ar' ? 'الموظف' : 'Employee'}</TableHead>
+                    <TableHead>{t.participants.department}</TableHead>
+                    <TableHead>{t.participants.jobTitle}</TableHead>
+                    <TableHead className="text-center">{t.assessments.title}</TableHead>
+                    <TableHead>{t.employees.lastAssessment}</TableHead>
                     <TableHead className="w-12"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -365,7 +367,7 @@ const Employees = () => {
                             <User className="w-5 h-5 text-primary" />
                           </div>
                           <div>
-                            <p className="font-medium">{employee.full_name || "Unknown"}</p>
+                            <p className="font-medium">{employee.full_name || (language === 'ar' ? 'غير معروف' : 'Unknown')}</p>
                             <p className="text-sm text-muted-foreground">{employee.email}</p>
                             {employee.employee_code && (
                               <p className="text-xs text-muted-foreground">#{employee.employee_code}</p>
@@ -413,14 +415,14 @@ const Employees = () => {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewEmployee(employee); }}>
                               <Eye className="w-4 h-4 mr-2" />
-                              View Profile
+                              {language === 'ar' ? 'عرض الملف الشخصي' : 'View Profile'}
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={(e) => openAnonymizeDialog(employee, e)}
                               className="text-destructive focus:text-destructive"
                             >
                               <UserX className="w-4 h-4 mr-2" />
-                              Anonymize Data
+                              {t.employeeDetail.anonymizeData}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -440,32 +442,33 @@ const Employees = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <UserX className="w-5 h-5" />
-              Anonymize Employee Data
+              {t.employeeDetail.anonymizeTitle}
             </DialogTitle>
             <DialogDescription>
-              This will permanently anonymize all personal data for <strong>{selectedEmployee?.full_name || selectedEmployee?.email}</strong>. 
-              Their assessment results will be preserved but all identifying information will be removed.
+              {language === 'ar' 
+                ? `سيتم إخفاء جميع البيانات الشخصية بشكل دائم لـ ${selectedEmployee?.full_name || selectedEmployee?.email}. سيتم الحفاظ على نتائج التقييم ولكن ستتم إزالة جميع المعلومات التعريفية.`
+                : `This will permanently anonymize all personal data for ${selectedEmployee?.full_name || selectedEmployee?.email}. Their assessment results will be preserved but all identifying information will be removed.`}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 text-sm">
-              <p className="font-medium text-destructive mb-2">This action will:</p>
+              <p className="font-medium text-destructive mb-2">{t.employeeDetail.anonymizeWarning}</p>
               <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                <li>Replace name with an anonymous identifier</li>
-                <li>Replace email with an anonymized email</li>
-                <li>Remove employee code, department, and job title</li>
-                <li>Delete AI-generated report text</li>
-                <li>Preserve assessment scores and completion data</li>
+                <li>{t.employeeDetail.anonymizeItem1}</li>
+                <li>{t.employeeDetail.anonymizeItem2}</li>
+                <li>{t.employeeDetail.anonymizeItem3}</li>
+                <li>{t.employeeDetail.anonymizeItem4}</li>
+                <li>{t.employeeDetail.anonymizeItem5}</li>
               </ul>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsAnonymizeOpen(false)}>
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button variant="destructive" onClick={handleAnonymize} disabled={anonymizing}>
               {anonymizing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Anonymize Data
+              {t.employeeDetail.anonymizeData}
             </Button>
           </DialogFooter>
         </DialogContent>
