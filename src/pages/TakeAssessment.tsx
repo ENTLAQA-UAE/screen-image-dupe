@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSearchParams, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import confetti from "canvas-confetti";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,8 +23,40 @@ import {
   Download,
   Timer,
   Building2,
+  Sparkles,
 } from "lucide-react";
 import { openParticipantPrintPreview } from "@/lib/printPreview";
+
+// Celebration confetti function
+const triggerCelebration = () => {
+  const duration = 3000;
+  const animationEnd = Date.now() + duration;
+  const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+  const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+  const interval = window.setInterval(() => {
+    const timeLeft = animationEnd - Date.now();
+    if (timeLeft <= 0) {
+      return clearInterval(interval);
+    }
+
+    const particleCount = 50 * (timeLeft / duration);
+
+    confetti({
+      ...defaults,
+      particleCount,
+      origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+      colors: ['#10b981', '#34d399', '#6ee7b7', '#fbbf24', '#f59e0b'],
+    });
+    confetti({
+      ...defaults,
+      particleCount,
+      origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+      colors: ['#3b82f6', '#60a5fa', '#93c5fd', '#a855f7', '#c084fc'],
+    });
+  }, 250);
+};
 
 // Bilingual translations
 const translations = {
@@ -1233,31 +1266,67 @@ export default function TakeAssessment() {
     const orgData = completedData?.organization || assessmentData?.organization;
     const orgLogo = orgData?.logoUrl;
     const orgName = orgData?.name;
+    const completedPrimaryColor = orgData?.primaryColor || primaryColor;
+    const confettiTriggered = useRef(false);
+    
+    useEffect(() => {
+      if (!confettiTriggered.current) {
+        confettiTriggered.current = true;
+        triggerCelebration();
+      }
+    }, []);
     
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-green-50 to-teal-100 p-4" dir={isArabic ? "rtl" : "ltr"}>
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: "spring", duration: 0.6 }}
           className="max-w-md w-full"
         >
           <Card className="text-center shadow-2xl border-0 overflow-hidden">
-            <div className="p-6 bg-gradient-to-r from-emerald-500 to-green-500">
+            <div 
+              className="p-6 text-white"
+              style={{ 
+                background: completedPrimaryColor ? `linear-gradient(135deg, ${completedPrimaryColor}, ${completedPrimaryColor}dd)` : 'linear-gradient(135deg, #10b981, #059669)'
+              }}
+            >
               {orgLogo ? (
-                <img src={orgLogo} alt={orgName} className="h-12 mx-auto object-contain brightness-0 invert" />
+                <img src={orgLogo} alt={orgName} className="h-14 mx-auto object-contain brightness-0 invert" />
               ) : orgName ? (
-                <div className="flex items-center justify-center gap-2 text-white">
-                  <Building2 className="w-5 h-5" />
-                  <span className="font-semibold">{orgName}</span>
+                <div className="flex items-center justify-center gap-2">
+                  <Building2 className="w-6 h-6" />
+                  <span className="font-semibold text-lg">{orgName}</span>
                 </div>
               ) : null}
             </div>
             <CardContent className="pt-8 pb-10">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center mx-auto mb-6 shadow-xl">
-                <CheckCircle2 className="w-10 h-10 text-white" />
-              </div>
-              <h1 className="text-3xl font-bold mb-3 font-display text-slate-800">{t.thankYou}</h1>
-              <p className="text-slate-500">{t.submittedSuccess}</p>
+              <motion.div 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", delay: 0.2, duration: 0.5 }}
+                className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center mx-auto mb-6 shadow-xl relative"
+              >
+                <CheckCircle2 className="w-12 h-12 text-white" />
+                <motion.div
+                  className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-400 to-green-500"
+                  initial={{ scale: 1, opacity: 0.5 }}
+                  animate={{ scale: 1.5, opacity: 0 }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <Sparkles className="w-5 h-5 text-amber-500" />
+                  <h1 className="text-3xl font-bold font-display text-slate-800">{t.thankYou}</h1>
+                  <Sparkles className="w-5 h-5 text-amber-500" />
+                </div>
+                <p className="text-slate-500">{t.submittedSuccess}</p>
+              </motion.div>
             </CardContent>
           </Card>
         </motion.div>
@@ -1274,6 +1343,7 @@ export default function TakeAssessment() {
     const orgLogo = orgData?.logoUrl;
     const orgName = orgData?.name || "Organization";
     const resultPrimaryColor = orgData?.primaryColor || primaryColor;
+    const confettiTriggered = useRef(false);
 
     const participantName = completedData?.participant?.full_name || submissionResults?.results?.participantName || regForm.full_name || "Participant";
     const participantEmail = completedData?.participant?.email || submissionResults?.results?.participantEmail || regForm.email || "";
@@ -1281,6 +1351,13 @@ export default function TakeAssessment() {
     const assessmentType = completedData?.assessment?.type || assessmentData?.assessment?.type || "general";
     const groupName = completedData?.assessmentGroup?.name || assessmentData?.assessmentGroup?.name || "Assessment Group";
     const completedAt = completedData?.participant?.completed_at || new Date().toISOString();
+
+    useEffect(() => {
+      if (!confettiTriggered.current) {
+        confettiTriggered.current = true;
+        triggerCelebration();
+      }
+    }, []);
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-100 p-4" dir={isArabic ? "rtl" : "ltr"}>
@@ -1305,10 +1382,25 @@ export default function TakeAssessment() {
                     <span className="font-semibold text-lg">{orgName}</span>
                   </div>
                 )}
-                <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-4 shadow-xl">
-                  <CheckCircle2 className="w-10 h-10 text-white" />
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", delay: 0.1, duration: 0.5 }}
+                  className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-4 shadow-xl relative"
+                >
+                  <CheckCircle2 className="w-12 h-12 text-white" />
+                  <motion.div
+                    className="absolute inset-0 rounded-full bg-white/20"
+                    initial={{ scale: 1, opacity: 0.5 }}
+                    animate={{ scale: 1.5, opacity: 0 }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  />
+                </motion.div>
+                <div className="flex items-center justify-center gap-2">
+                  <Sparkles className="w-5 h-5 text-amber-300" />
+                  <h1 className="text-3xl font-display font-bold">{t.assessmentComplete}</h1>
+                  <Sparkles className="w-5 h-5 text-amber-300" />
                 </div>
-                <h1 className="text-3xl font-display font-bold">{t.assessmentComplete}</h1>
                 <p className="text-white/80 mt-2">{assessmentTitle}</p>
                 <p className="text-sm text-white/70 mt-2">
                   {participantName} • {new Date(completedAt).toLocaleDateString(isArabic ? "ar-SA" : "en-US", {
