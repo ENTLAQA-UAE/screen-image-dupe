@@ -1283,147 +1283,199 @@ export default function TakeAssessment() {
     const completedAt = completedData?.participant?.completed_at || new Date().toISOString();
 
     return (
-      <div className="min-h-screen bg-background p-4" dir={isArabic ? "rtl" : "ltr"}>
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-100 p-4" dir={isArabic ? "rtl" : "ltr"}>
         <div className="max-w-3xl mx-auto py-8">
-          <Card className="shadow-elegant overflow-hidden">
-            {/* Header with branding */}
-            <div 
-              className="p-6 text-center"
-              style={{ 
-                background: `linear-gradient(135deg, ${resultPrimaryColor}15, ${resultPrimaryColor}05)`,
-                borderBottom: `3px solid ${resultPrimaryColor}40`
-              }}
-            >
-              {orgLogo ? (
-                <img src={orgLogo} alt={orgName} className="h-12 mx-auto mb-4 object-contain" />
-              ) : (
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <Building2 className="w-6 h-6" style={{ color: resultPrimaryColor }} />
-                  <span className="font-semibold text-lg">{orgName}</span>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Card className="shadow-2xl border-0 overflow-hidden">
+              {/* Header with gradient branding */}
+              <div 
+                className="p-6 text-center text-white"
+                style={{ 
+                  background: resultPrimaryColor ? `linear-gradient(135deg, ${resultPrimaryColor}, ${resultPrimaryColor}dd)` : 'linear-gradient(135deg, #10b981, #059669)'
+                }}
+              >
+                {orgLogo ? (
+                  <img src={orgLogo} alt={orgName} className="h-14 mx-auto mb-4 object-contain brightness-0 invert" />
+                ) : (
+                  <div className="flex items-center justify-center gap-2 mb-4">
+                    <Building2 className="w-6 h-6" />
+                    <span className="font-semibold text-lg">{orgName}</span>
+                  </div>
+                )}
+                <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-4 shadow-xl">
+                  <CheckCircle2 className="w-10 h-10 text-white" />
                 </div>
-              )}
-              <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="w-8 h-8 text-success" />
+                <h1 className="text-3xl font-display font-bold">{t.assessmentComplete}</h1>
+                <p className="text-white/80 mt-2">{assessmentTitle}</p>
+                <p className="text-sm text-white/70 mt-2">
+                  {participantName} • {new Date(completedAt).toLocaleDateString(isArabic ? "ar-SA" : "en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
               </div>
-              <h1 className="text-2xl font-display font-bold">{t.assessmentComplete}</h1>
-              <p className="text-muted-foreground mt-1">{assessmentTitle}</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                {participantName} • {new Date(completedAt).toLocaleDateString(isArabic ? "ar-SA" : "en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </p>
-            </div>
 
-            <CardContent className="p-6 space-y-6">
-              {isGraded && scoreSummary && (
-                <div className="text-center p-8 bg-muted rounded-xl">
-                  <div 
-                    className="text-6xl font-bold mb-2 font-display" 
-                    style={{ color: resultPrimaryColor }}
+              <CardContent className="p-6 space-y-6">
+                {isGraded && scoreSummary && (
+                  <motion.div 
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-center p-8 bg-gradient-to-br from-emerald-50 to-green-100 rounded-2xl shadow-inner"
                   >
-                    {scoreSummary.percentage}%
-                  </div>
-                  <p className="text-muted-foreground text-lg">
-                    {scoreSummary.correctCount} {t.of} {scoreSummary.totalPossible} {t.correct}
-                  </p>
-                  <div 
-                    className="mt-4 inline-block px-4 py-2 rounded-full font-semibold"
-                    style={{ 
-                      backgroundColor: `${resultPrimaryColor}15`,
-                      color: resultPrimaryColor
-                    }}
-                  >
-                    {t.grade}: {scoreSummary.grade}
-                  </div>
-                </div>
-              )}
-
-              {!isGraded && scoreSummary?.traits && (
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-lg font-display">{t.yourProfile}</h3>
-                  <div className="space-y-3">
-                    {Object.entries(scoreSummary.traits).map(([trait, score]: [string, any]) => (
-                      <div key={trait} className="p-4 bg-muted rounded-xl">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="capitalize font-medium">{trait}</span>
-                          <span className="text-sm font-semibold" style={{ color: resultPrimaryColor }}>
-                            {typeof score === 'number' ? score.toFixed(1) : score}/5
-                          </span>
-                        </div>
-                        <div className="h-2 bg-background rounded-full overflow-hidden">
-                          <div 
-                            className="h-full rounded-full transition-all duration-500"
-                            style={{ 
-                              width: `${(typeof score === 'number' ? score : parseFloat(score)) / 5 * 100}%`,
-                              backgroundColor: resultPrimaryColor
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {aiReport && (
-                <div className="border-t pt-6">
-                  <h3 className="font-semibold text-lg font-display mb-4">{t.personalizedFeedback}</h3>
-                  <div 
-                    className="prose prose-sm max-w-none p-5 rounded-xl border"
-                    style={{ 
-                      backgroundColor: `${resultPrimaryColor}05`,
-                      borderColor: `${resultPrimaryColor}20`
-                    }}
-                  >
-                    <p 
-                      dir={isArabic ? "rtl" : "ltr"}
-                      className={`whitespace-pre-wrap leading-relaxed text-foreground/80 ${isArabic ? "text-right" : "text-left"}`}
-                      style={{ unicodeBidi: "plaintext" }}
+                    <div 
+                      className="text-7xl font-bold mb-3 font-display bg-gradient-to-r from-emerald-600 to-green-500 bg-clip-text text-transparent"
                     >
-                      {aiReport}
+                      {scoreSummary.percentage}%
+                    </div>
+                    <p className="text-slate-600 text-lg">
+                      {scoreSummary.correctCount} {t.of} {scoreSummary.totalPossible} {t.correct}
                     </p>
-                  </div>
-                </div>
-              )}
+                    <div 
+                      className="mt-4 inline-block px-6 py-2 rounded-full font-semibold text-white shadow-lg"
+                      style={{ 
+                        background: resultPrimaryColor ? `linear-gradient(135deg, ${resultPrimaryColor}, ${resultPrimaryColor}dd)` : 'linear-gradient(135deg, #10b981, #059669)'
+                      }}
+                    >
+                      {t.grade}: {scoreSummary.grade}
+                    </div>
+                  </motion.div>
+                )}
 
-              {(results?.allowPdfDownload || completedData?.allowPdfDownload) && (
-                <div className="text-center pt-4 border-t">
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
-                    className="transition-smooth"
-                    onClick={() => {
-                      openParticipantPrintPreview(
-                        {
-                          participantName,
-                          participantEmail,
-                          employeeCode: completedData?.participant?.employee_code,
-                          department: completedData?.participant?.department,
-                          groupName,
-                          assessmentTitle,
-                          assessmentType,
-                          completedAt,
-                          scoreSummary: scoreSummary || null,
-                          aiReport: aiReport || null,
-                        },
-                        {
-                          name: orgName,
-                          logoUrl: orgLogo,
-                          primaryColor: resultPrimaryColor,
-                        },
-                        isArabic ? 'ar' : 'en'
-                      );
-                    }}
+                {!isGraded && scoreSummary?.traits && (
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-lg font-display text-slate-800 flex items-center gap-2">
+                      <div 
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-white"
+                        style={{ 
+                          background: resultPrimaryColor ? `linear-gradient(135deg, ${resultPrimaryColor}, ${resultPrimaryColor}dd)` : 'linear-gradient(135deg, #10b981, #059669)'
+                        }}
+                      >
+                        <FileText className="w-4 h-4" />
+                      </div>
+                      {t.yourProfile}
+                    </h3>
+                    <div className="grid gap-3">
+                      {Object.entries(scoreSummary.traits).map(([trait, score]: [string, any], index) => (
+                        <motion.div 
+                          key={trait} 
+                          initial={{ opacity: 0, x: isArabic ? 20 : -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.1 * index }}
+                          className="p-4 bg-gradient-to-r from-slate-50 to-white rounded-xl border border-slate-100 shadow-sm"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="capitalize font-medium text-slate-700">{trait}</span>
+                            <span 
+                              className="text-sm font-bold px-3 py-1 rounded-full text-white"
+                              style={{ 
+                                background: resultPrimaryColor ? `linear-gradient(135deg, ${resultPrimaryColor}, ${resultPrimaryColor}dd)` : 'linear-gradient(135deg, #10b981, #059669)'
+                              }}
+                            >
+                              {typeof score === 'number' ? score.toFixed(1) : score}/5
+                            </span>
+                          </div>
+                          <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                            <motion.div 
+                              className="h-full rounded-full"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${(typeof score === 'number' ? score : parseFloat(score)) / 5 * 100}%` }}
+                              transition={{ duration: 0.8, delay: 0.2 + (0.1 * index) }}
+                              style={{ 
+                                background: resultPrimaryColor ? `linear-gradient(90deg, ${resultPrimaryColor}, ${resultPrimaryColor}aa)` : 'linear-gradient(90deg, #10b981, #34d399)'
+                              }}
+                            />
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {aiReport && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="border-t pt-6"
                   >
-                    <Download className={`w-4 h-4 ${isArabic ? "ml-2" : "mr-2"}`} />
-                    {t.downloadPdf}
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    <h3 className="font-semibold text-lg font-display text-slate-800 mb-4 flex items-center gap-2">
+                      <div 
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-white"
+                        style={{ 
+                          background: resultPrimaryColor ? `linear-gradient(135deg, ${resultPrimaryColor}, ${resultPrimaryColor}dd)` : 'linear-gradient(135deg, #10b981, #059669)'
+                        }}
+                      >
+                        <FileText className="w-4 h-4" />
+                      </div>
+                      {t.personalizedFeedback}
+                    </h3>
+                    <div 
+                      className="p-6 rounded-2xl border-2 shadow-inner"
+                      style={{ 
+                        backgroundColor: `${resultPrimaryColor}08`,
+                        borderColor: `${resultPrimaryColor}30`
+                      }}
+                    >
+                      <p 
+                        dir={isArabic ? "rtl" : "ltr"}
+                        className={`whitespace-pre-wrap leading-relaxed text-slate-700 ${isArabic ? "text-right" : "text-left"}`}
+                        style={{ unicodeBidi: "plaintext" }}
+                      >
+                        {aiReport}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {(results?.allowPdfDownload || completedData?.allowPdfDownload) && (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="text-center pt-6 border-t"
+                  >
+                    <Button 
+                      size="lg" 
+                      className="h-14 px-8 text-base font-semibold shadow-xl hover:shadow-2xl transition-all text-white"
+                      style={{ 
+                        background: resultPrimaryColor ? `linear-gradient(135deg, ${resultPrimaryColor}, ${resultPrimaryColor}dd)` : 'linear-gradient(135deg, #10b981, #059669)'
+                      }}
+                      onClick={() => {
+                        openParticipantPrintPreview(
+                          {
+                            participantName,
+                            participantEmail,
+                            employeeCode: completedData?.participant?.employee_code,
+                            department: completedData?.participant?.department,
+                            groupName,
+                            assessmentTitle,
+                            assessmentType,
+                            completedAt,
+                            scoreSummary: scoreSummary || null,
+                            aiReport: aiReport || null,
+                          },
+                          {
+                            name: orgName,
+                            logoUrl: orgLogo,
+                            primaryColor: resultPrimaryColor,
+                          },
+                          isArabic ? 'ar' : 'en'
+                        );
+                      }}
+                    >
+                      <Download className={`w-5 h-5 ${isArabic ? "ml-2" : "mr-2"}`} />
+                      {t.downloadPdf}
+                    </Button>
+                  </motion.div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </div>
     );
