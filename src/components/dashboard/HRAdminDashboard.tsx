@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { LiveProgressDashboard } from "@/components/dashboard/LiveProgressDashboard";
 import {
   Plus,
   FileText,
@@ -26,6 +27,7 @@ import {
   Heart,
   MessageSquare,
   Languages,
+  Activity,
 } from "lucide-react";
 
 interface AssessmentGroup {
@@ -288,18 +290,18 @@ export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardP
   ];
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <motion.h1
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-2xl font-display font-bold text-foreground mb-1"
+            className="text-xl sm:text-2xl font-display font-bold text-foreground mb-1"
           >
             {t.dashboard.welcome}, {userName}
           </motion.h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             {t.hrDashboard.activityOverview}
           </p>
         </div>
@@ -310,7 +312,7 @@ export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardP
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
       >
         {quickActions.map((action, index) => (
           <motion.button
@@ -319,12 +321,21 @@ export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardP
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 + index * 0.05 }}
             onClick={() => navigate(action.href)}
-            className={`flex items-center gap-3 p-4 rounded-xl transition-all ${action.color}`}
+            className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-xl transition-all text-left ${action.color}`}
           >
-            <action.icon className="w-5 h-5" />
-            <span className="font-medium">{action.label}</span>
+            <action.icon className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+            <span className="font-medium text-xs sm:text-sm truncate">{action.label}</span>
           </motion.button>
         ))}
+      </motion.div>
+
+      {/* Live Progress Dashboard */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+      >
+        <LiveProgressDashboard organizationId={organizationId} />
       </motion.div>
 
       {/* Stats Grid - Colorful Gradient Cards */}
@@ -332,68 +343,68 @@ export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardP
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="grid grid-cols-2 md:grid-cols-5 gap-4"
+        className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4"
       >
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-0 shadow-md p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-              <FolderKanban className="w-6 h-6 text-white" />
+        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-0 shadow-md p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shrink-0">
+              <FolderKanban className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <div>
-              <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{stats.activeGroups}</p>
-              <p className="text-xs text-blue-600/70 dark:text-blue-400/70">{t.hrDashboard.activeGroups}</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 border-0 shadow-md p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg">
-              <Clock className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{stats.pendingAssessments}</p>
-              <p className="text-xs text-amber-600/70 dark:text-amber-400/70">{t.hrDashboard.pending}</p>
+            <div className="min-w-0">
+              <p className="text-xl sm:text-2xl font-bold text-blue-700 dark:text-blue-300">{stats.activeGroups}</p>
+              <p className="text-[10px] sm:text-xs text-blue-600/70 dark:text-blue-400/70 truncate">{t.hrDashboard.activeGroups}</p>
             </div>
           </div>
         </Card>
-        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/30 dark:to-emerald-900/20 border-0 shadow-md p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg">
-              <CheckCircle2 className="w-6 h-6 text-white" />
+        <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 border-0 shadow-md p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shrink-0">
+              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <div>
-              <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{stats.completedToday}</p>
-              <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">{t.hrDashboard.completedToday}</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-950/30 dark:to-violet-900/20 border-0 shadow-md p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-lg">
-              <Users className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-violet-700 dark:text-violet-300">{stats.totalParticipants}</p>
-              <p className="text-xs text-violet-600/70 dark:text-violet-400/70">{t.hrDashboard.totalParticipants}</p>
+            <div className="min-w-0">
+              <p className="text-xl sm:text-2xl font-bold text-amber-700 dark:text-amber-300">{stats.pendingAssessments}</p>
+              <p className="text-[10px] sm:text-xs text-amber-600/70 dark:text-amber-400/70 truncate">{t.hrDashboard.pending}</p>
             </div>
           </div>
         </Card>
-        <Card className="bg-gradient-to-br from-rose-50 to-pink-100 dark:from-rose-950/30 dark:to-pink-900/20 border-0 shadow-md p-4">
+        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/30 dark:to-emerald-900/20 border-0 shadow-md p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shrink-0">
+              <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xl sm:text-2xl font-bold text-emerald-700 dark:text-emerald-300">{stats.completedToday}</p>
+              <p className="text-[10px] sm:text-xs text-emerald-600/70 dark:text-emerald-400/70 truncate">{t.hrDashboard.completedToday}</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-950/30 dark:to-violet-900/20 border-0 shadow-md p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-lg shrink-0">
+              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xl sm:text-2xl font-bold text-violet-700 dark:text-violet-300">{stats.totalParticipants}</p>
+              <p className="text-[10px] sm:text-xs text-violet-600/70 dark:text-violet-400/70 truncate">{t.hrDashboard.totalParticipants}</p>
+            </div>
+          </div>
+        </Card>
+        <Card className="bg-gradient-to-br from-rose-50 to-pink-100 dark:from-rose-950/30 dark:to-pink-900/20 border-0 shadow-md p-3 sm:p-4">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs text-rose-600/70 dark:text-rose-400/70">{t.hrDashboard.completionRate}</p>
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-xs text-rose-600/70 dark:text-rose-400/70">{t.hrDashboard.completionRate}</p>
             </div>
-            <div className="relative">
-              <svg width="56" height="56" className="-rotate-90">
-                <circle cx="28" cy="28" r="22" fill="none" strokeWidth="5" className="stroke-rose-200 dark:stroke-rose-800/50" />
+            <div className="relative w-12 h-12 sm:w-14 sm:h-14 shrink-0">
+              <svg className="w-full h-full -rotate-90">
+                <circle cx="50%" cy="50%" r="40%" fill="none" strokeWidth="4" className="stroke-rose-200 dark:stroke-rose-800/50" />
                 <circle
-                  cx="28" cy="28" r="22" fill="none" strokeWidth="5" strokeLinecap="round"
-                  strokeDasharray={2 * Math.PI * 22}
-                  strokeDashoffset={2 * Math.PI * 22 * (1 - stats.completionRate / 100)}
+                  cx="50%" cy="50%" r="40%" fill="none" strokeWidth="4" strokeLinecap="round"
+                  strokeDasharray={`${2 * Math.PI * 40}%`}
+                  strokeDashoffset={`${2 * Math.PI * 40 * (1 - stats.completionRate / 100)}%`}
                   className="stroke-rose-500 transition-all duration-700 ease-out"
                 />
               </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-rose-700 dark:text-rose-300">
+              <span className="absolute inset-0 flex items-center justify-center text-xs sm:text-sm font-bold text-rose-700 dark:text-rose-300">
                 {stats.completionRate}%
               </span>
             </div>
@@ -401,7 +412,7 @@ export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardP
         </Card>
       </motion.div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Groups Needing Attention */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
