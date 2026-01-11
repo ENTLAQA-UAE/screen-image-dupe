@@ -26,6 +26,12 @@ import {
   Sparkles,
 } from "lucide-react";
 import { openParticipantPrintPreview } from "@/lib/printPreview";
+import { useSwipeGesture } from "@/hooks/useSwipeGesture";
+import { useOfflineSupport } from "@/hooks/useOfflineSupport";
+import { SwipeIndicator } from "@/components/assessment/SwipeIndicator";
+import { OfflineIndicator } from "@/components/assessment/OfflineIndicator";
+import { MobileQuestionCard } from "@/components/assessment/MobileQuestionCard";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Celebration confetti function
 const triggerCelebration = () => {
@@ -285,6 +291,10 @@ export default function TakeAssessment() {
   const [timerActive, setTimerActive] = useState(false);
   const [shownWarnings, setShownWarnings] = useState<Set<number>>(new Set());
 
+  // Mobile and offline support
+  const isMobile = useIsMobile();
+  const { isOnline, hasPendingData, saveOfflineData, loadOfflineData, clearOfflineData } = useOfflineSupport();
+
   // State for error pages with branding
   const [errorOrganization, setErrorOrganization] = useState<{
     name: string;
@@ -514,21 +524,35 @@ export default function TakeAssessment() {
   };
 
   const handleAnswer = (questionId: string, value: any) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: value }));
+    setAnswers((prev) => {
+      const newAnswers = { ...prev, [questionId]: value };
+      // Save to offline storage for recovery
+      saveOfflineData({
+        answers: newAnswers,
+        participantId,
+        assessmentId: assessmentData?.assessment.id || null,
+      });
+      return newAnswers;
+    });
   };
 
   const handleMultiAnswer = (questionId: string, optionValue: number, checked: boolean) => {
     setAnswers((prev) => {
       const current = prev[questionId] || [];
-      if (checked) {
-        return { ...prev, [questionId]: [...current, optionValue] };
-      } else {
-        return { ...prev, [questionId]: current.filter((v: number) => v !== optionValue) };
-      }
+      const newAnswers = checked
+        ? { ...prev, [questionId]: [...current, optionValue] }
+        : { ...prev, [questionId]: current.filter((v: number) => v !== optionValue) };
+      // Save to offline storage for recovery
+      saveOfflineData({
+        answers: newAnswers,
+        participantId,
+        assessmentId: assessmentData?.assessment.id || null,
+      });
+      return newAnswers;
     });
   };
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (!assessmentData) return;
     
     const currentQuestion = assessmentData.questions[currentQuestionIndex];
@@ -542,13 +566,49 @@ export default function TakeAssessment() {
     } else {
       handleSubmit();
     }
-  };
+  }, [assessmentData, currentQuestionIndex, answers, t.selectAnswer]);
 
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex((prev) => prev - 1);
     }
-  };
+  }, [currentQuestionIndex]);
+
+  // Swipe gesture handlers - adjusted for RTL
+  const handleSwipeLeft = useCallback(() => {
+    if (!assessmentData) return;
+    const currentQuestion = assessmentData.questions[currentQuestionIndex];
+    
+    // In RTL, swipe left = previous, in LTR swipe left = next
+    if (isArabic) {
+      handlePrevious();
+    } else {
+      if (answers[currentQuestion.id] !== undefined) {
+        handleNext();
+      }
+    }
+  }, [assessmentData, currentQuestionIndex, answers, isArabic, handleNext, handlePrevious]);
+
+  const handleSwipeRight = useCallback(() => {
+    if (!assessmentData) return;
+    const currentQuestion = assessmentData.questions[currentQuestionIndex];
+    
+    // In RTL, swipe right = next, in LTR swipe right = previous
+    if (isArabic) {
+      if (answers[currentQuestion.id] !== undefined) {
+        handleNext();
+      }
+    } else {
+      handlePrevious();
+    }
+  }, [assessmentData, currentQuestionIndex, answers, isArabic, handleNext, handlePrevious]);
+
+  // Swipe gesture hook
+  const { swipeState, handlers: swipeHandlers } = useSwipeGesture({
+    onSwipeLeft: handleSwipeLeft,
+    onSwipeRight: handleSwipeRight,
+    threshold: 80,
+  });
 
   const handleSubmit = useCallback(async () => {
     if (!assessmentData || !participantId) return;
@@ -1059,27 +1119,48 @@ export default function TakeAssessment() {
     const question = assessmentData.questions[currentQuestionIndex];
     const progress = ((currentQuestionIndex + 1) / assessmentData.questions.length) * 100;
     const isLast = currentQuestionIndex === assessmentData.questions.length - 1;
-    const isMultiSelect = question.type === "mcq_multi";
+    const isFirst = currentQuestionIndex === 0;
+    const canSwipeNext = answers[question.id] !== undefined && !isLast;
+    const canSwipePrev = !isFirst;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100" dir={isArabic ? "rtl" : "ltr"}>
+      <div 
+        className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 overflow-x-hidden" 
+        dir={isArabic ? "rtl" : "ltr"}
+        {...(isMobile ? swipeHandlers : {})}
+      >
+        {/* Offline indicator */}
+        <OfflineIndicator isOnline={isOnline} hasPendingData={hasPendingData} isArabic={isArabic} />
+
+        {/* Swipe indicators for mobile */}
+        {isMobile && (
+          <SwipeIndicator 
+            direction={swipeState.direction} 
+            offsetX={swipeState.offsetX}
+            isArabic={isArabic}
+            canSwipeLeft={isArabic ? canSwipePrev : canSwipeNext}
+            canSwipeRight={isArabic ? canSwipeNext : canSwipePrev}
+          />
+        )}
+
         {/* Header with progress and timer */}
         <div 
           className="sticky top-0 z-10 backdrop-blur-md border-b border-white/20 shadow-sm"
           style={{ 
-            background: primaryColor ? `linear-gradient(135deg, ${primaryColor}ee, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6ee, #6366f1dd)'
+            background: primaryColor ? `linear-gradient(135deg, ${primaryColor}ee, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6ee, #6366f1dd)',
+            paddingTop: !isOnline ? '2.5rem' : undefined,
           }}
         >
-          <div className="max-w-3xl mx-auto px-4 py-4">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-white/90 font-medium">
+          <div className="max-w-3xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <span className="text-xs sm:text-sm text-white/90 font-medium">
                 {t.questionOf
                   .replace("{current}", String(currentQuestionIndex + 1))
                   .replace("{total}", String(assessmentData.questions.length))}
               </span>
               {timeRemaining !== null && (
                 <motion.div 
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold ${
+                  className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full font-semibold text-xs sm:text-sm ${
                     timeRemaining < 60 ? "bg-red-500 text-white" : 
                     timeRemaining < 300 ? "bg-amber-400 text-amber-900" : 
                     "bg-white/20 text-white backdrop-blur-sm"
@@ -1087,27 +1168,49 @@ export default function TakeAssessment() {
                   animate={timeRemaining < 60 ? { scale: [1, 1.05, 1] } : {}}
                   transition={{ repeat: Infinity, duration: 1 }}
                 >
-                  <Timer className={`w-4 h-4 ${timeRemaining < 60 ? "animate-pulse" : ""}`} />
-                  <span className="font-mono text-sm">{formatTime(timeRemaining)}</span>
+                  <Timer className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${timeRemaining < 60 ? "animate-pulse" : ""}`} />
+                  <span className="font-mono">{formatTime(timeRemaining)}</span>
                   {timeRemaining < 60 && (
-                    <AlertTriangle className="w-4 h-4 animate-pulse" />
+                    <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-pulse" />
                   )}
                 </motion.div>
               )}
             </div>
-            <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-              <motion.div 
-                className="h-full bg-white rounded-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.3 }}
-              />
+            {/* Progress bar with dots for mobile */}
+            <div className="relative">
+              <div className="h-1.5 sm:h-2 bg-white/20 rounded-full overflow-hidden">
+                <motion.div 
+                  className="h-full bg-white rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.3 }}
+                />
+              </div>
+              {/* Question dots for mobile - only show if 10 or fewer questions */}
+              {isMobile && assessmentData.questions.length <= 10 && (
+                <div className="flex justify-between mt-2 px-1">
+                  {assessmentData.questions.map((_, idx) => (
+                    <motion.div
+                      key={idx}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        idx < currentQuestionIndex 
+                          ? 'bg-white' 
+                          : idx === currentQuestionIndex 
+                            ? 'bg-white scale-125 ring-2 ring-white/50' 
+                            : 'bg-white/30'
+                      }`}
+                      animate={idx === currentQuestionIndex ? { scale: [1, 1.2, 1] } : {}}
+                      transition={{ duration: 0.5 }}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Question content */}
-        <div className="max-w-3xl mx-auto px-4 py-8">
+        {/* Question content with swipe support */}
+        <div className="max-w-3xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={question.id}
@@ -1116,126 +1219,154 @@ export default function TakeAssessment() {
               exit={{ opacity: 0, x: isArabic ? 20 : -20 }}
               transition={{ duration: 0.2 }}
             >
-              <Card className="shadow-2xl border-0 overflow-hidden">
-                <CardContent className="p-8" style={{ textAlign: isArabic ? 'right' : 'left' }}>
-                  <div className="flex items-center gap-3 mb-6">
-                    <div 
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg"
-                      style={{ 
-                        background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6, #6366f1)'
-                      }}
-                    >
-                      {currentQuestionIndex + 1}
+              {isMobile ? (
+                <MobileQuestionCard
+                  question={question}
+                  questionIndex={currentQuestionIndex}
+                  totalQuestions={assessmentData.questions.length}
+                  answer={answers[question.id]}
+                  onAnswer={handleAnswer}
+                  onMultiAnswer={handleMultiAnswer}
+                  isArabic={isArabic}
+                  primaryColor={primaryColor}
+                  swipeOffset={swipeState.offsetX}
+                />
+              ) : (
+                <Card className="shadow-2xl border-0 overflow-hidden">
+                  <CardContent className="p-6 sm:p-8" style={{ textAlign: isArabic ? 'right' : 'left' }}>
+                    <div className="flex items-center gap-3 mb-6">
+                      <div 
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg"
+                        style={{ 
+                          background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6, #6366f1)'
+                        }}
+                      >
+                        {currentQuestionIndex + 1}
+                      </div>
+                      <div className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent" />
                     </div>
-                    <div className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent" />
-                  </div>
-                  
-                  <h2 
-                    className={`text-xl font-semibold mb-8 font-display leading-relaxed text-slate-800 ${isArabic ? 'text-right' : 'text-left'}`}
-                    style={{ unicodeBidi: 'plaintext' }}
-                  >
-                    {question.text}
-                  </h2>
+                    
+                    <h2 
+                      className={`text-lg sm:text-xl font-semibold mb-6 sm:mb-8 font-display leading-relaxed text-slate-800 ${isArabic ? 'text-right' : 'text-left'}`}
+                      style={{ unicodeBidi: 'plaintext' }}
+                    >
+                      {question.text}
+                    </h2>
 
-                  {isMultiSelect ? (
-                    <div className="space-y-3">
-                      {question.options.map((option, index) => {
-                        const optionValue = option.value ?? index;
-                        const isChecked = (answers[question.id] || []).includes(optionValue);
-                        return (
-                          <motion.div 
-                            key={index}
-                            whileHover={{ scale: 1.01 }}
-                            whileTap={{ scale: 0.99 }}
-                            className={`flex items-center gap-4 p-5 rounded-xl border-2 cursor-pointer transition-all ${
-                              isChecked 
-                                ? "border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-md" 
-                                : "border-slate-200 hover:border-blue-300 hover:bg-slate-50"
-                            }`}
-                            onClick={() => handleMultiAnswer(question.id, optionValue, !isChecked)}
-                          >
-                            <Checkbox
-                              checked={isChecked}
-                              onCheckedChange={(checked) => handleMultiAnswer(question.id, optionValue, !!checked)}
-                              className="w-5 h-5"
-                            />
-                            <Label 
-                              className={`flex-1 cursor-pointer text-base text-slate-700 ${isArabic ? 'text-right' : 'text-left'}`}
-                              style={{ unicodeBidi: 'plaintext' }}
+                    {question.type === "mcq_multi" ? (
+                      <div className="space-y-2 sm:space-y-3">
+                        {question.options.map((option, index) => {
+                          const optionValue = option.value ?? index;
+                          const isChecked = (answers[question.id] || []).includes(optionValue);
+                          return (
+                            <motion.div 
+                              key={index}
+                              whileHover={{ scale: 1.01 }}
+                              whileTap={{ scale: 0.98 }}
+                              className={`flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-xl border-2 cursor-pointer transition-all ${
+                                isChecked 
+                                  ? "border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-md" 
+                                  : "border-slate-200 hover:border-blue-300 hover:bg-slate-50"
+                              }`}
+                              onClick={() => handleMultiAnswer(question.id, optionValue, !isChecked)}
                             >
-                              {option.text}
-                            </Label>
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <RadioGroup
-                      value={answers[question.id]?.toString() || ""}
-                      onValueChange={(value) => {
-                        handleAnswer(question.id, parseInt(value));
-                      }}
-                      className="space-y-3"
-                    >
-                      {question.options.map((option, index) => {
-                        const optionValue = option.value ?? index;
-                        const isSelected = answers[question.id] === optionValue;
-                        return (
-                          <motion.div 
-                            key={index}
-                            whileHover={{ scale: 1.01 }}
-                            whileTap={{ scale: 0.99 }}
-                            className={`flex items-center gap-4 p-5 rounded-xl border-2 cursor-pointer transition-all ${
-                              isSelected 
-                                ? "border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-md" 
-                                : "border-slate-200 hover:border-blue-300 hover:bg-slate-50"
-                            }`}
-                            onClick={() => handleAnswer(question.id, optionValue)}
-                          >
-                            <RadioGroupItem
-                              value={optionValue.toString()}
-                              id={`option-${index}`}
-                              className="w-5 h-5"
-                            />
-                            <Label 
-                              htmlFor={`option-${index}`} 
-                              className={`flex-1 cursor-pointer text-base text-slate-700 ${isArabic ? 'text-right' : 'text-left'}`}
-                              style={{ unicodeBidi: 'plaintext' }}
+                              <Checkbox
+                                checked={isChecked}
+                                onCheckedChange={(checked) => handleMultiAnswer(question.id, optionValue, !!checked)}
+                                className="w-5 h-5"
+                              />
+                              <Label 
+                                className={`flex-1 cursor-pointer text-sm sm:text-base text-slate-700 ${isArabic ? 'text-right' : 'text-left'}`}
+                                style={{ unicodeBidi: 'plaintext' }}
+                              >
+                                {option.text}
+                              </Label>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <RadioGroup
+                        value={answers[question.id]?.toString() || ""}
+                        onValueChange={(value) => {
+                          handleAnswer(question.id, parseInt(value));
+                        }}
+                        className="space-y-2 sm:space-y-3"
+                      >
+                        {question.options.map((option, index) => {
+                          const optionValue = option.value ?? index;
+                          const isSelected = answers[question.id] === optionValue;
+                          return (
+                            <motion.div 
+                              key={index}
+                              whileHover={{ scale: 1.01 }}
+                              whileTap={{ scale: 0.98 }}
+                              className={`flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-xl border-2 cursor-pointer transition-all ${
+                                isSelected 
+                                  ? "border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-md" 
+                                  : "border-slate-200 hover:border-blue-300 hover:bg-slate-50"
+                              }`}
+                              onClick={() => handleAnswer(question.id, optionValue)}
                             >
-                              {option.text}
-                            </Label>
-                          </motion.div>
-                        );
-                      })}
-                    </RadioGroup>
-                  )}
-                </CardContent>
-              </Card>
+                              <RadioGroupItem
+                                value={optionValue.toString()}
+                                id={`option-${index}`}
+                                className="w-5 h-5"
+                              />
+                              <Label 
+                                htmlFor={`option-${index}`} 
+                                className={`flex-1 cursor-pointer text-sm sm:text-base text-slate-700 ${isArabic ? 'text-right' : 'text-left'}`}
+                                style={{ unicodeBidi: 'plaintext' }}
+                              >
+                                {option.text}
+                              </Label>
+                            </motion.div>
+                          );
+                        })}
+                      </RadioGroup>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </motion.div>
           </AnimatePresence>
 
-          {/* Navigation */}
-          <div className="flex justify-between mt-8 gap-4">
+          {/* Navigation - mobile optimized with larger touch targets */}
+          <div className="flex justify-between mt-6 sm:mt-8 gap-3 sm:gap-4 px-2 sm:px-0">
             <Button
               variant="outline"
               onClick={handlePrevious}
-              disabled={currentQuestionIndex === 0}
-              className="h-12 px-6 bg-white shadow-lg hover:shadow-xl border-slate-200"
+              disabled={isFirst}
+              className="h-12 sm:h-14 px-4 sm:px-6 bg-white shadow-lg hover:shadow-xl border-slate-200 text-sm sm:text-base flex-1 sm:flex-none"
             >
-              <ArrowLeft className={`w-5 h-5 ${isArabic ? "ml-2 rotate-180" : "mr-2"}`} />
-              {t.previous}
+              <ArrowLeft className={`w-4 h-4 sm:w-5 sm:h-5 ${isArabic ? "ml-1 sm:ml-2 rotate-180" : "mr-1 sm:mr-2"}`} />
+              <span className="hidden sm:inline">{t.previous}</span>
+              <span className="sm:hidden">{isArabic ? 'السابق' : 'Prev'}</span>
             </Button>
             <Button 
               onClick={handleNext} 
-              className="h-12 px-8 shadow-lg hover:shadow-xl"
+              className="h-12 sm:h-14 px-6 sm:px-8 shadow-lg hover:shadow-xl text-sm sm:text-base flex-1 sm:flex-none"
               style={{ 
                 background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6, #6366f1)'
               }}
             >
-              {isLast ? t.submit : t.next}
-              <ArrowRight className={`w-5 h-5 ${isArabic ? "mr-2 rotate-180" : "ml-2"}`} />
+              <span className="hidden sm:inline">{isLast ? t.submit : t.next}</span>
+              <span className="sm:hidden">{isLast ? (isArabic ? 'إرسال' : 'Submit') : (isArabic ? 'التالي' : 'Next')}</span>
+              <ArrowRight className={`w-4 h-4 sm:w-5 sm:h-5 ${isArabic ? "mr-1 sm:mr-2 rotate-180" : "ml-1 sm:ml-2"}`} />
             </Button>
           </div>
+
+          {/* Swipe hint on mobile - only on first question */}
+          {isMobile && isFirst && (
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 2 }}
+              className="text-center text-xs text-muted-foreground mt-4"
+            >
+              {isArabic ? '👆 اسحب يميناً أو يساراً للتنقل' : '👆 Swipe left or right to navigate'}
+            </motion.p>
+          )}
         </div>
       </div>
     );
