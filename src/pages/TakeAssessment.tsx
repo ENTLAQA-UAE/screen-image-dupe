@@ -99,6 +99,7 @@ const translations = {
     instruction3: "You can navigate back to previous questions",
     instruction4: "Your progress is saved as you go",
     instruction5: "Important: If you close or leave this tab during the assessment, it will be automatically submitted and you will no longer have access to it",
+    integrityWarning: "Sharing your assessment credentials or having someone else complete this assessment on your behalf is strictly prohibited. Violations will result in immediate cancellation of your results and a 5-year suspension from all promotion opportunities.",
     takingAs: "Taking as",
     startAssessment: "Start Assessment",
     questionOf: "Question {current} of {total}",
@@ -155,6 +156,7 @@ const translations = {
     instruction3: "يمكنك العودة إلى الأسئلة السابقة",
     instruction4: "يتم حفظ تقدمك تلقائياً",
     instruction5: "تنبيه هام: إذا أغلقت أو غادرت هذه الصفحة أثناء التقييم، سيتم إرساله تلقائياً ولن يكون بإمكانك الوصول إليه مرة أخرى",
+    integrityWarning: "يُمنع منعاً باتاً مشاركة بيانات الدخول الخاصة بك أو تكليف شخص آخر بإكمال هذا التقييم نيابةً عنك. أي مخالفة ستؤدي إلى إلغاء نتائجك فوراً وحرمانك من فرص الترقية لمدة 5 سنوات.",
     takingAs: "المشارك",
     startAssessment: "بدء التقييم",
     questionOf: "السؤال {current} من {total}",
@@ -1067,6 +1069,10 @@ export default function TakeAssessment() {
                 <li className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
                   <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
                   <span className="text-amber-700 font-medium">{t.instruction5}</span>
+                </li>
+                <li className="flex items-start gap-3 p-4 bg-red-50 rounded-lg border-2 border-red-300">
+                  <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+                  <span className="text-red-700 font-bold">{t.integrityWarning}</span>
                 </li>
               </ul>
             </div>

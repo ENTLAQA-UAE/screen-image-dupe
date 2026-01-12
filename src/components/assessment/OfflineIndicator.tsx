@@ -32,23 +32,6 @@ export function OfflineIndicator({
         </motion.div>
       )}
 
-      {isOnline && hasPendingData && (
-        <motion.div
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -50 }}
-          className="fixed top-0 left-0 right-0 z-[100] bg-emerald-500 text-emerald-950 px-4 py-2 shadow-lg"
-        >
-          <div className="flex items-center justify-center gap-2 text-sm font-medium">
-            <Wifi className="w-4 h-4" />
-            <span>
-              {isArabic 
-                ? 'أنت متصل مرة أخرى - جاري مزامنة البيانات' 
-                : "You're back online - Syncing your data"}
-            </span>
-          </div>
-        </motion.div>
-      )}
     </AnimatePresence>
   );
 }
