@@ -291,6 +291,9 @@ export default function TakeAssessment() {
   const [timerActive, setTimerActive] = useState(false);
   const [shownWarnings, setShownWarnings] = useState<Set<number>>(new Set());
 
+  // Confetti trigger ref - must be at component level, not inside render functions
+  const confettiTriggered = useRef(false);
+
   // Mobile and offline support
   const isMobile = useIsMobile();
   const { isOnline, hasPendingData, saveOfflineData, loadOfflineData, clearOfflineData } = useOfflineSupport();
@@ -998,7 +1001,7 @@ export default function TakeAssessment() {
             ) : null}
             <h2 className="text-2xl font-display font-bold">{assessmentData?.assessment.title}</h2>
             <p className="text-white/80 mt-2 max-w-lg mx-auto">
-              {assessmentData?.assessment.description || t.welcome}
+              {t.welcome}
             </p>
           </div>
 
@@ -1398,14 +1401,14 @@ export default function TakeAssessment() {
     const orgLogo = orgData?.logoUrl;
     const orgName = orgData?.name;
     const completedPrimaryColor = orgData?.primaryColor || primaryColor;
-    const confettiTriggered = useRef(false);
     
+    // Trigger confetti on mount - use component-level ref
     useEffect(() => {
-      if (!confettiTriggered.current) {
+      if (!confettiTriggered.current && pageState === "completed") {
         confettiTriggered.current = true;
         triggerCelebration();
       }
-    }, []);
+    }, [pageState]);
     
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-green-50 to-teal-100 p-4" dir={isArabic ? "rtl" : "ltr"}>
@@ -1474,7 +1477,6 @@ export default function TakeAssessment() {
     const orgLogo = orgData?.logoUrl;
     const orgName = orgData?.name || "Organization";
     const resultPrimaryColor = orgData?.primaryColor || primaryColor;
-    const confettiTriggered = useRef(false);
 
     const participantName = completedData?.participant?.full_name || submissionResults?.results?.participantName || regForm.full_name || "Participant";
     const participantEmail = completedData?.participant?.email || submissionResults?.results?.participantEmail || regForm.email || "";
@@ -1483,12 +1485,13 @@ export default function TakeAssessment() {
     const groupName = completedData?.assessmentGroup?.name || assessmentData?.assessmentGroup?.name || "Assessment Group";
     const completedAt = completedData?.participant?.completed_at || new Date().toISOString();
 
+    // Trigger confetti on mount - use component-level ref
     useEffect(() => {
-      if (!confettiTriggered.current) {
+      if (!confettiTriggered.current && pageState === "results") {
         confettiTriggered.current = true;
         triggerCelebration();
       }
-    }, []);
+    }, [pageState]);
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-100 p-4" dir={isArabic ? "rtl" : "ltr"}>
