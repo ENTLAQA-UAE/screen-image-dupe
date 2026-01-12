@@ -169,6 +169,7 @@ export default function AssessmentBuilder() {
   const [editingQuestion, setEditingQuestion] = useState<GeneratedQuestion | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [savingToBank, setSavingToBank] = useState(false);
+  const [regeneratingIndex, setRegeneratingIndex] = useState<number | null>(null);
   
   // Import from bank
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -484,6 +485,46 @@ export default function AssessmentBuilder() {
       toast.error("Failed to save questions to bank");
     } finally {
       setSavingToBank(false);
+    }
+  };
+
+  const handleRegenerateQuestion = async (questionIndex: number) => {
+    if (regeneratingIndex !== null) return;
+    
+    setRegeneratingIndex(questionIndex);
+    try {
+      const currentQuestion = generatedQuestions[questionIndex];
+      const response = await supabase.functions.invoke("generate-questions", {
+        body: {
+          assessmentType,
+          category,
+          language: formData.language,
+          description: `${formData.description}\n\nGenerate exactly 1 new question similar in style to: "${currentQuestion.text}" but with different content.`,
+          questionCount: 1,
+          difficulty: currentQuestion.metadata?.difficulty || formData.difficulty,
+          config: typeConfig,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      const { questions } = response.data;
+      if (!questions?.length) {
+        throw new Error("No question generated");
+      }
+
+      // Replace the question at the specified index
+      setGeneratedQuestions((prev) =>
+        prev.map((q, i) => (i === questionIndex ? questions[0] : q))
+      );
+      toast.success("Question regenerated successfully");
+    } catch (error: any) {
+      console.error("Error regenerating question:", error);
+      toast.error(error.message || "Failed to regenerate question");
+    } finally {
+      setRegeneratingIndex(null);
     }
   };
 
@@ -1133,6 +1174,20 @@ export default function AssessmentBuilder() {
                     )}
                   </div>
                   <div className="flex gap-1 shrink-0">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => handleRegenerateQuestion(index)}
+                      disabled={regeneratingIndex !== null}
+                      className="h-8 w-8"
+                      title="Regenerate Question"
+                    >
+                      {regeneratingIndex === index ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="w-4 h-4" />
+                      )}
+                    </Button>
                     <Button
                       size="icon"
                       variant="ghost"
