@@ -100,6 +100,8 @@ const translations = {
     instruction4: "Your progress is saved as you go",
     instruction5: "Important: If you close or leave this tab during the assessment, it will be automatically submitted and you will no longer have access to it",
     integrityWarning: "Sharing your assessment credentials or having someone else complete this assessment on your behalf is strictly prohibited. Violations will result in immediate cancellation of your results and a 5-year suspension from all promotion opportunities.",
+    integrityAcknowledge: "I acknowledge and agree to the integrity warning above",
+    mustAcknowledge: "You must acknowledge the integrity warning to continue",
     takingAs: "Taking as",
     startAssessment: "Start Assessment",
     questionOf: "Question {current} of {total}",
@@ -157,6 +159,8 @@ const translations = {
     instruction4: "يتم حفظ تقدمك تلقائياً",
     instruction5: "تنبيه هام: إذا أغلقت أو غادرت هذه الصفحة أثناء التقييم، سيتم إرساله تلقائياً ولن يكون بإمكانك الوصول إليه مرة أخرى",
     integrityWarning: "يُمنع منعاً باتاً مشاركة بيانات الدخول الخاصة بك أو تكليف شخص آخر بإكمال هذا التقييم نيابةً عنك. أي مخالفة ستؤدي إلى إلغاء نتائجك فوراً وحرمانك من فرص الترقية لمدة 5 سنوات.",
+    integrityAcknowledge: "أقر وأوافق على التحذير المتعلق بالنزاهة أعلاه",
+    mustAcknowledge: "يجب عليك الإقرار بتحذير النزاهة للمتابعة",
     takingAs: "المشارك",
     startAssessment: "بدء التقييم",
     questionOf: "السؤال {current} من {total}",
@@ -295,6 +299,9 @@ export default function TakeAssessment() {
 
   // Confetti trigger ref - must be at component level, not inside render functions
   const confettiTriggered = useRef(false);
+  
+  // Integrity acknowledgement state
+  const [integrityAcknowledged, setIntegrityAcknowledged] = useState(false);
 
   // Mobile and offline support
   const isMobile = useIsMobile();
@@ -372,6 +379,14 @@ export default function TakeAssessment() {
 
     return () => clearInterval(interval);
   }, [timerActive, timeRemaining, shownWarnings, isArabic]);
+
+  // Trigger confetti when entering completed or results state
+  useEffect(() => {
+    if ((pageState === "completed" || pageState === "results") && !confettiTriggered.current) {
+      confettiTriggered.current = true;
+      triggerCelebration();
+    }
+  }, [pageState]);
 
   // Beforeunload warning when assessment is in progress
   useEffect(() => {
@@ -1105,12 +1120,37 @@ export default function TakeAssessment() {
               </div>
             )}
 
+            {/* Integrity Acknowledgement Checkbox */}
+            <div className="flex items-start gap-3 p-4 bg-red-50 rounded-xl border-2 border-red-200">
+              <Checkbox 
+                id="integrity-acknowledge"
+                checked={integrityAcknowledged}
+                onCheckedChange={(checked) => setIntegrityAcknowledged(checked === true)}
+                className="mt-0.5 border-red-400 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+              />
+              <Label 
+                htmlFor="integrity-acknowledge" 
+                className="text-sm text-red-700 font-medium cursor-pointer leading-relaxed"
+              >
+                {t.integrityAcknowledge}
+              </Label>
+            </div>
+
             <Button 
-              className="w-full h-14 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all" 
+              className="w-full h-14 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed" 
               size="lg" 
-              onClick={handleStartAssessment}
+              onClick={() => {
+                if (!integrityAcknowledged) {
+                  toast.error(t.mustAcknowledge);
+                  return;
+                }
+                handleStartAssessment();
+              }}
+              disabled={!integrityAcknowledged}
               style={{ 
-                background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6, #6366f1)'
+                background: integrityAcknowledged 
+                  ? (primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6, #6366f1)')
+                  : 'linear-gradient(135deg, #94a3b8, #64748b)'
               }}
             >
               {t.startAssessment}
@@ -1408,14 +1448,6 @@ export default function TakeAssessment() {
     const orgName = orgData?.name;
     const completedPrimaryColor = orgData?.primaryColor || primaryColor;
     
-    // Trigger confetti on mount - use component-level ref
-    useEffect(() => {
-      if (!confettiTriggered.current && pageState === "completed") {
-        confettiTriggered.current = true;
-        triggerCelebration();
-      }
-    }, [pageState]);
-    
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-green-50 to-teal-100 p-4" dir={isArabic ? "rtl" : "ltr"}>
         <motion.div 
@@ -1491,13 +1523,6 @@ export default function TakeAssessment() {
     const groupName = completedData?.assessmentGroup?.name || assessmentData?.assessmentGroup?.name || "Assessment Group";
     const completedAt = completedData?.participant?.completed_at || new Date().toISOString();
 
-    // Trigger confetti on mount - use component-level ref
-    useEffect(() => {
-      if (!confettiTriggered.current && pageState === "results") {
-        confettiTriggered.current = true;
-        triggerCelebration();
-      }
-    }, [pageState]);
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-100 p-4" dir={isArabic ? "rtl" : "ltr"}>
