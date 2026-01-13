@@ -281,6 +281,15 @@ export const translations = {
       deleteParticipantWarning: "This action cannot be undone and will also delete all their responses.",
       total: "Total",
       notAssigned: "You are not assigned to any organization.",
+      resetParticipant: "Reset for Retake",
+      resetParticipantConfirm: "Are you sure you want to reset this participant?",
+      resetParticipantWarning: "This will clear their responses and allow them to retake the assessment.",
+      resetSuccess: "Participant reset successfully",
+      resetError: "Failed to reset participant",
+      submissionType: "Submission Type",
+      submissionNormal: "Completed",
+      submissionAutoSubmitted: "Auto-submitted (Tab Closed)",
+      submissionTimeExpired: "Time Expired",
     },
     // Employees
     employees: {
@@ -926,6 +935,15 @@ export const translations = {
       deleteParticipantWarning: "لا يمكن التراجع عن هذا الإجراء وسيتم حذف جميع إجاباته أيضاً.",
       total: "الإجمالي",
       notAssigned: "أنت غير مسجل في أي منظمة.",
+      resetParticipant: "إعادة تعيين للإعادة",
+      resetParticipantConfirm: "هل أنت متأكد من إعادة تعيين هذا المشارك؟",
+      resetParticipantWarning: "سيتم مسح إجاباتهم والسماح لهم بإعادة التقييم.",
+      resetSuccess: "تم إعادة تعيين المشارك بنجاح",
+      resetError: "فشل في إعادة تعيين المشارك",
+      submissionType: "نوع الإرسال",
+      submissionNormal: "مكتمل",
+      submissionAutoSubmitted: "إرسال تلقائي (إغلاق التبويب)",
+      submissionTimeExpired: "انتهى الوقت",
     },
     // Employees
     employees: {

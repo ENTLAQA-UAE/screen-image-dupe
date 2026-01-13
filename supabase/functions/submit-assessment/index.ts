@@ -13,6 +13,7 @@ interface SubmitRequest {
     questionId: string;
     value: any;
   }>;
+  submissionType?: 'normal' | 'auto_submitted' | 'time_expired';
 }
 
 serve(async (req) => {
@@ -21,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    const { participantId, assessmentId, answers }: SubmitRequest = await req.json();
+    const { participantId, assessmentId, answers, submissionType = 'normal' }: SubmitRequest = await req.json();
 
     if (!participantId || !assessmentId || !answers?.length) {
       return new Response(
@@ -188,6 +189,7 @@ serve(async (req) => {
         completed_at: new Date().toISOString(),
         score_summary: scoreSummary,
         ai_report_text: aiReportText,
+        submission_type: submissionType,
       })
       .eq("id", participantId);
 

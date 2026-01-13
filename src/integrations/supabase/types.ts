@@ -388,6 +388,7 @@ export type Database = {
           score_summary: Json | null
           started_at: string | null
           status: string | null
+          submission_type: string | null
         }
         Insert: {
           access_token?: string | null
@@ -404,6 +405,7 @@ export type Database = {
           score_summary?: Json | null
           started_at?: string | null
           status?: string | null
+          submission_type?: string | null
         }
         Update: {
           access_token?: string | null
@@ -420,6 +422,7 @@ export type Database = {
           score_summary?: Json | null
           started_at?: string | null
           status?: string | null
+          submission_type?: string | null
         }
         Relationships: [
           {
