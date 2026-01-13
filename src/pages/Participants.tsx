@@ -45,6 +45,9 @@ import {
   Download,
   AlertTriangle,
   RefreshCw,
+  RotateCcw,
+  XCircle,
+  Timer,
 } from "lucide-react";
 import { CsvImportDialog } from "@/components/participants/CsvImportDialog";
 import { useCsvExport } from "@/hooks/useCsvExport";
@@ -75,6 +78,7 @@ interface Participant {
   started_at: string | null;
   completed_at: string | null;
   score_summary: any;
+  submission_type: string | null;
   group?: AssessmentGroup | null;
 }
 
@@ -107,9 +111,11 @@ const Participants = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isResetOpen, setIsResetOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [selectedParticipant, setSelectedParticipant] = useState<Participant | null>(null);
   const [saving, setSaving] = useState(false);
+  const [resetting, setResetting] = useState(false);
   
   const { exportToCsv } = useCsvExport();
   
@@ -322,6 +328,51 @@ const Participants = () => {
   const openDeleteDialog = (participant: Participant) => {
     setSelectedParticipant(participant);
     setIsDeleteOpen(true);
+  };
+
+  const openResetDialog = (participant: Participant) => {
+    setSelectedParticipant(participant);
+    setIsResetOpen(true);
+  };
+
+  const handleResetParticipant = async () => {
+    if (!selectedParticipant) return;
+
+    setResetting(true);
+    try {
+      // Delete all responses for this participant
+      const { error: deleteResponsesError } = await supabase
+        .from('responses')
+        .delete()
+        .eq('participant_id', selectedParticipant.id);
+
+      if (deleteResponsesError) throw deleteResponsesError;
+
+      // Reset participant status and clear results
+      const { error: updateError } = await supabase
+        .from('participants')
+        .update({
+          status: 'invited',
+          started_at: null,
+          completed_at: null,
+          score_summary: null,
+          ai_report_text: null,
+          submission_type: null,
+        })
+        .eq('id', selectedParticipant.id);
+
+      if (updateError) throw updateError;
+
+      toast.success(t.participants.resetSuccess);
+      setIsResetOpen(false);
+      setSelectedParticipant(null);
+      fetchParticipants();
+    } catch (error: any) {
+      console.error('Error resetting participant:', error);
+      toast.error(t.participants.resetError);
+    } finally {
+      setResetting(false);
+    }
   };
 
   const resetForm = () => {
@@ -592,14 +643,35 @@ const Participants = () => {
                         )}
                       </td>
                       <td className="py-4 px-6">
-                        <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium ${
-                          status === 'completed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                          status === 'started' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-                          'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-                        }`}>
-                          <StatusIcon className="w-3 h-3 mr-1.5" />
-                          {t.participants[status as keyof typeof t.participants] || status}
-                        </span>
+                        <div className="flex flex-col gap-1">
+                          <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium ${
+                            status === 'completed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                            status === 'started' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                            'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                          }`}>
+                            <StatusIcon className="w-3 h-3 mr-1.5" />
+                            {t.participants[status as keyof typeof t.participants] || status}
+                          </span>
+                          {status === 'completed' && participant.submission_type && participant.submission_type !== 'normal' && (
+                            <span className={`inline-flex items-center px-2 py-1 rounded text-[10px] font-medium ${
+                              participant.submission_type === 'auto_submitted' 
+                                ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            }`}>
+                              {participant.submission_type === 'auto_submitted' ? (
+                                <>
+                                  <XCircle className="w-2.5 h-2.5 mr-1" />
+                                  {t.participants.submissionAutoSubmitted}
+                                </>
+                              ) : (
+                                <>
+                                  <Timer className="w-2.5 h-2.5 mr-1" />
+                                  {t.participants.submissionTimeExpired}
+                                </>
+                              )}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-4 px-6 text-sm text-muted-foreground">
                         {formatDate(participant.started_at)}
@@ -631,6 +703,15 @@ const Participants = () => {
                               <Edit className="w-4 h-4 mr-2" />
                               {t.common.edit}
                             </DropdownMenuItem>
+                            {(status === 'completed' || status === 'started') && (
+                              <DropdownMenuItem 
+                                onClick={() => openResetDialog(participant)}
+                                className="text-amber-600 focus:text-amber-600"
+                              >
+                                <RotateCcw className="w-4 h-4 mr-2" />
+                                {t.participants.resetParticipant}
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
                               onClick={() => openDeleteDialog(participant)}
@@ -815,6 +896,51 @@ const Participants = () => {
             <Button variant="destructive" onClick={handleDelete} disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               {t.common.delete}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Dialog */}
+      <Dialog open={isResetOpen} onOpenChange={setIsResetOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <RotateCcw className="w-5 h-5 text-amber-500" />
+              {t.participants.resetParticipant}
+            </DialogTitle>
+            <DialogDescription>
+              {t.participants.resetParticipantConfirm}
+              <br />
+              <span className="text-amber-600 font-medium mt-2 block">
+                {t.participants.resetParticipantWarning}
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
+            <p className="text-sm text-muted-foreground">
+              <strong>{t.participants.name}:</strong> {selectedParticipant?.full_name || '-'}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              <strong>{t.participants.email}:</strong> {selectedParticipant?.email || '-'}
+            </p>
+            {selectedParticipant?.employee_code && (
+              <p className="text-sm text-muted-foreground">
+                <strong>{t.participants.employeeCode}:</strong> {selectedParticipant.employee_code}
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsResetOpen(false)}>
+              {t.common.cancel}
+            </Button>
+            <Button 
+              onClick={handleResetParticipant} 
+              disabled={resetting}
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+            >
+              {resetting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {t.participants.resetParticipant}
             </Button>
           </DialogFooter>
         </DialogContent>

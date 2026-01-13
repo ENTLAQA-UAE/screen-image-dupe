@@ -353,7 +353,7 @@ export default function TakeAssessment() {
 
     if (timeRemaining <= 0) {
       toast.error(isArabic ? "انتهى الوقت! جاري الإرسال..." : "Time's up! Submitting...");
-      handleSubmit();
+      handleSubmit('time_expired');
       return;
     }
 
@@ -630,7 +630,7 @@ export default function TakeAssessment() {
     threshold: 80,
   });
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = useCallback(async (submissionType: 'normal' | 'auto_submitted' | 'time_expired' = 'normal') => {
     if (!assessmentData || !participantId) return;
 
     setTimerActive(false);
@@ -647,6 +647,7 @@ export default function TakeAssessment() {
           participantId,
           assessmentId: assessmentData.assessment.id,
           answers: answersArray,
+          submissionType,
         },
       });
 
@@ -673,7 +674,7 @@ export default function TakeAssessment() {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
         toast.info(isArabic ? "تم إرسال التقييم تلقائياً بسبب مغادرة الصفحة" : "Assessment auto-submitted due to leaving the page");
-        handleSubmit();
+        handleSubmit('auto_submitted');
       }
     };
 
