@@ -633,6 +633,11 @@ export default function TakeAssessment() {
   const handleSubmit = useCallback(async (submissionType: 'normal' | 'auto_submitted' | 'time_expired' = 'normal') => {
     if (!assessmentData || !participantId) return;
 
+    // Prevent duplicate submissions
+    if (pageState === "submitting" || pageState === "completed" || pageState === "results") {
+      return;
+    }
+
     setTimerActive(false);
     setPageState("submitting");
 
@@ -651,7 +656,16 @@ export default function TakeAssessment() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check if the error is "already submitted" - treat as success
+        const errorMessage = error.message || '';
+        if (errorMessage.includes("already submitted") || errorMessage.includes("Assessment already")) {
+          console.log("Assessment was already submitted, showing completed state");
+          setPageState("completed");
+          return;
+        }
+        throw error;
+      }
 
       setSubmissionResults(data);
       
@@ -662,10 +676,16 @@ export default function TakeAssessment() {
       }
     } catch (error: any) {
       console.error("Submit error:", error);
+      // Check if the error indicates already submitted (from edge function response)
+      const errorText = error?.message || error?.toString() || '';
+      if (errorText.includes("already submitted") || errorText.includes("Assessment already")) {
+        setPageState("completed");
+        return;
+      }
       toast.error("Failed to submit assessment. Please try again.");
       setPageState("questions");
     }
-  }, [assessmentData, participantId, answers]);
+  }, [assessmentData, participantId, answers, pageState]);
 
   // Track if auto-submit has been triggered to prevent double submission
   const autoSubmitTriggered = useRef(false);
