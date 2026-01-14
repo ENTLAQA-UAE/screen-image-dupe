@@ -667,12 +667,17 @@ export default function TakeAssessment() {
     }
   }, [assessmentData, participantId, answers]);
 
+  // Track if auto-submit has been triggered to prevent double submission
+  const autoSubmitTriggered = useRef(false);
+
   // Auto-submit on visibility change (tab switch/hide)
   useEffect(() => {
     if (pageState !== "questions") return;
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
+      // Only trigger once and only when hiding the page
+      if (document.visibilityState === "hidden" && !autoSubmitTriggered.current) {
+        autoSubmitTriggered.current = true;
         toast.info(isArabic ? "تم إرسال التقييم تلقائياً بسبب مغادرة الصفحة" : "Assessment auto-submitted due to leaving the page");
         handleSubmit('auto_submitted');
       }
@@ -681,6 +686,13 @@ export default function TakeAssessment() {
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [pageState, handleSubmit, isArabic]);
+
+  // Reset auto-submit flag when starting a new assessment
+  useEffect(() => {
+    if (pageState === "intro" || pageState === "register") {
+      autoSubmitTriggered.current = false;
+    }
+  }, [pageState]);
 
   // Format timer display
   const formatTime = (seconds: number): string => {
