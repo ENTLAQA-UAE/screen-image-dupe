@@ -74,6 +74,17 @@ export interface TalentSnapshotReport {
   language?: Language;
 }
 
+// ============= Security: HTML Escaping =============
+function escapeHtml(unsafe: string | null | undefined): string {
+  if (!unsafe) return '';
+  return String(unsafe)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 // ============= Translations =============
 const translations = {
   en: {
@@ -257,27 +268,30 @@ function buildHeaderHtml(
 ): string {
   const gradient = getGradientColors(getPrimaryColor(org));
   const dir = getDirection(lang);
+  const safeTitle = escapeHtml(title);
+  const safeOrgName = escapeHtml(org.name);
   
   const logoHtml = logoBase64 ? `
     <div style="margin-bottom: 15px;">
-      <img src="${logoBase64}" alt="${org.name}" style="max-height: 60px; max-width: 200px; object-fit: contain;" />
+      <img src="${logoBase64}" alt="${safeOrgName}" style="max-height: 60px; max-width: 200px; object-fit: contain;" />
     </div>
   ` : '';
 
   return `
     <div class="page-break-inside-avoid" style="background: linear-gradient(135deg, ${gradient.start} 0%, ${gradient.end} 100%); color: white; padding: 35px 40px; border-radius: 16px; text-align: center; margin-bottom: 35px; direction: ${dir};">
       ${logoHtml}
-      <h1 style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: 0.5px;">${title}</h1>
-      <div style="margin-top: 8px; font-size: 14px; opacity: 0.9;">${org.name}</div>
+      <h1 style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: 0.5px;">${safeTitle}</h1>
+      <div style="margin-top: 8px; font-size: 14px; opacity: 0.9;">${safeOrgName}</div>
     </div>
   `;
 }
 
 function buildSectionHeader(title: string, primaryColor: string, lang: Language): string {
   const textAlign = getTextAlign(lang);
+  const safeTitle = escapeHtml(title);
   return `
     <h2 style="color: ${primaryColor}; font-size: 17px; margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid ${primaryColor}; font-weight: 600; text-align: ${textAlign};">
-      ${title}
+      ${safeTitle}
     </h2>
   `;
 }
@@ -293,8 +307,8 @@ function buildInfoGrid(items: { label: string; value: string }[], lang: Language
     <div class="page-break-inside-avoid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; direction: ${dir};">
       ${items.map(item => `
         <div style="background: #f8fafc; padding: 14px 16px; border-radius: 10px; text-align: ${textAlign};">
-          <div style="${labelStyle}">${item.label}</div>
-          <div style="color: #0f172a; font-weight: 600; font-size: 14px;">${item.value}</div>
+          <div style="${labelStyle}">${escapeHtml(item.label)}</div>
+          <div style="color: #0f172a; font-weight: 600; font-size: 14px;">${escapeHtml(item.value)}</div>
         </div>
       `).join('')}
     </div>
@@ -328,7 +342,8 @@ function buildAiFeedbackSection(content: string, title: string, primaryColor: st
   const paragraphs = content.split("\n\n").filter((p) => p.trim());
   const formattedContent = paragraphs
     .map((p) => {
-      const safe = p.trim();
+      // Escape HTML to prevent XSS attacks from AI-generated content
+      const safe = escapeHtml(p.trim());
       // For Arabic, isolate the paragraph to prevent punctuation/numbers flipping.
       const bidi = lang === "ar" ? "isolate" : "plaintext";
       return `<p style="margin: 0 0 12px 0; text-align: ${textAlign}; direction: ${dir}; unicode-bidi: ${bidi};">${safe}</p>`;
