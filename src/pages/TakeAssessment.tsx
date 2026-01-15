@@ -27,9 +27,7 @@ import {
 } from "lucide-react";
 import { openParticipantPrintPreview } from "@/lib/printPreview";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
-import { useOfflineSupport } from "@/hooks/useOfflineSupport";
 import { SwipeIndicator } from "@/components/assessment/SwipeIndicator";
-import { OfflineIndicator } from "@/components/assessment/OfflineIndicator";
 import { MobileQuestionCard } from "@/components/assessment/MobileQuestionCard";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -303,9 +301,8 @@ export default function TakeAssessment() {
   // Integrity acknowledgement state
   const [integrityAcknowledged, setIntegrityAcknowledged] = useState(false);
 
-  // Mobile and offline support
+  // Mobile support
   const isMobile = useIsMobile();
-  const { isOnline, hasPendingData, saveOfflineData, loadOfflineData, clearOfflineData } = useOfflineSupport();
 
   // State for error pages with branding
   const [errorOrganization, setErrorOrganization] = useState<{
@@ -544,31 +541,15 @@ export default function TakeAssessment() {
   };
 
   const handleAnswer = (questionId: string, value: any) => {
-    setAnswers((prev) => {
-      const newAnswers = { ...prev, [questionId]: value };
-      // Save to offline storage for recovery
-      saveOfflineData({
-        answers: newAnswers,
-        participantId,
-        assessmentId: assessmentData?.assessment.id || null,
-      });
-      return newAnswers;
-    });
+    setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
   const handleMultiAnswer = (questionId: string, optionValue: number, checked: boolean) => {
     setAnswers((prev) => {
       const current = prev[questionId] || [];
-      const newAnswers = checked
+      return checked
         ? { ...prev, [questionId]: [...current, optionValue] }
         : { ...prev, [questionId]: current.filter((v: number) => v !== optionValue) };
-      // Save to offline storage for recovery
-      saveOfflineData({
-        answers: newAnswers,
-        participantId,
-        assessmentId: assessmentData?.assessment.id || null,
-      });
-      return newAnswers;
     });
   };
 
@@ -713,7 +694,6 @@ export default function TakeAssessment() {
               );
 
         setSubmissionResults(data);
-        clearOfflineData();
 
         if (data?.showResults && data?.results) {
           setPageState('results');
@@ -754,7 +734,6 @@ export default function TakeAssessment() {
       answers,
       pageState,
       submitViaFetch,
-      clearOfflineData,
       isArabic,
     ],
   );
@@ -782,7 +761,7 @@ export default function TakeAssessment() {
       }
 
       // When the user returns, retry if needed (e.g., previous request was cancelled while hidden).
-      if (document.visibilityState === "visible" && pendingAutoSubmit.current && isOnline) {
+      if (document.visibilityState === "visible" && pendingAutoSubmit.current) {
         handleSubmit('auto_submitted', { keepalive: false, suppressErrorToast: true });
       }
     };
@@ -802,7 +781,7 @@ export default function TakeAssessment() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("pagehide", handlePageHide);
     };
-  }, [pageState, handleSubmit, isArabic, isOnline, assessmentData, participantId]);
+  }, [pageState, handleSubmit, isArabic, assessmentData, participantId]);
 
   // Reset auto-submit flag when starting a new assessment
   useEffect(() => {
@@ -1308,9 +1287,6 @@ export default function TakeAssessment() {
         dir={isArabic ? "rtl" : "ltr"}
         {...(isMobile ? swipeHandlers : {})}
       >
-        {/* Offline indicator */}
-        <OfflineIndicator isOnline={isOnline} hasPendingData={hasPendingData} isArabic={isArabic} />
-
         {/* Swipe indicators for mobile */}
         {isMobile && (
           <SwipeIndicator 
@@ -1327,7 +1303,6 @@ export default function TakeAssessment() {
           className="sticky top-0 z-10 backdrop-blur-md border-b border-white/20 shadow-sm"
           style={{ 
             background: primaryColor ? `linear-gradient(135deg, ${primaryColor}ee, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6ee, #6366f1dd)',
-            paddingTop: !isOnline ? '2.5rem' : undefined,
           }}
         >
           <div className="max-w-5xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
