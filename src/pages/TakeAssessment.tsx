@@ -630,82 +630,179 @@ export default function TakeAssessment() {
     threshold: 80,
   });
 
-  const handleSubmit = useCallback(async (submissionType: 'normal' | 'auto_submitted' | 'time_expired' = 'normal') => {
-    if (!assessmentData || !participantId) return;
+  const submitViaFetch = useCallback(
+    async (payload: {
+      participantId: string;
+      assessmentId: string;
+      answers: Array<{ questionId: string; value: any }>;
+      submissionType: 'normal' | 'auto_submitted' | 'time_expired';
+    }, opts?: { keepalive?: boolean }) => {
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/submit-assessment`;
+      const apiKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-    // Prevent duplicate submissions
-    if (pageState === "submitting" || pageState === "completed" || pageState === "results") {
-      return;
-    }
-
-    setTimerActive(false);
-    setPageState("submitting");
-
-    try {
-      const answersArray = Object.entries(answers).map(([questionId, value]) => ({
-        questionId,
-        value,
-      }));
-
-      const { data, error } = await supabase.functions.invoke("submit-assessment", {
-        body: {
-          participantId,
-          assessmentId: assessmentData.assessment.id,
-          answers: answersArray,
-          submissionType,
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: apiKey,
+          Authorization: `Bearer ${apiKey}`,
         },
+        body: JSON.stringify(payload),
+        keepalive: !!opts?.keepalive,
       });
 
-      if (error) {
-        // Check if the error is "already submitted" - treat as success
-        const errorMessage = error.message || '';
-        if (errorMessage.includes("already submitted") || errorMessage.includes("Assessment already")) {
-          console.log("Assessment was already submitted, showing completed state");
-          setPageState("completed");
-          return;
-        }
-        throw error;
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const message = json?.error || json?.message || `HTTP ${res.status}`;
+        throw new Error(message);
       }
 
-      setSubmissionResults(data);
-      
-      if (data.showResults && data.results) {
-        setPageState("results");
-      } else {
-        setPageState("completed");
-      }
-    } catch (error: any) {
-      console.error("Submit error:", error);
-      // Check if the error indicates already submitted (from edge function response)
-      const errorText = error?.message || error?.toString() || '';
-      if (errorText.includes("already submitted") || errorText.includes("Assessment already")) {
-        setPageState("completed");
+      return json;
+    },
+    [],
+  );
+
+  const pendingAutoSubmit = useRef(false);
+
+  const handleSubmit = useCallback(
+    async (
+      submissionType: 'normal' | 'auto_submitted' | 'time_expired' = 'normal',
+      opts?: { keepalive?: boolean; suppressErrorToast?: boolean },
+    ) => {
+      if (!assessmentData || !participantId) return;
+
+      // Prevent duplicate submissions
+      if (pageState === 'submitting' || pageState === 'completed' || pageState === 'results') {
         return;
       }
-      toast.error("Failed to submit assessment. Please try again.");
-      setPageState("questions");
-    }
-  }, [assessmentData, participantId, answers, pageState]);
+
+      setTimerActive(false);
+      setPageState('submitting');
+
+      try {
+        const answersArray = Object.entries(answers).map(([questionId, value]) => ({
+          questionId,
+          value,
+        }));
+
+        // Normal flow uses supabase client; auto/time uses fetch keepalive for better reliability when tab is hidden.
+        const data =
+          submissionType === 'normal'
+            ? (() =>
+                supabase.functions
+                  .invoke('submit-assessment', {
+                    body: {
+                      participantId,
+                      assessmentId: assessmentData.assessment.id,
+                      answers: answersArray,
+                      submissionType,
+                    },
+                  })
+                  .then(({ data, error }) => {
+                    if (error) throw error;
+                    return data;
+                  }))()
+            : await submitViaFetch(
+                {
+                  participantId,
+                  assessmentId: assessmentData.assessment.id,
+                  answers: answersArray,
+                  submissionType,
+                },
+                { keepalive: opts?.keepalive ?? true },
+              );
+
+        setSubmissionResults(data);
+        clearOfflineData();
+
+        if (data?.showResults && data?.results) {
+          setPageState('results');
+        } else {
+          setPageState('completed');
+        }
+      } catch (error: any) {
+        console.error('Submit error:', error);
+
+        const errorText = error?.message || error?.toString?.() || '';
+        if (errorText.includes('already submitted') || errorText.includes('Assessment already')) {
+          setPageState('completed');
+          return;
+        }
+
+        // If submission was triggered by tab hide / time expiry, don't bounce the user back to questions.
+        if (submissionType !== 'normal') {
+          pendingAutoSubmit.current = true;
+          if (!opts?.suppressErrorToast) {
+            toast.warning(
+              isArabic
+                ? 'تعذر الإرسال الآن. سنحاول مرة أخرى تلقائياً.'
+                : 'Could not submit yet. We will retry automatically.',
+            );
+          }
+          // Stay in submitting state and retry when the tab becomes visible/online.
+          setPageState('submitting');
+          return;
+        }
+
+        toast.error('Failed to submit assessment. Please try again.');
+        setPageState('questions');
+      }
+    },
+    [
+      assessmentData,
+      participantId,
+      answers,
+      pageState,
+      submitViaFetch,
+      clearOfflineData,
+      isArabic,
+    ],
+  );
 
   // Track if auto-submit has been triggered to prevent double submission
   const autoSubmitTriggered = useRef(false);
 
-  // Auto-submit on visibility change (tab switch/hide)
+  // Auto-submit on visibility change (tab switch/hide) + retry when returning
   useEffect(() => {
-    if (pageState !== "questions") return;
+    if (pageState !== "questions" && pageState !== "submitting") return;
+
+    const attemptAutoSubmit = () => {
+      if (!assessmentData || !participantId) return;
+      toast.info(isArabic ? "تم إرسال التقييم تلقائياً بسبب مغادرة الصفحة" : "Assessment auto-submitted due to leaving the page");
+      pendingAutoSubmit.current = true;
+      handleSubmit('auto_submitted', { keepalive: true, suppressErrorToast: true });
+    };
 
     const handleVisibilityChange = () => {
-      // Only trigger once and only when hiding the page
-      if (document.visibilityState === "hidden" && !autoSubmitTriggered.current) {
+      // When the page becomes hidden, trigger once.
+      if (document.visibilityState === "hidden" && !autoSubmitTriggered.current && pageState === "questions") {
         autoSubmitTriggered.current = true;
-        toast.info(isArabic ? "تم إرسال التقييم تلقائياً بسبب مغادرة الصفحة" : "Assessment auto-submitted due to leaving the page");
-        handleSubmit('auto_submitted');
+        attemptAutoSubmit();
+        return;
+      }
+
+      // When the user returns, retry if needed (e.g., previous request was cancelled while hidden).
+      if (document.visibilityState === "visible" && pendingAutoSubmit.current && isOnline) {
+        handleSubmit('auto_submitted', { keepalive: false, suppressErrorToast: true });
+      }
+    };
+
+    const handlePageHide = () => {
+      // Best-effort submit when navigating away/closing.
+      if (!autoSubmitTriggered.current && pageState === "questions") {
+        autoSubmitTriggered.current = true;
+        attemptAutoSubmit();
       }
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [pageState, handleSubmit, isArabic]);
+    window.addEventListener("pagehide", handlePageHide);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", handlePageHide);
+    };
+  }, [pageState, handleSubmit, isArabic, isOnline, assessmentData, participantId]);
 
   // Reset auto-submit flag when starting a new assessment
   useEffect(() => {
@@ -1031,7 +1128,7 @@ export default function TakeAssessment() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-2xl w-full"
+        className="max-w-5xl w-full"
       >
         <Card className="shadow-2xl border-0 overflow-hidden">
           {/* Header with gradient */}
@@ -1233,7 +1330,7 @@ export default function TakeAssessment() {
             paddingTop: !isOnline ? '2.5rem' : undefined,
           }}
         >
-          <div className="max-w-3xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+          <div className="max-w-5xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
             <div className="flex items-center justify-between mb-2 sm:mb-3">
               <span className="text-xs sm:text-sm text-white/90 font-medium">
                 {t.questionOf
@@ -1292,7 +1389,7 @@ export default function TakeAssessment() {
         </div>
 
         {/* Question content with swipe support */}
-        <div className="max-w-3xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
+        <div className="max-w-5xl mx-auto px-2 sm:px-6 py-4 sm:py-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={question.id}
