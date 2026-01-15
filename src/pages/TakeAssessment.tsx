@@ -644,21 +644,22 @@ export default function TakeAssessment() {
   );
 
   const pendingAutoSubmit = useRef(false);
+  const submitInFlight = useRef(false);
 
   const handleSubmit = useCallback(
     async (
       submissionType: 'normal' | 'auto_submitted' | 'time_expired' = 'normal',
-      opts?: { keepalive?: boolean; suppressErrorToast?: boolean },
+      opts?: { keepalive?: boolean; suppressErrorToast?: boolean; force?: boolean },
     ) => {
       if (!assessmentData || !participantId) return;
 
       // Prevent duplicate submissions
-      if (pageState === 'submitting' || pageState === 'completed' || pageState === 'results') {
-        return;
-      }
+      if (pageState === 'completed' || pageState === 'results') return;
+      if ((pageState === 'submitting' || submitInFlight.current) && !opts?.force) return;
 
       setTimerActive(false);
       setPageState('submitting');
+      submitInFlight.current = true;
 
       try {
         const answersArray = Object.entries(answers).map(([questionId, value]) => ({
@@ -719,13 +720,15 @@ export default function TakeAssessment() {
                 : 'Could not submit yet. We will retry automatically.',
             );
           }
-          // Stay in submitting state and retry when the tab becomes visible/online.
+          // Stay in submitting state; we will retry on return to the tab.
           setPageState('submitting');
           return;
         }
 
         toast.error('Failed to submit assessment. Please try again.');
         setPageState('questions');
+      } finally {
+        submitInFlight.current = false;
       }
     },
     [
@@ -762,7 +765,7 @@ export default function TakeAssessment() {
 
       // When the user returns, retry if needed (e.g., previous request was cancelled while hidden).
       if (document.visibilityState === "visible" && pendingAutoSubmit.current) {
-        handleSubmit('auto_submitted', { keepalive: false, suppressErrorToast: true });
+        handleSubmit('auto_submitted', { keepalive: false, suppressErrorToast: true, force: true });
       }
     };
 
