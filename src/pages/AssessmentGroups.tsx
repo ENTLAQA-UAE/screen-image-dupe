@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { SortDropdown, SortOption } from "@/components/ui/sort-dropdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -123,6 +124,7 @@ const AssessmentGroups = () => {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("date_desc");
   
   // Dialog states
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -389,12 +391,36 @@ const AssessmentGroups = () => {
     return format(new Date(dateString), 'MMM d, yyyy');
   };
 
-  const filteredGroups = useMemo(() =>
-    groups.filter(g =>
+  const sortOptions: SortOption[] = [
+    { value: "date_desc", label: language === 'ar' ? "الأحدث أولاً" : "Newest First" },
+    { value: "date_asc", label: language === 'ar' ? "الأقدم أولاً" : "Oldest First" },
+    { value: "name_asc", label: language === 'ar' ? "الاسم (أ-ي)" : "Name (A-Z)" },
+    { value: "name_desc", label: language === 'ar' ? "الاسم (ي-أ)" : "Name (Z-A)" },
+    { value: "status", label: t.assessments.status },
+  ];
+
+  const filteredAndSortedGroups = useMemo(() => {
+    const filtered = groups.filter(g =>
       g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       g.assessment?.title?.toLowerCase().includes(searchQuery.toLowerCase())
-    ), [groups, searchQuery]
-  );
+    );
+    
+    return [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case "date_asc":
+          return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+        case "name_asc":
+          return a.name.localeCompare(b.name);
+        case "name_desc":
+          return b.name.localeCompare(a.name);
+        case "status":
+          return (a.is_active ? "active" : "draft").localeCompare(b.is_active ? "active" : "draft");
+        case "date_desc":
+        default:
+          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      }
+    });
+  }, [groups, searchQuery, sortBy]);
 
   const {
     currentPage,
@@ -405,12 +431,12 @@ const AssessmentGroups = () => {
     startIndex,
     endIndex,
     resetPage,
-  } = usePagination(filteredGroups);
+  } = usePagination(filteredAndSortedGroups);
 
   // Reset to page 1 when search changes
   useEffect(() => {
     resetPage();
-  }, [searchQuery]);
+  }, [searchQuery, sortBy]);
 
   if (authLoading) {
     return (
@@ -456,8 +482,8 @@ const AssessmentGroups = () => {
           </Button>
         </div>
 
-        {/* Search */}
-        <div className="mb-6">
+        {/* Search and Sort */}
+        <div className="flex flex-wrap items-center gap-4 mb-6">
           <div className="relative w-80">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -467,6 +493,12 @@ const AssessmentGroups = () => {
               className="pl-10"
             />
           </div>
+          <SortDropdown
+            options={sortOptions}
+            value={sortBy}
+            onValueChange={setSortBy}
+            placeholder={language === 'ar' ? "ترتيب حسب" : "Sort by"}
+          />
         </div>
 
         {/* Content */}
@@ -478,7 +510,7 @@ const AssessmentGroups = () => {
           <div className="text-center py-20">
             <p className="text-muted-foreground">{t.assessments.notAssigned}</p>
           </div>
-        ) : filteredGroups.length === 0 ? (
+        ) : filteredAndSortedGroups.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card p-12 text-center">
             <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">
@@ -600,7 +632,7 @@ const AssessmentGroups = () => {
         )}
 
         {/* Pagination */}
-        {!loading && filteredGroups.length > 0 && (
+        {!loading && filteredAndSortedGroups.length > 0 && (
           <TablePagination
             currentPage={currentPage}
             totalPages={totalPages}

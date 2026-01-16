@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { SortDropdown, SortOption } from "@/components/ui/sort-dropdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -108,6 +109,7 @@ const Participants = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterGroup, setFilterGroup] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [sortBy, setSortBy] = useState("date_desc");
   
   // Dialog states
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -430,18 +432,44 @@ const Participants = () => {
     return format(new Date(dateString), 'MMM d, yyyy HH:mm');
   };
 
-  const filteredParticipants = useMemo(() => participants.filter(p => {
-    const matchesSearch = 
-      (p.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
-      (p.email?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
-      (p.employee_code?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
-      (p.group?.name?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
-    
-    const matchesGroup = filterGroup === 'all' || p.group_id === filterGroup;
-    const matchesStatus = filterStatus === 'all' || p.status === filterStatus;
-    
-    return matchesSearch && matchesGroup && matchesStatus;
-  }), [participants, searchQuery, filterGroup, filterStatus]);
+  const sortOptions: SortOption[] = [
+    { value: "date_desc", label: "Newest First" },
+    { value: "date_asc", label: "Oldest First" },
+    { value: "name_asc", label: "Name (A-Z)" },
+    { value: "name_desc", label: "Name (Z-A)" },
+    { value: "status", label: t.participants.status },
+  ];
+
+  const filteredAndSortedParticipants = useMemo(() => {
+    const filtered = participants.filter(p => {
+      const matchesSearch = 
+        (p.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
+        (p.email?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
+        (p.employee_code?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
+        (p.group?.name?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
+      
+      const matchesGroup = filterGroup === 'all' || p.group_id === filterGroup;
+      const matchesStatus = filterStatus === 'all' || p.status === filterStatus;
+      
+      return matchesSearch && matchesGroup && matchesStatus;
+    });
+
+    return [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case "date_asc":
+          return new Date(a.started_at || a.completed_at || 0).getTime() - new Date(b.started_at || b.completed_at || 0).getTime();
+        case "name_asc":
+          return (a.full_name || "").localeCompare(b.full_name || "");
+        case "name_desc":
+          return (b.full_name || "").localeCompare(a.full_name || "");
+        case "status":
+          return (a.status || "").localeCompare(b.status || "");
+        case "date_desc":
+        default:
+          return new Date(b.started_at || b.completed_at || 0).getTime() - new Date(a.started_at || a.completed_at || 0).getTime();
+      }
+    });
+  }, [participants, searchQuery, filterGroup, filterStatus, sortBy]);
 
   const {
     currentPage,
@@ -452,12 +480,12 @@ const Participants = () => {
     startIndex,
     endIndex,
     resetPage,
-  } = usePagination(filteredParticipants);
+  } = usePagination(filteredAndSortedParticipants);
 
   // Reset to page 1 when filters change
   useEffect(() => {
     resetPage();
-  }, [searchQuery, filterGroup, filterStatus]);
+  }, [searchQuery, filterGroup, filterStatus, sortBy]);
 
   if (authLoading) {
     return (
@@ -506,7 +534,7 @@ const Participants = () => {
               onClick={() => exportToCsv({
                 filename: 'participants',
                 headers: [t.participants.employeeCode, t.participants.name, t.participants.email, t.participants.department, t.participants.jobTitle, t.participants.group, t.participants.status, 'Started At', t.participants.completedAt],
-                data: filteredParticipants,
+                data: filteredAndSortedParticipants,
                 columnMap: {
                   [t.participants.employeeCode]: 'employee_code',
                   [t.participants.name]: 'full_name',
@@ -519,7 +547,7 @@ const Participants = () => {
                   [t.participants.completedAt]: 'completed_at',
                 }
               })}
-              disabled={filteredParticipants.length === 0}
+              disabled={filteredAndSortedParticipants.length === 0}
             >
               <Download className="w-4 h-4 mr-2" />
               {t.participants.export}
@@ -571,6 +599,12 @@ const Participants = () => {
               <SelectItem value="completed">{t.participants.completed}</SelectItem>
             </SelectContent>
           </Select>
+          <SortDropdown
+            options={sortOptions}
+            value={sortBy}
+            onValueChange={setSortBy}
+            placeholder="Sort by"
+          />
         </div>
 
         {/* Content */}
@@ -582,7 +616,7 @@ const Participants = () => {
           <div className="text-center py-20">
             <p className="text-muted-foreground">{t.participants.notAssigned}</p>
           </div>
-        ) : filteredParticipants.length === 0 ? (
+        ) : filteredAndSortedParticipants.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card p-12 text-center">
             <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">
@@ -750,7 +784,7 @@ const Participants = () => {
         )}
 
         {/* Pagination */}
-        {!loading && filteredParticipants.length > 0 && (
+        {!loading && filteredAndSortedParticipants.length > 0 && (
           <TablePagination
             currentPage={currentPage}
             totalPages={totalPages}

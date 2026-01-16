@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
@@ -12,6 +12,9 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { SortDropdown, SortOption } from "@/components/ui/sort-dropdown";
 import { useCsvExport } from "@/hooks/useCsvExport";
 import {
   Users,
@@ -117,6 +120,46 @@ const Reports = () => {
   const [trendData, setTrendData] = useState<TrendData[]>([]);
   const [topEmployees, setTopEmployees] = useState<EmployeeSummary[]>([]);
   const [allResults, setAllResults] = useState<any[]>([]);
+  const [groupSortBy, setGroupSortBy] = useState("date_desc");
+
+  const groupSortOptions: SortOption[] = [
+    { value: "date_desc", label: "Newest First" },
+    { value: "date_asc", label: "Oldest First" },
+    { value: "name_asc", label: "Name (A-Z)" },
+    { value: "name_desc", label: "Name (Z-A)" },
+    { value: "completion", label: "Completion Rate" },
+    { value: "participants", label: "Most Participants" },
+  ];
+
+  const sortedGroups = useMemo(() => {
+    return [...groups].sort((a, b) => {
+      switch (groupSortBy) {
+        case "date_asc":
+          return a.name.localeCompare(b.name); // fallback since we don't have date
+        case "name_asc":
+          return a.name.localeCompare(b.name);
+        case "name_desc":
+          return b.name.localeCompare(a.name);
+        case "completion":
+          return b.completionRate - a.completionRate;
+        case "participants":
+          return b.totalParticipants - a.totalParticipants;
+        case "date_desc":
+        default:
+          return b.name.localeCompare(a.name); // fallback
+      }
+    });
+  }, [groups, groupSortBy]);
+
+  const {
+    currentPage: groupsPage,
+    totalPages: groupsTotalPages,
+    paginatedItems: paginatedGroups,
+    goToPage: goToGroupsPage,
+    totalItems: groupsTotalItems,
+    startIndex: groupsStartIndex,
+    endIndex: groupsEndIndex,
+  } = usePagination(sortedGroups);
 
   const { exportToCsv } = useCsvExport();
 
@@ -674,13 +717,23 @@ const Reports = () => {
           <TabsContent value="groups" className="space-y-6">
             <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-0 shadow-lg">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-white" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle>Active Assessment Groups</CardTitle>
+                      <CardDescription>Performance overview for each group</CardDescription>
+                    </div>
                   </div>
-                  Active Assessment Groups
-                </CardTitle>
-                <CardDescription>Performance overview for each group</CardDescription>
+                  <SortDropdown
+                    options={groupSortOptions}
+                    value={groupSortBy}
+                    onValueChange={setGroupSortBy}
+                    placeholder="Sort by"
+                  />
+                </div>
               </CardHeader>
               <CardContent>
                 {groups.length === 0 ? (
@@ -689,53 +742,65 @@ const Reports = () => {
                     <p>No active groups found</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {groups.map((group, index) => {
-                      const TypeIcon = getTypeIcon(group.assessmentType);
-                      return (
-                        <motion.div
-                          key={group.id}
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800/50 shadow-sm hover:shadow-md transition-all cursor-pointer"
-                          onClick={() => navigate(`/assessment-groups/${group.id}/report`)}
-                        >
-                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0 shadow-md">
-                            <TypeIcon className="w-6 h-6 text-white" />
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{group.name}</p>
-                            <p className="text-sm text-muted-foreground truncate">{group.assessmentTitle}</p>
-                          </div>
-
-                          <div className="hidden sm:flex items-center gap-6">
-                            <div className="text-center px-3 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/30">
-                              <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">{group.totalParticipants}</p>
-                              <p className="text-xs text-blue-600/70 dark:text-blue-400/70">Participants</p>
+                  <>
+                    <div className="space-y-4">
+                      {paginatedGroups.map((group, index) => {
+                        const TypeIcon = getTypeIcon(group.assessmentType);
+                        return (
+                          <motion.div
+                            key={group.id}
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                            className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800/50 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                            onClick={() => navigate(`/assessment-groups/${group.id}/report`)}
+                          >
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0 shadow-md">
+                              <TypeIcon className="w-6 h-6 text-white" />
                             </div>
-                            <div className="text-center px-3 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/30">
-                              <p className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">{group.completionRate}%</p>
-                              <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">Completed</p>
+
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate">{group.name}</p>
+                              <p className="text-sm text-muted-foreground truncate">{group.assessmentTitle}</p>
                             </div>
-                            {group.averageScore !== null && (
-                              <div className="text-center px-3 py-1 rounded-lg bg-violet-50 dark:bg-violet-950/30">
-                                <p className="text-lg font-semibold text-violet-600 dark:text-violet-400">{group.averageScore}%</p>
-                                <p className="text-xs text-violet-600/70 dark:text-violet-400/70">Avg Score</p>
+
+                            <div className="hidden sm:flex items-center gap-6">
+                              <div className="text-center px-3 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/30">
+                                <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">{group.totalParticipants}</p>
+                                <p className="text-xs text-blue-600/70 dark:text-blue-400/70">Participants</p>
                               </div>
-                            )}
-                          </div>
+                              <div className="text-center px-3 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/30">
+                                <p className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">{group.completionRate}%</p>
+                                <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70">Completed</p>
+                              </div>
+                              {group.averageScore !== null && (
+                                <div className="text-center px-3 py-1 rounded-lg bg-violet-50 dark:bg-violet-950/30">
+                                  <p className="text-lg font-semibold text-violet-600 dark:text-violet-400">{group.averageScore}%</p>
+                                  <p className="text-xs text-violet-600/70 dark:text-violet-400/70">Avg Score</p>
+                                </div>
+                              )}
+                            </div>
 
-                          <Button variant="outline" size="sm" className="shadow-sm">
-                            <Eye className="w-4 h-4 mr-1" />
-                            View
-                            <ArrowRight className="w-4 h-4 ml-1" />
-                          </Button>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
+                            <Button variant="outline" size="sm" className="shadow-sm">
+                              <Eye className="w-4 h-4 mr-1" />
+                              View
+                              <ArrowRight className="w-4 h-4 ml-1" />
+                            </Button>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                    {sortedGroups.length > 0 && (
+                      <TablePagination
+                        currentPage={groupsPage}
+                        totalPages={groupsTotalPages}
+                        onPageChange={goToGroupsPage}
+                        totalItems={groupsTotalItems}
+                        startIndex={groupsStartIndex}
+                        endIndex={groupsEndIndex}
+                      />
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>

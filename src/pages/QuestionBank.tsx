@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { SortDropdown, SortOption } from "@/components/ui/sort-dropdown";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
@@ -90,6 +91,7 @@ export default function QuestionBank() {
   const [filterDifficulty, setFilterDifficulty] = useState<string>("all");
   const [filterLanguage, setFilterLanguage] = useState<string>("all");
   const [filterTag, setFilterTag] = useState<string>("");
+  const [sortBy, setSortBy] = useState("date_desc");
   
   // Dialogs
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -242,15 +244,39 @@ export default function QuestionBank() {
     setEditForm({ ...editForm, options: newOptions });
   };
 
-  // Apply filters
-  const filteredQuestions = useMemo(() => questions.filter((q) => {
-    if (searchTerm && !q.text.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-    if (filterType !== "all" && q.assessment_type !== filterType) return false;
-    if (filterDifficulty !== "all" && q.difficulty !== filterDifficulty) return false;
-    if (filterLanguage !== "all" && q.language !== filterLanguage) return false;
-    if (filterTag && !q.tags?.some((t) => t.toLowerCase().includes(filterTag.toLowerCase()))) return false;
-    return true;
-  }), [questions, searchTerm, filterType, filterDifficulty, filterLanguage, filterTag]);
+  const sortOptions: SortOption[] = [
+    { value: "date_desc", label: language === 'ar' ? "الأحدث أولاً" : "Newest First" },
+    { value: "date_asc", label: language === 'ar' ? "الأقدم أولاً" : "Oldest First" },
+    { value: "difficulty", label: t.builder.difficulty },
+    { value: "type", label: t.assessments.type },
+  ];
+
+  // Apply filters and sorting
+  const filteredAndSortedQuestions = useMemo(() => {
+    const filtered = questions.filter((q) => {
+      if (searchTerm && !q.text.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+      if (filterType !== "all" && q.assessment_type !== filterType) return false;
+      if (filterDifficulty !== "all" && q.difficulty !== filterDifficulty) return false;
+      if (filterLanguage !== "all" && q.language !== filterLanguage) return false;
+      if (filterTag && !q.tags?.some((t) => t.toLowerCase().includes(filterTag.toLowerCase()))) return false;
+      return true;
+    });
+
+    return [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case "date_asc":
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case "difficulty":
+          const diffOrder = { easy: 0, medium: 1, hard: 2 };
+          return (diffOrder[a.difficulty as keyof typeof diffOrder] || 1) - (diffOrder[b.difficulty as keyof typeof diffOrder] || 1);
+        case "type":
+          return (a.assessment_type || "").localeCompare(b.assessment_type || "");
+        case "date_desc":
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+  }, [questions, searchTerm, filterType, filterDifficulty, filterLanguage, filterTag, sortBy]);
 
   const {
     currentPage,
@@ -261,12 +287,12 @@ export default function QuestionBank() {
     startIndex,
     endIndex,
     resetPage,
-  } = usePagination(filteredQuestions);
+  } = usePagination(filteredAndSortedQuestions);
 
   // Reset to page 1 when filters change
   useEffect(() => {
     resetPage();
-  }, [searchTerm, filterType, filterDifficulty, filterLanguage, filterTag]);
+  }, [searchTerm, filterType, filterDifficulty, filterLanguage, filterTag, sortBy]);
 
   // Get unique tags for filter suggestions
   const allTags = [...new Set(questions.flatMap((q) => q.tags || []))];
@@ -374,6 +400,12 @@ export default function QuestionBank() {
                   ))}
                 </datalist>
               </div>
+              <SortDropdown
+                options={sortOptions}
+                value={sortBy}
+                onValueChange={setSortBy}
+                placeholder={language === 'ar' ? "ترتيب حسب" : "Sort by"}
+              />
             </div>
           </CardContent>
         </Card>
@@ -385,7 +417,7 @@ export default function QuestionBank() {
               <div className="flex items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
               </div>
-            ) : filteredQuestions.length === 0 ? (
+            ) : filteredAndSortedQuestions.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 text-center">
                 <Library className="w-12 h-12 text-muted-foreground/40 mb-4" />
                 <h3 className="font-semibold text-lg mb-2">{language === 'ar' ? 'لم يتم العثور على أسئلة' : 'No questions found'}</h3>
@@ -488,7 +520,7 @@ export default function QuestionBank() {
             )}
 
             {/* Pagination */}
-            {!loading && filteredQuestions.length > 0 && (
+            {!loading && filteredAndSortedQuestions.length > 0 && (
               <TablePagination
                 currentPage={currentPage}
                 totalPages={totalPages}

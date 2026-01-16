@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/ui/table-pagination";
+import { SortDropdown, SortOption } from "@/components/ui/sort-dropdown";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -119,6 +120,7 @@ const Assessments = () => {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("date_desc");
   
   // Dialog states
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -345,12 +347,36 @@ const Assessments = () => {
     });
   };
 
-  const filteredAssessments = useMemo(() => 
-    assessments.filter(a =>
+  const sortOptions: SortOption[] = [
+    { value: "date_desc", label: "Newest First" },
+    { value: "date_asc", label: "Oldest First" },
+    { value: "name_asc", label: "Name (A-Z)" },
+    { value: "name_desc", label: "Name (Z-A)" },
+    { value: "status", label: t.assessments.status },
+  ];
+
+  const filteredAndSortedAssessments = useMemo(() => {
+    const filtered = assessments.filter(a =>
       a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       a.type.toLowerCase().includes(searchQuery.toLowerCase())
-    ), [assessments, searchQuery]
-  );
+    );
+    
+    return [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case "date_asc":
+          return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+        case "name_asc":
+          return a.title.localeCompare(b.title);
+        case "name_desc":
+          return b.title.localeCompare(a.title);
+        case "status":
+          return (a.status || "").localeCompare(b.status || "");
+        case "date_desc":
+        default:
+          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      }
+    });
+  }, [assessments, searchQuery, sortBy]);
 
   const {
     currentPage,
@@ -361,12 +387,12 @@ const Assessments = () => {
     startIndex,
     endIndex,
     resetPage,
-  } = usePagination(filteredAssessments);
+  } = usePagination(filteredAndSortedAssessments);
 
   // Reset to page 1 when search changes
   useEffect(() => {
     resetPage();
-  }, [searchQuery]);
+  }, [searchQuery, sortBy]);
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '-';
@@ -421,8 +447,8 @@ const Assessments = () => {
           </Button>
         </div>
 
-        {/* Search */}
-        <div className="mb-6">
+        {/* Search and Sort */}
+        <div className="flex flex-wrap items-center gap-4 mb-6">
           <div className="relative w-80">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -432,6 +458,12 @@ const Assessments = () => {
               className="pl-10"
             />
           </div>
+          <SortDropdown
+            options={sortOptions}
+            value={sortBy}
+            onValueChange={setSortBy}
+            placeholder="Sort by"
+          />
         </div>
 
         {/* Content */}
@@ -443,7 +475,7 @@ const Assessments = () => {
           <div className="text-center py-20">
             <p className="text-muted-foreground">{t.assessments.notAssigned}</p>
           </div>
-        ) : filteredAssessments.length === 0 ? (
+        ) : filteredAndSortedAssessments.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card p-12 text-center">
             <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">
@@ -564,7 +596,7 @@ const Assessments = () => {
         )}
 
         {/* Pagination */}
-        {!loading && filteredAssessments.length > 0 && (
+        {!loading && filteredAndSortedAssessments.length > 0 && (
           <TablePagination
             currentPage={currentPage}
             totalPages={totalPages}
