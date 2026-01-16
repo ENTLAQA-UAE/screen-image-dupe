@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -193,7 +195,7 @@ const Participants = () => {
           )
         `)
         .eq('organization_id', organizationId)
-        .order('id', { ascending: false });
+        .order('started_at', { ascending: false, nullsFirst: false });
 
       if (error) throw error;
 
@@ -428,7 +430,7 @@ const Participants = () => {
     return format(new Date(dateString), 'MMM d, yyyy HH:mm');
   };
 
-  const filteredParticipants = participants.filter(p => {
+  const filteredParticipants = useMemo(() => participants.filter(p => {
     const matchesSearch = 
       (p.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
       (p.email?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
@@ -439,7 +441,23 @@ const Participants = () => {
     const matchesStatus = filterStatus === 'all' || p.status === filterStatus;
     
     return matchesSearch && matchesGroup && matchesStatus;
-  });
+  }), [participants, searchQuery, filterGroup, filterStatus]);
+
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems: paginatedParticipants,
+    goToPage,
+    totalItems,
+    startIndex,
+    endIndex,
+    resetPage,
+  } = usePagination(filteredParticipants);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    resetPage();
+  }, [searchQuery, filterGroup, filterStatus]);
 
   if (authLoading) {
     return (
@@ -598,7 +616,7 @@ const Participants = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredParticipants.map((participant, index) => {
+                {paginatedParticipants.map((participant, index) => {
                   const status = participant.status || 'invited';
                   const StatusIcon = statusIcons[status] || Clock;
 
@@ -731,9 +749,21 @@ const Participants = () => {
           </div>
         )}
 
+        {/* Pagination */}
+        {!loading && filteredParticipants.length > 0 && (
+          <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+            totalItems={totalItems}
+            startIndex={startIndex}
+            endIndex={endIndex}
+          />
+        )}
+
         {/* Summary */}
         {!loading && organizationId && participants.length > 0 && (
-          <div className="mt-6 flex items-center gap-6 text-sm text-muted-foreground">
+          <div className="mt-4 flex items-center gap-6 text-sm text-muted-foreground">
             <span>{t.participants.total}: {participants.length}</span>
             <span>{t.participants.invited}: {participants.filter(p => p.status === 'invited').length}</span>
             <span>{t.participants.started}: {participants.filter(p => p.status === 'started').length}</span>

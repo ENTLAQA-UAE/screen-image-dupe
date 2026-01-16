@@ -1009,7 +1009,7 @@ export default function TakeAssessment() {
             }}
           >
             {organization?.logoUrl ? (
-              <img src={organization.logoUrl} alt={organization.name} className="h-14 mx-auto mb-4 object-contain brightness-0 invert" />
+              <img src={organization.logoUrl} alt={organization.name} className="h-14 mx-auto mb-4 object-contain drop-shadow-lg" />
             ) : organization?.name ? (
               <div className="flex items-center justify-center gap-2 mb-4">
                 <Building2 className="w-6 h-6" />
@@ -1121,7 +1121,7 @@ export default function TakeAssessment() {
             }}
           >
             {organization?.logoUrl ? (
-              <img src={organization.logoUrl} alt={organization.name} className="h-14 mx-auto mb-4 object-contain brightness-0 invert" />
+              <img src={organization.logoUrl} alt={organization.name} className="h-14 mx-auto mb-4 object-contain drop-shadow-lg" />
             ) : organization?.name ? (
               <div className="flex items-center justify-center gap-2 mb-4">
                 <Building2 className="w-6 h-6" />
@@ -1572,7 +1572,7 @@ export default function TakeAssessment() {
               }}
             >
               {orgLogo ? (
-                <img src={orgLogo} alt={orgName} className="h-14 mx-auto object-contain brightness-0 invert" />
+                <img src={orgLogo} alt={orgName} className="h-14 mx-auto object-contain drop-shadow-lg" />
               ) : orgName ? (
                 <div className="flex items-center justify-center gap-2">
                   <Building2 className="w-6 h-6" />
@@ -1648,7 +1648,7 @@ export default function TakeAssessment() {
                 }}
               >
                 {orgLogo ? (
-                  <img src={orgLogo} alt={orgName} className="h-14 mx-auto mb-4 object-contain brightness-0 invert" />
+                  <img src={orgLogo} alt={orgName} className="h-14 mx-auto mb-4 object-contain drop-shadow-lg" />
                 ) : (
                   <div className="flex items-center justify-center gap-2 mb-4">
                     <Building2 className="w-6 h-6" />

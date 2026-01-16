@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
@@ -241,14 +243,30 @@ export default function QuestionBank() {
   };
 
   // Apply filters
-  const filteredQuestions = questions.filter((q) => {
+  const filteredQuestions = useMemo(() => questions.filter((q) => {
     if (searchTerm && !q.text.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     if (filterType !== "all" && q.assessment_type !== filterType) return false;
     if (filterDifficulty !== "all" && q.difficulty !== filterDifficulty) return false;
     if (filterLanguage !== "all" && q.language !== filterLanguage) return false;
     if (filterTag && !q.tags?.some((t) => t.toLowerCase().includes(filterTag.toLowerCase()))) return false;
     return true;
-  });
+  }), [questions, searchTerm, filterType, filterDifficulty, filterLanguage, filterTag]);
+
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems: paginatedQuestions,
+    goToPage,
+    totalItems,
+    startIndex,
+    endIndex,
+    resetPage,
+  } = usePagination(filteredQuestions);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    resetPage();
+  }, [searchTerm, filterType, filterDifficulty, filterLanguage, filterTag]);
 
   // Get unique tags for filter suggestions
   const allTags = [...new Set(questions.flatMap((q) => q.tags || []))];
@@ -390,7 +408,7 @@ export default function QuestionBank() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredQuestions.map((question) => (
+                  {paginatedQuestions.map((question) => (
                     <TableRow key={question.id}>
                       <TableCell>
                         <div className="max-w-md">
@@ -467,6 +485,18 @@ export default function QuestionBank() {
                   ))}
                 </TableBody>
               </Table>
+            )}
+
+            {/* Pagination */}
+            {!loading && filteredQuestions.length > 0 && (
+              <TablePagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={goToPage}
+                totalItems={totalItems}
+                startIndex={startIndex}
+                endIndex={endIndex}
+              />
             )}
           </CardContent>
         </Card>
