@@ -222,8 +222,7 @@ const Reports = () => {
       `)
       .eq("organization_id", organizationId!)
       .eq("is_active", true)
-      .order("created_at", { ascending: false })
-      .limit(10);
+      .order("created_at", { ascending: false });
 
     if (!groupsData) return;
 

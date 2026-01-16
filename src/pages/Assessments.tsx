@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -343,10 +345,28 @@ const Assessments = () => {
     });
   };
 
-  const filteredAssessments = assessments.filter(a =>
-    a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    a.type.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredAssessments = useMemo(() => 
+    assessments.filter(a =>
+      a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      a.type.toLowerCase().includes(searchQuery.toLowerCase())
+    ), [assessments, searchQuery]
   );
+
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems: paginatedAssessments,
+    goToPage,
+    totalItems,
+    startIndex,
+    endIndex,
+    resetPage,
+  } = usePagination(filteredAssessments);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    resetPage();
+  }, [searchQuery]);
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '-';
@@ -445,7 +465,7 @@ const Assessments = () => {
             animate={{ opacity: 1, y: 0 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            {filteredAssessments.map((assessment, index) => {
+            {paginatedAssessments.map((assessment, index) => {
               const assessmentTypes = getAssessmentTypes(t);
               const statusConfig = getStatusConfig(t);
               const IconComponent = getAssessmentIcon(assessment.type);
@@ -541,6 +561,18 @@ const Assessments = () => {
               );
             })}
           </motion.div>
+        )}
+
+        {/* Pagination */}
+        {!loading && filteredAssessments.length > 0 && (
+          <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+            totalItems={totalItems}
+            startIndex={startIndex}
+            endIndex={endIndex}
+          />
         )}
       </div>
 
