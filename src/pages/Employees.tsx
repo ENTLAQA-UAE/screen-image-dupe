@@ -63,7 +63,6 @@ const Employees = () => {
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [departments, setDepartments] = useState<string[]>([]);
