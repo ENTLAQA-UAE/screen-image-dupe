@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Edit, UserPlus, Link as LinkIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,9 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Organization, OrganizationStats, planColors } from './types';
+import { usePagination } from '@/hooks/usePagination';
+import { TablePagination } from '@/components/ui/table-pagination';
+import { SortDropdown, SortOption } from '@/components/ui/sort-dropdown';
 
 interface OrganizationsSectionProps {
   organizations: Organization[];
@@ -46,6 +49,40 @@ export function OrganizationsSection({
   const [editOrgPlan, setEditOrgPlan] = useState('');
   const [editOrgColor, setEditOrgColor] = useState('');
   const [isUpdatingOrg, setIsUpdatingOrg] = useState(false);
+  const [sortBy, setSortBy] = useState('date-desc');
+
+  const sortOptions: SortOption[] = [
+    { value: 'date-desc', label: 'Newest First' },
+    { value: 'date-asc', label: 'Oldest First' },
+    { value: 'name-asc', label: 'Name (A-Z)' },
+    { value: 'name-desc', label: 'Name (Z-A)' },
+  ];
+
+  const sortedOrganizations = useMemo(() => {
+    const sorted = [...organizations];
+    switch (sortBy) {
+      case 'date-desc':
+        return sorted.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+      case 'date-asc':
+        return sorted.sort((a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
+      case 'name-asc':
+        return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      case 'name-desc':
+        return sorted.sort((a, b) => b.name.localeCompare(a.name));
+      default:
+        return sorted;
+    }
+  }, [organizations, sortBy]);
+
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems: paginatedOrganizations,
+    goToPage,
+    totalItems,
+    startIndex,
+    endIndex,
+  } = usePagination(sortedOrganizations);
 
   const handleCreateOrganization = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,60 +200,68 @@ export function OrganizationsSection({
             Manage client organizations, plans, and settings
           </p>
         </div>
-        <Dialog open={isCreateOrgOpen} onOpenChange={setIsCreateOrgOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Organization
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Organization</DialogTitle>
-              <DialogDescription>
-                Add a new client organization to the platform.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleCreateOrganization} className="space-y-4 mt-4">
-              <div className="space-y-2">
-                <Label htmlFor="org-name">Organization Name</Label>
-                <Input
-                  id="org-name"
-                  placeholder="Acme Corporation"
-                  value={newOrgName}
-                  onChange={(e) => setNewOrgName(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="org-slug">Slug (optional)</Label>
-                <Input
-                  id="org-slug"
-                  placeholder="acme-corp"
-                  value={newOrgSlug}
-                  onChange={(e) => setNewOrgSlug(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="org-plan">Plan</Label>
-                <Select value={newOrgPlan} onValueChange={setNewOrgPlan}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="free">Free</SelectItem>
-                    <SelectItem value="starter">Starter</SelectItem>
-                    <SelectItem value="professional">Professional</SelectItem>
-                    <SelectItem value="enterprise">Enterprise</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button type="submit" className="w-full" disabled={isCreatingOrg}>
-                {isCreatingOrg ? "Creating..." : "Create Organization"}
+        <div className="flex items-center gap-4">
+          <SortDropdown
+            options={sortOptions}
+            value={sortBy}
+            onValueChange={setSortBy}
+            placeholder="Sort by"
+          />
+          <Dialog open={isCreateOrgOpen} onOpenChange={setIsCreateOrgOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Organization
               </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Organization</DialogTitle>
+                <DialogDescription>
+                  Add a new client organization to the platform.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleCreateOrganization} className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="org-name">Organization Name</Label>
+                  <Input
+                    id="org-name"
+                    placeholder="Acme Corporation"
+                    value={newOrgName}
+                    onChange={(e) => setNewOrgName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="org-slug">Slug (optional)</Label>
+                  <Input
+                    id="org-slug"
+                    placeholder="acme-corp"
+                    value={newOrgSlug}
+                    onChange={(e) => setNewOrgSlug(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="org-plan">Plan</Label>
+                  <Select value={newOrgPlan} onValueChange={setNewOrgPlan}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="free">Free</SelectItem>
+                      <SelectItem value="starter">Starter</SelectItem>
+                      <SelectItem value="professional">Professional</SelectItem>
+                      <SelectItem value="enterprise">Enterprise</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button type="submit" className="w-full" disabled={isCreatingOrg}>
+                  {isCreatingOrg ? "Creating..." : "Create Organization"}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card>
@@ -228,91 +273,101 @@ export function OrganizationsSection({
               No organizations yet. Create your first organization.
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Organization</TableHead>
-                  <TableHead>Plan</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-center">Assessments</TableHead>
-                  <TableHead className="text-center">Participants</TableHead>
-                  <TableHead className="text-center">Groups</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {organizations.map((org) => (
-                  <TableRow key={org.id} className={org.is_active === false ? 'opacity-60' : ''}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div 
-                          className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm"
-                          style={{ backgroundColor: org.primary_color || '#0f172a' }}
-                        >
-                          {org.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <div className="font-medium">{org.name}</div>
-                          {org.slug && (
-                            <div className="text-xs text-muted-foreground flex items-center gap-1">
-                              <LinkIcon className="h-3 w-3" />
-                              {org.slug}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={planColors[org.plan || 'free']}>
-                        {org.plan || 'free'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <Switch
-                          checked={org.is_active !== false}
-                          onCheckedChange={() => handleToggleOrgActive(org.id, org.is_active !== false)}
-                        />
-                        <span className={`text-xs font-medium ${org.is_active !== false ? 'text-success' : 'text-muted-foreground'}`}>
-                          {org.is_active !== false ? 'Active' : 'Inactive'}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center font-medium">
-                      {orgStats[org.id]?.assessments || 0}
-                    </TableCell>
-                    <TableCell className="text-center font-medium">
-                      {orgStats[org.id]?.participants || 0}
-                    </TableCell>
-                    <TableCell className="text-center font-medium">
-                      {orgStats[org.id]?.groups || 0}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {org.created_at ? new Date(org.created_at).toLocaleDateString() : '-'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openEditOrg(org)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onOpenAssignAdmin(org.id)}
-                        >
-                          <UserPlus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Organization</TableHead>
+                    <TableHead>Plan</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
+                    <TableHead className="text-center">Assessments</TableHead>
+                    <TableHead className="text-center">Participants</TableHead>
+                    <TableHead className="text-center">Groups</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {paginatedOrganizations.map((org) => (
+                    <TableRow key={org.id} className={org.is_active === false ? 'opacity-60' : ''}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div 
+                            className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-sm"
+                            style={{ backgroundColor: org.primary_color || '#0f172a' }}
+                          >
+                            {org.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="font-medium">{org.name}</div>
+                            {org.slug && (
+                              <div className="text-xs text-muted-foreground flex items-center gap-1">
+                                <LinkIcon className="h-3 w-3" />
+                                {org.slug}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={planColors[org.plan || 'free']}>
+                          {org.plan || 'free'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Switch
+                            checked={org.is_active !== false}
+                            onCheckedChange={() => handleToggleOrgActive(org.id, org.is_active !== false)}
+                          />
+                          <span className={`text-xs font-medium ${org.is_active !== false ? 'text-success' : 'text-muted-foreground'}`}>
+                            {org.is_active !== false ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center font-medium">
+                        {orgStats[org.id]?.assessments || 0}
+                      </TableCell>
+                      <TableCell className="text-center font-medium">
+                        {orgStats[org.id]?.participants || 0}
+                      </TableCell>
+                      <TableCell className="text-center font-medium">
+                        {orgStats[org.id]?.groups || 0}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {org.created_at ? new Date(org.created_at).toLocaleDateString() : '-'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditOrg(org)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onOpenAssignAdmin(org.id)}
+                          >
+                            <UserPlus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <TablePagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={goToPage}
+                totalItems={totalItems}
+                startIndex={startIndex}
+                endIndex={endIndex}
+              />
+            </>
           )}
         </CardContent>
       </Card>

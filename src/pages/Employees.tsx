@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/ui/table-pagination";
+import { SortDropdown, SortOption } from "@/components/ui/sort-dropdown";
 import {
   Dialog,
   DialogContent,
@@ -59,11 +62,12 @@ const Employees = () => {
 
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [departments, setDepartments] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<string>("name-asc");
   const [isAnonymizeOpen, setIsAnonymizeOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [anonymizing, setAnonymizing] = useState(false);
@@ -96,9 +100,6 @@ const Employees = () => {
     }
   }, [organizationId]);
 
-  useEffect(() => {
-    filterEmployees();
-  }, [employees, searchQuery, departmentFilter]);
 
   const fetchEmployees = async () => {
     if (!organizationId) return;
@@ -177,7 +178,15 @@ const Employees = () => {
     }
   };
 
-  const filterEmployees = () => {
+  const sortOptions: SortOption[] = [
+    { value: "name-asc", label: language === 'ar' ? 'الاسم (أ-ي)' : 'Name (A-Z)' },
+    { value: "name-desc", label: language === 'ar' ? 'الاسم (ي-أ)' : 'Name (Z-A)' },
+    { value: "date-desc", label: language === 'ar' ? 'الأحدث أولاً' : 'Newest First' },
+    { value: "date-asc", label: language === 'ar' ? 'الأقدم أولاً' : 'Oldest First' },
+    { value: "assessments-desc", label: language === 'ar' ? 'الأكثر تقييمات' : 'Most Assessments' },
+  ];
+
+  const filteredAndSortedEmployees = useMemo(() => {
     let filtered = [...employees];
 
     // Search filter
@@ -198,8 +207,42 @@ const Employees = () => {
       filtered = filtered.filter((e) => e.department === departmentFilter);
     }
 
-    setFilteredEmployees(filtered);
-  };
+    // Sorting
+    switch (sortBy) {
+      case "name-asc":
+        filtered.sort((a, b) => (a.full_name || a.email).localeCompare(b.full_name || b.email));
+        break;
+      case "name-desc":
+        filtered.sort((a, b) => (b.full_name || b.email).localeCompare(a.full_name || a.email));
+        break;
+      case "date-desc":
+        filtered.sort((a, b) => new Date(b.last_assessment_date || 0).getTime() - new Date(a.last_assessment_date || 0).getTime());
+        break;
+      case "date-asc":
+        filtered.sort((a, b) => new Date(a.last_assessment_date || 0).getTime() - new Date(b.last_assessment_date || 0).getTime());
+        break;
+      case "assessments-desc":
+        filtered.sort((a, b) => b.assessment_count - a.assessment_count);
+        break;
+    }
+
+    return filtered;
+  }, [employees, searchQuery, departmentFilter, sortBy]);
+
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems: paginatedEmployees,
+    goToPage,
+    resetPage,
+    totalItems,
+    startIndex,
+    endIndex,
+  } = usePagination(filteredAndSortedEmployees);
+
+  useEffect(() => {
+    resetPage();
+  }, [searchQuery, departmentFilter, sortBy]);
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "-";
@@ -298,7 +341,7 @@ const Employees = () => {
         </div>
 
         {/* Filters */}
-        <div className="flex gap-4 mb-6">
+        <div className="flex flex-wrap gap-4 mb-6">
           <div className="relative flex-1 max-w-md">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -321,6 +364,12 @@ const Employees = () => {
               ))}
             </SelectContent>
           </Select>
+          <SortDropdown
+            options={sortOptions}
+            value={sortBy}
+            onValueChange={setSortBy}
+            placeholder={language === 'ar' ? 'ترتيب حسب' : 'Sort by'}
+          />
         </div>
 
         {/* Content */}
@@ -332,7 +381,7 @@ const Employees = () => {
           <div className="text-center py-20">
             <p className="text-muted-foreground">{t.assessments.notAssigned}</p>
           </div>
-        ) : filteredEmployees.length === 0 ? (
+        ) : filteredAndSortedEmployees.length === 0 ? (
           <Card className="p-12 text-center">
             <Users className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">
@@ -364,7 +413,7 @@ const Employees = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredEmployees.map((employee, index) => (
+                  {paginatedEmployees.map((employee) => (
                     <TableRow
                       key={employee.email}
                       className="cursor-pointer hover:bg-muted/50"
@@ -440,6 +489,14 @@ const Employees = () => {
                   ))}
                 </TableBody>
               </Table>
+              <TablePagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={goToPage}
+                totalItems={totalItems}
+                startIndex={startIndex}
+                endIndex={endIndex}
+              />
             </Card>
           </motion.div>
         )}
