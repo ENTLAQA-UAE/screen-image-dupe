@@ -87,6 +87,14 @@ serve(async (req) => {
     let correctCount = 0;
     const traitScores: Record<string, { score: number; count: number }> = {};
 
+    // SJT score mapping
+    const sjtScoreMap: Record<string, number> = {
+      "Most Effective": 4,
+      "Effective": 3,
+      "Ineffective": 1,
+      "Least Effective": 0,
+    };
+
     const responsesToInsert = answers.map((answer) => {
       const question = questionMap.get(answer.questionId);
       if (!question) return null;
@@ -94,8 +102,30 @@ serve(async (req) => {
       let isCorrect: boolean | null = null;
       let scoreValue: number | null = null;
 
-      if (assessment.is_graded && question.correct_answer) {
-        // Graded assessment - check correct answer
+      // Check if this is an SJT/situational question (has options with score_category)
+      const isSjtQuestion = question.type === 'sjt_ranking' || 
+        (question.options && Array.isArray(question.options) && 
+         question.options.length > 0 && question.options[0]?.score_category);
+
+      if (isSjtQuestion && assessment.is_graded) {
+        // SJT scoring - user selects an option index, score based on score_category
+        const selectedIndex = typeof answer.value === "number" ? answer.value : parseInt(answer.value);
+        const selectedOption = question.options?.[selectedIndex];
+        
+        if (selectedOption) {
+          const scoreCategory = selectedOption.score_category || selectedOption.score;
+          scoreValue = sjtScoreMap[scoreCategory] ?? 0;
+          totalScore += scoreValue;
+          totalPossible += 4; // Max possible score per SJT question
+          
+          // Consider "Most Effective" as correct for counting purposes
+          isCorrect = scoreCategory === "Most Effective";
+          if (isCorrect) {
+            correctCount += 1;
+          }
+        }
+      } else if (assessment.is_graded && question.correct_answer) {
+        // MCQ Graded assessment - check correct answer
         const correctIndex = question.correct_answer?.index;
         if (correctIndex !== undefined) {
           isCorrect = answer.value === correctIndex;
