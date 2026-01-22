@@ -121,6 +121,7 @@ const GroupReport = () => {
   const [selectedParticipant, setSelectedParticipant] = useState<ParticipantData | null>(null);
   const [groupNarrative, setGroupNarrative] = useState<string | null>(null);
   const [narrativeLoading, setNarrativeLoading] = useState(false);
+  const [recalculateLoading, setRecalculateLoading] = useState(false);
 
   useEffect(() => {
     if (groupId && user) {
@@ -434,6 +435,32 @@ const GroupReport = () => {
     toast.success("Results exported to CSV");
   };
 
+  const handleRecalculateScores = async () => {
+    if (!groupId) return;
+    
+    setRecalculateLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("recalculate-sjt-scores", {
+        body: { groupId },
+      });
+
+      if (error) throw error;
+
+      if (data.recalculatedCount > 0) {
+        toast.success(`Recalculated scores for ${data.recalculatedCount} participant(s)`);
+        // Refresh the data
+        fetchGroupData();
+      } else {
+        toast.info("No SJT assessments found to recalculate");
+      }
+    } catch (error: any) {
+      console.error("Error recalculating scores:", error);
+      toast.error("Failed to recalculate scores");
+    } finally {
+      setRecalculateLoading(false);
+    }
+  };
+
   const statusData = stats
     ? [
         { name: "Completed", value: stats.completed, color: STATUS_COLORS.completed },
@@ -477,6 +504,18 @@ const GroupReport = () => {
               {formatDate(group.start_date)} - {formatDate(group.end_date)}
             </p>
           </div>
+          <Button 
+            variant="outline" 
+            onClick={handleRecalculateScores} 
+            disabled={recalculateLoading || participants.filter(p => p.status === 'completed').length === 0}
+          >
+            {recalculateLoading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <RefreshCw className="w-4 h-4 mr-2" />
+            )}
+            Recalculate Scores
+          </Button>
           <Button variant="outline" onClick={handleExportResultsCsv} disabled={participants.length === 0}>
             <FileSpreadsheet className="w-4 h-4 mr-2" />
             Export CSV
