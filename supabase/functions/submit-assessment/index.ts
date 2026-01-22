@@ -87,12 +87,12 @@ serve(async (req) => {
     let correctCount = 0;
     const traitScores: Record<string, { score: number; count: number }> = {};
 
-    // SJT score mapping
-    const sjtScoreMap: Record<string, number> = {
+    // SJT category to score mapping (fallback for legacy data)
+    const sjtCategoryMap: Record<string, number> = {
       "Most Effective": 4,
       "Effective": 3,
-      "Ineffective": 1,
-      "Least Effective": 0,
+      "Ineffective": 2,
+      "Least Effective": 1,
     };
 
     const responsesToInsert = answers.map((answer) => {
@@ -102,24 +102,35 @@ serve(async (req) => {
       let isCorrect: boolean | null = null;
       let scoreValue: number | null = null;
 
-      // Check if this is an SJT/situational question (has options with score_category)
+      // Check if this is an SJT/situational question (has options with numeric score or score_category)
       const isSjtQuestion = question.type === 'sjt_ranking' || 
         (question.options && Array.isArray(question.options) && 
-         question.options.length > 0 && question.options[0]?.score_category);
+         question.options.length > 0 && 
+         (question.options[0]?.score !== undefined || question.options[0]?.score_category));
 
       if (isSjtQuestion && assessment.is_graded) {
-        // SJT scoring - user selects an option index, score based on score_category
+        // SJT scoring - find max score option and check if user selected it
         const selectedIndex = typeof answer.value === "number" ? answer.value : parseInt(answer.value);
         const selectedOption = question.options?.[selectedIndex];
         
-        if (selectedOption) {
-          const scoreCategory = selectedOption.score_category || selectedOption.score;
-          scoreValue = sjtScoreMap[scoreCategory] ?? 0;
-          totalScore += scoreValue;
-          totalPossible += 4; // Max possible score per SJT question
+        if (selectedOption && question.options) {
+          // Get score from numeric field or map from category
+          const getOptionScore = (opt: any): number => {
+            if (typeof opt.score === 'number') return opt.score;
+            if (opt.score_category) return sjtCategoryMap[opt.score_category] ?? 0;
+            return 0;
+          };
           
-          // Consider "Most Effective" as correct for counting purposes
-          isCorrect = scoreCategory === "Most Effective";
+          // Find the maximum score among all options
+          const maxScore = Math.max(...question.options.map(getOptionScore));
+          const selectedScore = getOptionScore(selectedOption);
+          
+          scoreValue = selectedScore;
+          totalScore += selectedScore;
+          totalPossible += maxScore; // Add max possible for this question
+          
+          // Correct = user selected the option with maximum points (e.g., 4)
+          isCorrect = selectedScore === maxScore;
           if (isCorrect) {
             correctCount += 1;
           }
