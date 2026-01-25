@@ -253,7 +253,18 @@ const Participants = () => {
       refreshLimits(); // Refresh usage counts
     } catch (error: any) {
       console.error('Error creating participant:', error);
-      toast.error(error.message || 'Failed to add participant');
+      // Handle duplicate email/code constraint violation
+      if (error.code === '23505' || error.message?.includes('unique constraint')) {
+        if (error.message?.includes('email')) {
+          toast.error('This email is already registered in this assessment group');
+        } else if (error.message?.includes('employee_code') || error.message?.includes('code')) {
+          toast.error('This employee code is already registered in this assessment group');
+        } else {
+          toast.error('This participant already exists in this assessment group');
+        }
+      } else {
+        toast.error(error.message || 'Failed to add participant');
+      }
     } finally {
       setSaving(false);
     }
