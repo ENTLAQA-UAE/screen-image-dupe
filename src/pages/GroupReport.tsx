@@ -93,6 +93,7 @@ interface GroupStats {
   completionRate: number;
   averageScore: number | null;
   highestScore: number | null;
+  competencyAverages: { competency: string; percentage: number; grade: string }[] | null;
   lowestScore: number | null;
   gradeDistribution: { grade: string; count: number }[];
   traitAverages: { trait: string; average: number }[] | null;
@@ -228,6 +229,16 @@ const GroupReport = () => {
     let lowestScore: number | null = null;
     let gradeDistribution: { grade: string; count: number }[] = [];
     let traitAverages: { trait: string; average: number }[] | null = null;
+    let competencyAverages: { competency: string; percentage: number; grade: string }[] | null = null;
+
+    // Helper function to get grade
+    const getGrade = (percentage: number): string => {
+      if (percentage >= 90) return "A";
+      if (percentage >= 80) return "B";
+      if (percentage >= 70) return "C";
+      if (percentage >= 60) return "D";
+      return "F";
+    };
 
     if (isGraded && completedWithScores.length > 0) {
       // Calculate score stats for graded assessments
@@ -254,6 +265,35 @@ const GroupReport = () => {
       gradeDistribution = ["A", "B", "C", "D", "F"]
         .filter((g) => gradeCount[g])
         .map((g) => ({ grade: g, count: gradeCount[g] || 0 }));
+
+      // Calculate competency averages for SJT assessments
+      const competencyData: Record<string, { totalPercentage: number; count: number }> = {};
+      
+      completedWithScores.forEach((p) => {
+        const breakdown = p.score_summary?.competencyBreakdown;
+        if (breakdown && typeof breakdown === "object") {
+          Object.entries(breakdown).forEach(([competency, data]: [string, any]) => {
+            if (typeof data?.percentage === "number") {
+              if (!competencyData[competency]) {
+                competencyData[competency] = { totalPercentage: 0, count: 0 };
+              }
+              competencyData[competency].totalPercentage += data.percentage;
+              competencyData[competency].count += 1;
+            }
+          });
+        }
+      });
+
+      if (Object.keys(competencyData).length > 0) {
+        competencyAverages = Object.entries(competencyData).map(([competency, data]) => {
+          const avgPercentage = Math.round(data.totalPercentage / data.count);
+          return {
+            competency,
+            percentage: avgPercentage,
+            grade: getGrade(avgPercentage),
+          };
+        });
+      }
     } else if (!isGraded && completedWithScores.length > 0) {
       // Calculate trait averages for personality/trait-based assessments
       const allTraits: Record<string, number[]> = {};
@@ -289,6 +329,7 @@ const GroupReport = () => {
       lowestScore,
       gradeDistribution,
       traitAverages,
+      competencyAverages,
     });
   };
 
@@ -779,6 +820,62 @@ const GroupReport = () => {
               )}
               </motion.div>
             </div>
+
+            {/* Competency Breakdown for SJT */}
+            {stats.competencyAverages && stats.competencyAverages.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.37 }}>
+                <Card className="bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-950/30 dark:to-cyan-950/20 border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+                        <TrendingUp className="w-5 h-5 text-white" />
+                      </div>
+                      Competency Breakdown
+                    </CardTitle>
+                    <CardDescription>Average performance by competency across all participants</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {stats.competencyAverages.map((item, index) => (
+                        <motion.div
+                          key={item.competency}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.1 * index }}
+                          className="p-4 bg-card rounded-xl border shadow-sm"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="font-medium text-foreground text-sm">{item.competency}</span>
+                            <span className={`px-2 py-1 rounded-md text-xs font-bold ${
+                              item.grade === 'A' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                              item.grade === 'B' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
+                              item.grade === 'C' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
+                              item.grade === 'D' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' :
+                              'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                            }`}>
+                              {item.grade}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Progress value={item.percentage} className="h-2 flex-1" />
+                            <span className="text-sm font-semibold text-muted-foreground w-12 text-right">
+                              {item.percentage}%
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            {item.grade === 'A' ? 'Outstanding' :
+                             item.grade === 'B' ? 'Exceed Expectations' :
+                             item.grade === 'C' ? 'Meet Expectations' :
+                             item.grade === 'D' ? 'Below Expectations' :
+                             "Doesn't Meet"}
+                          </p>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
             {/* AI Group Narrative */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
