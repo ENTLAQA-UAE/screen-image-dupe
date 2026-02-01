@@ -545,6 +545,7 @@ export type Database = {
           options: Json | null
           order_index: number | null
           organization_id: string
+          subdomain: string | null
           text: string
           type: string
         }
@@ -556,6 +557,7 @@ export type Database = {
           options?: Json | null
           order_index?: number | null
           organization_id: string
+          subdomain?: string | null
           text: string
           type: string
         }
@@ -567,6 +569,7 @@ export type Database = {
           options?: Json | null
           order_index?: number | null
           organization_id?: string
+          subdomain?: string | null
           text?: string
           type?: string
         }
