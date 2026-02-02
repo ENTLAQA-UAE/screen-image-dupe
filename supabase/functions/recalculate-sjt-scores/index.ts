@@ -116,6 +116,7 @@ serve(async (req) => {
       let totalScore = 0;
       let totalPossible = 0;
       let correctCount = 0;
+      const competencyScores: Record<string, { earned: number; possible: number }> = {};
 
       for (const response of responses) {
         const question = response.questions;
@@ -138,6 +139,14 @@ serve(async (req) => {
             
             totalScore += selectedScore;
             totalPossible += maxScore;
+            
+            // Track competency breakdown using subdomain field
+            const competency = question.subdomain || "General";
+            if (!competencyScores[competency]) {
+              competencyScores[competency] = { earned: 0, possible: 0 };
+            }
+            competencyScores[competency].earned += selectedScore;
+            competencyScores[competency].possible += maxScore;
             
             const isCorrect = selectedScore === maxScore;
             if (isCorrect) {
@@ -167,6 +176,16 @@ serve(async (req) => {
         }
       }
 
+      // Build competency breakdown
+      const competencyBreakdown: Record<string, { percentage: number; grade: string }> = {};
+      for (const [competency, data] of Object.entries(competencyScores)) {
+        const compPercentage = data.possible > 0 ? Math.round((data.earned / data.possible) * 100) : 0;
+        competencyBreakdown[competency] = {
+          percentage: compPercentage,
+          grade: getGrade(compPercentage),
+        };
+      }
+
       // Calculate new score summary
       const percentage = totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) : 0;
       const newScoreSummary = {
@@ -175,6 +194,7 @@ serve(async (req) => {
         correctCount,
         percentage,
         grade: getGrade(percentage),
+        competencyBreakdown: Object.keys(competencyBreakdown).length > 0 ? competencyBreakdown : undefined,
         recalculatedAt: new Date().toISOString(),
       };
 
