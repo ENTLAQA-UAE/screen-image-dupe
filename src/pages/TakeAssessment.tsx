@@ -1697,17 +1697,68 @@ export default function TakeAssessment() {
                     >
                       {scoreSummary.percentage}%
                     </div>
-                    <p className="text-slate-600 text-lg">
-                      {scoreSummary.correctCount} {t.of} {scoreSummary.totalPossible} {t.correct}
-                    </p>
                     <div 
                       className="mt-4 inline-block px-6 py-2 rounded-full font-semibold text-white shadow-lg"
                       style={{ 
                         background: resultPrimaryColor ? `linear-gradient(135deg, ${resultPrimaryColor}, ${resultPrimaryColor}dd)` : 'linear-gradient(135deg, #10b981, #059669)'
                       }}
                     >
-                      {t.grade}: {scoreSummary.grade}
+                      {t.grade}: {scoreSummary.grade} - {
+                        scoreSummary.grade === 'A' ? 'Outstanding' :
+                        scoreSummary.grade === 'B' ? 'Exceed Expectations "EE"' :
+                        scoreSummary.grade === 'C' ? 'Meet Expectations "ME"' :
+                        scoreSummary.grade === 'D' ? 'Below Expectations "BE"' :
+                        'Doesn\'t Meet "DM"'
+                      }
                     </div>
+                    
+                    {/* Competency Breakdown for SJT */}
+                    {scoreSummary.competencyBreakdown && Object.keys(scoreSummary.competencyBreakdown).length > 0 && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="mt-8 text-left"
+                      >
+                        <h4 className="font-semibold text-lg text-slate-700 mb-4 text-center">
+                          {isArabic ? "تحليل الكفاءات" : "Competency Breakdown"}
+                        </h4>
+                        <div className="grid gap-3">
+                          {Object.entries(scoreSummary.competencyBreakdown).map(([competency, data]: [string, any], index) => (
+                            <motion.div 
+                              key={competency}
+                              initial={{ opacity: 0, x: isArabic ? 20 : -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.1 * index + 0.5 }}
+                              className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm"
+                            >
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-medium text-slate-700">{competency}</span>
+                                <span 
+                                  className="text-sm font-bold px-3 py-1 rounded-full text-white"
+                                  style={{ 
+                                    background: resultPrimaryColor ? `linear-gradient(135deg, ${resultPrimaryColor}, ${resultPrimaryColor}dd)` : 'linear-gradient(135deg, #10b981, #059669)'
+                                  }}
+                                >
+                                  {data.grade} ({data.percentage}%)
+                                </span>
+                              </div>
+                              <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                                <motion.div 
+                                  className="h-full rounded-full"
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${data.percentage}%` }}
+                                  transition={{ duration: 0.8, delay: 0.3 + (0.1 * index) }}
+                                  style={{ 
+                                    background: resultPrimaryColor ? `linear-gradient(90deg, ${resultPrimaryColor}, ${resultPrimaryColor}aa)` : 'linear-gradient(90deg, #10b981, #34d399)'
+                                  }}
+                                />
+                              </div>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
                   </motion.div>
                 )}
 

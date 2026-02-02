@@ -1094,18 +1094,51 @@ const GroupReport = () => {
                   Results
                 </h3>
                 {selectedParticipant.score_summary.percentage !== undefined ? (
-                  <div className="text-center p-6 bg-muted rounded-xl">
-                    <div className="text-5xl font-bold text-primary mb-2">
-                      {selectedParticipant.score_summary.percentage}%
+                  <div className="space-y-4">
+                    <div className="text-center p-6 bg-muted rounded-xl">
+                      <div className="text-5xl font-bold text-primary mb-2">
+                        {selectedParticipant.score_summary.percentage}%
+                      </div>
+                      {selectedParticipant.score_summary.grade && (
+                        <Badge className="mt-3 text-base px-4 py-1" variant="secondary">
+                          {selectedParticipant.score_summary.grade} - {
+                            selectedParticipant.score_summary.grade === 'A' ? 'Outstanding' :
+                            selectedParticipant.score_summary.grade === 'B' ? 'Exceed Expectations "EE"' :
+                            selectedParticipant.score_summary.grade === 'C' ? 'Meet Expectations "ME"' :
+                            selectedParticipant.score_summary.grade === 'D' ? 'Below Expectations "BE"' :
+                            'Doesn\'t Meet "DM"'
+                          }
+                        </Badge>
+                      )}
                     </div>
-                    <p className="text-muted-foreground">
-                      {selectedParticipant.score_summary.correctCount} of{" "}
-                      {selectedParticipant.score_summary.totalPossible} correct
-                    </p>
-                    {selectedParticipant.score_summary.grade && (
-                      <Badge className="mt-3" variant="secondary">
-                        Grade: {selectedParticipant.score_summary.grade}
-                      </Badge>
+                    
+                    {/* Competency Breakdown for SJT */}
+                    {selectedParticipant.score_summary.competencyBreakdown && 
+                     Object.keys(selectedParticipant.score_summary.competencyBreakdown).length > 0 && (
+                      <div className="mt-4">
+                        <h4 className="font-medium text-sm text-muted-foreground mb-3">Competency Breakdown</h4>
+                        <div className="space-y-3">
+                          {Object.entries(selectedParticipant.score_summary.competencyBreakdown).map(
+                            ([competency, data]: [string, any]) => (
+                              <div key={competency} className="p-3 bg-muted/50 rounded-lg">
+                                <div className="flex items-center justify-between gap-4 mb-2">
+                                  <span className="font-medium text-sm">{competency}</span>
+                                  <Badge variant="outline" className="text-xs">
+                                    {data.grade} - {
+                                      data.grade === 'A' ? 'Outstanding' :
+                                      data.grade === 'B' ? 'EE' :
+                                      data.grade === 'C' ? 'ME' :
+                                      data.grade === 'D' ? 'BE' :
+                                      'DM'
+                                    } ({data.percentage}%)
+                                  </Badge>
+                                </div>
+                                <Progress value={data.percentage} className="h-2" />
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
                     )}
                   </div>
                 ) : selectedParticipant.score_summary.traits ? (

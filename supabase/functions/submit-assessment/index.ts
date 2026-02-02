@@ -86,6 +86,9 @@ serve(async (req) => {
     let totalPossible = 0;
     let correctCount = 0;
     const traitScores: Record<string, { score: number; count: number }> = {};
+    
+    // Track competency breakdown for SJT assessments
+    const competencyScores: Record<string, { earned: number; possible: number }> = {};
 
     // SJT category to score mapping (fallback for legacy data)
     const sjtCategoryMap: Record<string, number> = {
@@ -128,6 +131,14 @@ serve(async (req) => {
           scoreValue = selectedScore;
           totalScore += selectedScore;
           totalPossible += maxScore; // Add max possible for this question
+          
+          // Track competency breakdown using subdomain field
+          const competency = question.subdomain || "General";
+          if (!competencyScores[competency]) {
+            competencyScores[competency] = { earned: 0, possible: 0 };
+          }
+          competencyScores[competency].earned += selectedScore;
+          competencyScores[competency].possible += maxScore;
           
           // Correct = user selected the option with maximum points (e.g., 4)
           isCorrect = selectedScore === maxScore;
@@ -191,12 +202,24 @@ serve(async (req) => {
     
     if (assessment.is_graded) {
       const percentage = totalPossible > 0 ? Math.round((totalScore / totalPossible) * 100) : 0;
+      
+      // Build competency breakdown for SJT assessments
+      const competencyBreakdown: Record<string, { percentage: number; grade: string }> = {};
+      for (const [competency, data] of Object.entries(competencyScores)) {
+        const compPercentage = data.possible > 0 ? Math.round((data.earned / data.possible) * 100) : 0;
+        competencyBreakdown[competency] = {
+          percentage: compPercentage,
+          grade: getGrade(compPercentage),
+        };
+      }
+      
       scoreSummary = {
         totalScore,
         totalPossible,
         correctCount,
         percentage,
         grade: getGrade(percentage),
+        competencyBreakdown: Object.keys(competencyBreakdown).length > 0 ? competencyBreakdown : undefined,
       };
     } else {
       // Calculate trait averages
