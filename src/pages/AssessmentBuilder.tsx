@@ -289,6 +289,8 @@ export default function AssessmentBuilder() {
         text: q.text,
         options: q.options,
         correct_answer: q.correctAnswer !== undefined ? { index: q.correctAnswer } : q.scoringLogic,
+        // IMPORTANT: used by SJT competency breakdown (defaults to "General" if missing)
+        subdomain: q.metadata?.subdomain || q.metadata?.trait || null,
         order_index: index,
       }));
 

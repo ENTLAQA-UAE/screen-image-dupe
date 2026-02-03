@@ -49,7 +49,12 @@ Questions should help identify workplace behavior patterns. Use Likert scales or
 - Customer service orientation
 - Integrity and ethics
 
-Each scenario should present 4-5 response options. Rate options as Most Effective, Effective, Ineffective, or Least Effective.`,
+Each scenario should present 4-5 response options. Rate options as Most Effective, Effective, Ineffective, or Least Effective.
+
+CRITICAL FOR REPORTING:
+- Each generated question MUST include metadata.subdomain set to EXACTLY one competency name from the provided "Target these competencies" list.
+- Distribute questions as evenly as possible across the competencies list.
+- Do NOT invent new competency names.`,
 
   language: `You are an expert in English language assessment. Generate questions that measure:
 - Grammar (sentence structure, verb tenses, articles)
@@ -198,7 +203,10 @@ Each question object must have:
 - "type": one of "mcq_single", "mcq_multi", "likert", "sjt_ranking"
 - "options": array of option objects, each with "text" and optionally "value" (for Likert) or "score" (for personality traits)
 ${isGraded ? '- "correctAnswer": index of the correct option (0-based) for graded questions' : '- "scoringLogic": object mapping option indices to trait/scale scores'}
-- "metadata": object with "difficulty" (easy/medium/hard), "subdomain" or "trait" if applicable
+- "metadata": object with "difficulty" (easy/medium/hard), and:
+  - for situational/SJT questions: "subdomain" MUST be one of the provided competencies
+  - for cognitive: "subdomain" can be a subdomain
+  - for profile: "trait" should be used
 
 Example for graded MCQ:
 {"text": "What is 15 × 8?", "type": "mcq_single", "options": [{"text": "100"}, {"text": "120"}, {"text": "115"}, {"text": "125"}], "correctAnswer": 1, "metadata": {"difficulty": "easy", "subdomain": "numerical"}}
@@ -271,17 +279,24 @@ Return ONLY the JSON array, no other text.`;
     }
 
     // Validate and normalize questions
-    const normalizedQuestions = allQuestions.map((q: any, index: number) => ({
+    const normalizedQuestions = allQuestions.map((q: any, index: number) => {
+      const meta = q.metadata || {};
+      // Tolerate common alternative key from LLMs ("competency") and normalize to subdomain
+      const normalizedSubdomain = meta.subdomain || meta.competency || undefined;
+
+      return {
       text: q.text || "",
       type: q.type || "mcq_single",
       options: q.options || [],
       correctAnswer: q.correctAnswer,
       scoringLogic: q.scoringLogic,
       metadata: {
-        ...q.metadata,
+        ...meta,
+        ...(normalizedSubdomain ? { subdomain: normalizedSubdomain } : {}),
         orderIndex: index,
       },
-    }));
+      };
+    });
 
     console.log(`Generated ${normalizedQuestions.length} questions successfully`);
 
