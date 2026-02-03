@@ -21,7 +21,11 @@ const sjtCategoryMap: Record<string, number> = {
 };
 
 function getOptionScore(opt: any): number {
+  // Case 1: score is a number (e.g., 1, 2, 3, 4)
   if (typeof opt.score === 'number') return opt.score;
+  // Case 2: score is a string category (e.g., "Most Effective")
+  if (typeof opt.score === 'string') return sjtCategoryMap[opt.score] ?? 0;
+  // Case 3: separate score_category field
   if (opt.score_category) return sjtCategoryMap[opt.score_category] ?? 0;
   return 0;
 }
@@ -100,6 +104,7 @@ serve(async (req) => {
       }
 
       // Check if any questions are SJT type
+      // Handle multiple formats: score as number, score as string category, or score_category field
       const hasSjtQuestions = responses.some((r: any) => {
         const q = r.questions;
         return q?.type === 'sjt_ranking' || 
@@ -125,6 +130,7 @@ serve(async (req) => {
         const answerValue = response.answer_data?.value;
         if (answerValue === undefined || answerValue === null) continue;
 
+        // Detect SJT questions - handle multiple formats
         const isSjtQuestion = question.type === 'sjt_ranking' || 
           (question.options && Array.isArray(question.options) && question.options.length > 0 && 
            (question.options[0]?.score !== undefined || question.options[0]?.score_category));
