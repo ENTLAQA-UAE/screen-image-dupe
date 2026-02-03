@@ -85,6 +85,29 @@ function escapeHtml(unsafe: string | null | undefined): string {
     .replace(/'/g, "&#039;");
 }
 
+// ============= Grade Label Mapping =============
+const gradeLabels = {
+  en: {
+    A: "Outstanding",
+    B: "Exceed Expectations \"EE\"",
+    C: "Meet Expectations \"ME\"",
+    D: "Below Expectations \"BE\"",
+    F: "Doesn't Meet \"DM\"",
+  },
+  ar: {
+    A: "متميز",
+    B: "يتجاوز التوقعات",
+    C: "يحقق التوقعات",
+    D: "أقل من التوقعات",
+    F: "لا يحقق المتطلبات",
+  }
+};
+
+function getGradeLabel(grade: string, lang: Language): string {
+  const labels = gradeLabels[lang];
+  return labels[grade as keyof typeof labels] || grade;
+}
+
 // ============= Translations =============
 const translations = {
   en: {
@@ -98,7 +121,7 @@ const translations = {
     group: "Group",
     completed: "Completed",
     results: "Results",
-    correct: "Correct Answers",
+    percentage: "Percentage",
     grade: "Grade",
     aiGeneratedFeedback: "AI-Generated Feedback",
     generatedOn: "Generated on",
@@ -114,7 +137,6 @@ const translations = {
     highest: "Highest Score",
     participants: "Participants",
     status: "Status",
-    score: "Score",
     anonymous: "Anonymous",
     andMore: "and more participants",
     employeeCode: "Employee Code",
@@ -131,6 +153,7 @@ const translations = {
     jobTitle: "Job Title",
     basedOnAssessments: "Based on",
     assessments: "assessments",
+    competencyBreakdown: "Competency Breakdown",
   },
   ar: {
     assessmentReport: "تقرير التقييم",
@@ -143,7 +166,7 @@ const translations = {
     group: "المجموعة",
     completed: "تاريخ الإكمال",
     results: "النتائج",
-    correct: "الإجابات الصحيحة",
+    percentage: "النسبة المئوية",
     grade: "التقدير",
     aiGeneratedFeedback: "ملاحظات الذكاء الاصطناعي",
     generatedOn: "تم الإنشاء في",
@@ -159,7 +182,6 @@ const translations = {
     highest: "أعلى درجة",
     participants: "المشاركون",
     status: "الحالة",
-    score: "الدرجة",
     anonymous: "مجهول",
     andMore: "مشاركين آخرين",
     employeeCode: "رقم الموظف",
@@ -176,6 +198,7 @@ const translations = {
     jobTitle: "المسمى الوظيفي",
     basedOnAssessments: "بناءً على",
     assessments: "تقييمات",
+    competencyBreakdown: "تفصيل الكفاءات",
   }
 };
 
@@ -638,17 +661,15 @@ export async function generateParticipantPDF(report: ParticipantReport): Promise
     { label: t.completed, value: formatDate(report.completedAt, lang, true) }
   );
 
-  // Build stats
+  // Build stats - Show only percentage and grade with label mapping for graded assessments
   let statsItems: { label: string; value: string | number }[] = [];
   if (report.scoreSummary) {
     if (report.scoreSummary.percentage !== undefined) {
-      statsItems.push({ label: t.score, value: `${report.scoreSummary.percentage}%` });
-      statsItems.push({ 
-        label: t.correct, 
-        value: `${report.scoreSummary.correctCount || 0}/${report.scoreSummary.totalPossible || 0}` 
-      });
+      // Show percentage only, not the raw score
+      statsItems.push({ label: t.percentage, value: `${report.scoreSummary.percentage}%` });
       if (report.scoreSummary.grade) {
-        statsItems.push({ label: t.grade, value: report.scoreSummary.grade });
+        // Map grade to descriptive label (A → Outstanding, etc.)
+        statsItems.push({ label: t.grade, value: `${report.scoreSummary.grade} - ${getGradeLabel(report.scoreSummary.grade, lang)}` });
       }
     } else if (report.scoreSummary.traits) {
       statsItems = Object.entries(report.scoreSummary.traits).map(([trait, score]) => ({

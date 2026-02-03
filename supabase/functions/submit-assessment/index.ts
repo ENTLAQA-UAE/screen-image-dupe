@@ -105,7 +105,8 @@ serve(async (req) => {
       let isCorrect: boolean | null = null;
       let scoreValue: number | null = null;
 
-      // Check if this is an SJT/situational question (has options with numeric score or score_category)
+      // Check if this is an SJT/situational question
+      // Handle multiple data formats: score as number, score as string category, or score_category field
       const isSjtQuestion = question.type === 'sjt_ranking' || 
         (question.options && Array.isArray(question.options) && 
          question.options.length > 0 && 
@@ -117,9 +118,13 @@ serve(async (req) => {
         const selectedOption = question.options?.[selectedIndex];
         
         if (selectedOption && question.options) {
-          // Get score from numeric field or map from category
+          // Get score from numeric field, string category in score field, or score_category field
           const getOptionScore = (opt: any): number => {
+            // Case 1: score is a number (e.g., 1, 2, 3, 4)
             if (typeof opt.score === 'number') return opt.score;
+            // Case 2: score is a string category (e.g., "Most Effective")
+            if (typeof opt.score === 'string') return sjtCategoryMap[opt.score] ?? 0;
+            // Case 3: separate score_category field
             if (opt.score_category) return sjtCategoryMap[opt.score_category] ?? 0;
             return 0;
           };
