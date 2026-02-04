@@ -113,7 +113,7 @@ const translations = {
     percentage: "النسبة المئوية",
     grade: "التقدير",
     competencyBreakdown: "تفصيل الكفاءات",
-    aiGeneratedFeedback: "ملاحظات الذكاء الاصطناعي",
+    aiGeneratedFeedback: "التغذية العكسية",
     talentSnapshot: "لمحة المواهب",
     generatedOn: "تم الإنشاء في",
     basedOn: "بناءً على",

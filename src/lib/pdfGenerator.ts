@@ -175,7 +175,7 @@ const translations = {
     results: "النتائج",
     percentage: "النسبة المئوية",
     grade: "التقدير",
-    aiGeneratedFeedback: "ملاحظات الذكاء الاصطناعي",
+    aiGeneratedFeedback: "التغذية العكسية",
     generatedOn: "تم الإنشاء في",
     page: "صفحة",
     of: "من",
