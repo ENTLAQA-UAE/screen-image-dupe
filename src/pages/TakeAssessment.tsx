@@ -668,31 +668,29 @@ export default function TakeAssessment() {
         }));
 
         // Normal flow uses supabase client; auto/time uses fetch keepalive for better reliability when tab is hidden.
-        const data =
-          submissionType === 'normal'
-            ? (() =>
-                supabase.functions
-                  .invoke('submit-assessment', {
-                    body: {
-                      participantId,
-                      assessmentId: assessmentData.assessment.id,
-                      answers: answersArray,
-                      submissionType,
-                    },
-                  })
-                  .then(({ data, error }) => {
-                    if (error) throw error;
-                    return data;
-                  }))()
-            : await submitViaFetch(
-                {
-                  participantId,
-                  assessmentId: assessmentData.assessment.id,
-                  answers: answersArray,
-                  submissionType,
-                },
-                { keepalive: opts?.keepalive ?? true },
-              );
+        let data;
+        if (submissionType === 'normal') {
+          const { data: responseData, error } = await supabase.functions.invoke('submit-assessment', {
+            body: {
+              participantId,
+              assessmentId: assessmentData.assessment.id,
+              answers: answersArray,
+              submissionType,
+            },
+          });
+          if (error) throw error;
+          data = responseData;
+        } else {
+          data = await submitViaFetch(
+            {
+              participantId,
+              assessmentId: assessmentData.assessment.id,
+              answers: answersArray,
+              submissionType,
+            },
+            { keepalive: opts?.keepalive ?? true },
+          );
+        }
 
         setSubmissionResults(data);
 
