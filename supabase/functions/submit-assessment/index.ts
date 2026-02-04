@@ -315,9 +315,45 @@ async function generateAIReport(assessment: any, scoreSummary: any, participantN
   const isGraded = assessment.is_graded;
   const language = assessment.language || "en";
   const name = participantName || "Employee";
+  const isSJT = assessment.type === "situational" || assessment.type === "sjt";
 
   let prompt = "";
-  if (isGraded) {
+  
+  if (isSJT && scoreSummary.competencyBreakdown) {
+    // SJT-specific feedback with competency breakdown
+    const competencyDetails = Object.entries(scoreSummary.competencyBreakdown)
+      .map(([comp, data]: [string, any]) => `- ${comp}: ${data.percentage}% (Grade: ${data.grade})`)
+      .join("\n");
+    
+    const strengths = Object.entries(scoreSummary.competencyBreakdown)
+      .filter(([_, data]: [string, any]) => data.percentage >= 75)
+      .map(([comp]: [string, any]) => comp);
+    
+    const improvements = Object.entries(scoreSummary.competencyBreakdown)
+      .filter(([_, data]: [string, any]) => data.percentage < 60)
+      .map(([comp]: [string, any]) => comp);
+
+    prompt = `Generate a detailed, competency-based feedback report for ${name} who completed a Situational Judgment Test (SJT).
+
+Overall Score: ${scoreSummary.percentage}% (Grade: ${scoreSummary.grade})
+
+Competency Breakdown:
+${competencyDetails}
+
+${strengths.length > 0 ? `Strong competencies: ${strengths.join(", ")}` : ""}
+${improvements.length > 0 ? `Competencies needing development: ${improvements.join(", ")}` : ""}
+
+Provide:
+1. A personalized greeting using "${name}"
+2. Overall performance summary
+3. Detailed feedback for EACH competency listed above - explain what the score means and provide specific behavioral insights
+4. Highlight their strongest competencies with examples of how they demonstrated good judgment
+5. For lower-scoring competencies, provide constructive suggestions for improvement
+6. Actionable next steps for professional development
+
+Keep it professional, constructive, and around 300 words. Be specific to each competency - do not use generic feedback.
+${language === "ar" ? "Write the entire response in Arabic." : ""}`;
+  } else if (isGraded) {
     prompt = `Generate a brief, encouraging feedback report for ${name} who completed a ${assessment.type} assessment.
 Score: ${scoreSummary.percentage}% (${scoreSummary.correctCount}/${scoreSummary.totalPossible} correct)
 Grade: ${scoreSummary.grade}
