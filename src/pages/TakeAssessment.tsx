@@ -693,10 +693,14 @@ export default function TakeAssessment() {
         }
 
         setSubmissionResults(data);
+        
+        console.log("Submission response:", JSON.stringify(data));
+        console.log("showResults:", data?.showResults, "results:", data?.results);
 
         if (data?.showResults && data?.results) {
           setPageState('results');
         } else {
+          console.log("Setting pageState to 'completed' because showResults or results is missing");
           setPageState('completed');
         }
       } catch (error: any) {
