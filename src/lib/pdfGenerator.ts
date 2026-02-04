@@ -12,6 +12,12 @@ export interface OrganizationBranding {
   primaryColor?: string | null;
 }
 
+export interface CompetencyScore {
+  percentage: number;
+  grade: string;
+  questionsCount?: number;
+}
+
 export interface ParticipantReport {
   participantName: string;
   participantEmail: string;
@@ -27,6 +33,7 @@ export interface ParticipantReport {
     correctCount?: number;
     totalPossible?: number;
     traits?: Record<string, number>;
+    competencyBreakdown?: Record<string, CompetencyScore>;
   } | null;
   aiReport: string | null;
   organization: OrganizationBranding;
@@ -352,6 +359,61 @@ function buildStatsGrid(stats: { label: string; value: string | number }[], prim
           <div style="color: #64748b; font-size: 11px; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.3px;">${stat.label}</div>
         </div>
       `).join('')}
+    </div>
+  `;
+}
+
+function buildCompetencyBreakdownSection(
+  competencyBreakdown: Record<string, { percentage: number; grade: string; questionsCount?: number }>,
+  title: string,
+  primaryColor: string,
+  lang: Language
+): string {
+  const dir = getDirection(lang);
+  const textAlign = getTextAlign(lang);
+  const hsl = hexToHsl(primaryColor);
+
+  const entries = Object.entries(competencyBreakdown).filter(([name]) => name !== 'General');
+  if (entries.length === 0) return '';
+
+  const rows = entries.map(([name, data]) => {
+    const gradeLabel = getGradeLabel(data.grade, lang);
+    const safeName = escapeHtml(name);
+    return `
+      <tr>
+        <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-weight: 500;">${safeName}</td>
+        <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0; text-align: center;">
+          <span style="background: linear-gradient(135deg, hsl(${hsl.h}, 40%, 94%) 0%, hsl(${hsl.h}, 35%, 90%) 100%); padding: 4px 12px; border-radius: 12px; font-weight: 600; color: ${primaryColor};">
+            ${data.percentage}%
+          </span>
+        </td>
+        <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0; text-align: center;">
+          <span style="font-weight: 600; color: ${primaryColor};">${data.grade}</span>
+          <span style="color: #64748b; font-size: 12px; margin-${lang === 'ar' ? 'right' : 'left'}: 4px;">(${gradeLabel})</span>
+        </td>
+      </tr>
+    `;
+  }).join('');
+
+  const headerPercentage = lang === 'ar' ? 'النسبة' : 'Percentage';
+  const headerGrade = lang === 'ar' ? 'التقدير' : 'Grade';
+  const headerCompetency = lang === 'ar' ? 'الكفاءة' : 'Competency';
+
+  return `
+    <div class="page-break-inside-avoid" style="margin-bottom: 30px; direction: ${dir}; text-align: ${textAlign};">
+      ${buildSectionHeader(title, primaryColor, lang)}
+      <table style="width: 100%; border-collapse: collapse; background: #f8fafc; border-radius: 12px; overflow: hidden;">
+        <thead>
+          <tr style="background: linear-gradient(135deg, hsl(${hsl.h}, 30%, 96%) 0%, hsl(${hsl.h}, 25%, 93%) 100%);">
+            <th style="padding: 14px 16px; text-align: ${textAlign}; font-weight: 600; color: ${primaryColor};">${headerCompetency}</th>
+            <th style="padding: 14px 16px; text-align: center; font-weight: 600; color: ${primaryColor};">${headerPercentage}</th>
+            <th style="padding: 14px 16px; text-align: center; font-weight: 600; color: ${primaryColor};">${headerGrade}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
     </div>
   `;
 }
@@ -692,6 +754,16 @@ export async function generateParticipantPDF(report: ParticipantReport): Promise
     page1 += buildSectionHeader(t.results, primaryColor, lang);
     page1 += buildStatsGrid(statsItems, primaryColor, lang);
     page1 += `</div>`;
+  }
+
+  // Add competency breakdown for SJT assessments
+  if (report.scoreSummary?.competencyBreakdown) {
+    page1 += buildCompetencyBreakdownSection(
+      report.scoreSummary.competencyBreakdown,
+      t.competencyBreakdown,
+      primaryColor,
+      lang
+    );
   }
 
   // Build AI feedback pages (auto-paginated so nothing gets cut)
