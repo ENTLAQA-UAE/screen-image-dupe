@@ -71,9 +71,9 @@ const translations = {
     group: "Group",
     completed: "Completed",
     results: "Results",
-    score: "Score",
-    correct: "Correct Answers",
+    percentage: "Percentage",
     grade: "Grade",
+    competencyBreakdown: "Competency Breakdown",
     aiGeneratedFeedback: "AI-Generated Feedback",
     talentSnapshot: "Talent Snapshot",
     generatedOn: "Generated on",
@@ -110,9 +110,9 @@ const translations = {
     group: "المجموعة",
     completed: "تاريخ الإكمال",
     results: "النتائج",
-    score: "الدرجة",
-    correct: "الإجابات الصحيحة",
+    percentage: "النسبة المئوية",
     grade: "التقدير",
+    competencyBreakdown: "تفصيل الكفاءات",
     aiGeneratedFeedback: "ملاحظات الذكاء الاصطناعي",
     talentSnapshot: "لمحة المواهب",
     generatedOn: "تم الإنشاء في",
@@ -135,6 +135,29 @@ const translations = {
     error: "فشل تحميل التقرير",
   },
 };
+
+// Grade label mapping (matches in-app report view)
+const gradeLabels = {
+  en: {
+    A: "Outstanding",
+    B: "Exceed Expectations \"EE\"",
+    C: "Meet Expectations \"ME\"",
+    D: "Below Expectations \"BE\"",
+    F: "Doesn't Meet \"DM\"",
+  },
+  ar: {
+    A: "متميز",
+    B: "يتجاوز التوقعات",
+    C: "يحقق التوقعات",
+    D: "أقل من التوقعات",
+    F: "لا يحقق المتطلبات",
+  },
+} as const;
+
+function getGradeLabel(grade: string, lang: "en" | "ar"): string {
+  const labels = gradeLabels[lang];
+  return (labels as any)?.[grade] || grade;
+}
 
 const PrintPreview = () => {
   const [searchParams] = useSearchParams();
@@ -464,6 +487,38 @@ const PrintPreview = () => {
             font-size: 11px;
             margin-top: 4px;
           }
+
+          .breakdown-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #f8fafc;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 12px;
+          }
+
+          .breakdown-table th {
+            padding: 14px 16px;
+            font-weight: 600;
+            color: ${primaryColor};
+            background: linear-gradient(135deg, hsl(${hsl.h}, 30%, 96%) 0%, hsl(${hsl.h}, 25%, 93%) 100%);
+          }
+
+          .breakdown-table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+          }
+
+          .badge-pill {
+            background: linear-gradient(135deg, hsl(${hsl.h}, 40%, 94%) 0%, hsl(${hsl.h}, 35%, 90%) 100%);
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-weight: 600;
+            color: ${primaryColor};
+            display: inline-block;
+            min-width: 64px;
+            text-align: center;
+          }
           
           .ai-content {
             background: linear-gradient(135deg, hsl(${hsl.h}, 40%, 97%) 0%, hsl(${hsl.h}, 35%, 94%) 100%);
@@ -706,15 +761,21 @@ const PrintPreview = () => {
                   <div className="stats-grid">
                     <div className="stat-item">
                       <div className="stat-value">{participantData.scoreSummary.percentage}%</div>
-                      <div className="stat-label">{t.score}</div>
-                    </div>
-                    <div className="stat-item">
-                      <div className="stat-value">{participantData.scoreSummary.correctCount || 0}/{participantData.scoreSummary.totalPossible || 0}</div>
-                      <div className="stat-label">{t.correct}</div>
+                      <div className="stat-label">{t.percentage}</div>
                     </div>
                     {participantData.scoreSummary.grade && (
                       <div className="stat-item">
-                        <div className="stat-value">{participantData.scoreSummary.grade}</div>
+                        <div className="stat-value">
+                          {participantData.scoreSummary.grade}
+                          <span style={{
+                            color: "#64748b",
+                            fontSize: 12,
+                            fontWeight: 600,
+                            marginInlineStart: 8,
+                          }}>
+                            ({getGradeLabel(participantData.scoreSummary.grade, lang)})
+                          </span>
+                        </div>
                         <div className="stat-label">{t.grade}</div>
                       </div>
                     )}
@@ -732,6 +793,49 @@ const PrintPreview = () => {
                     ))}
                   </div>
                 ) : null}
+
+                {/* Competency breakdown for SJT (matches report view) */}
+                {participantData.scoreSummary?.competencyBreakdown && (
+                  (() => {
+                    const breakdown = participantData.scoreSummary.competencyBreakdown;
+                    const entries = breakdown && typeof breakdown === 'object'
+                      ? Object.entries(breakdown).filter(([name, data]: any) => name && name !== 'General' && typeof (data as any)?.percentage === 'number')
+                      : [];
+
+                    if (entries.length === 0) return null;
+
+                    return (
+                      <div className="avoid-break" style={{ marginTop: 24 }}>
+                        <h2 className="section-header">{t.competencyBreakdown}</h2>
+                        <table className="breakdown-table">
+                          <thead>
+                            <tr>
+                              <th style={{ textAlign: isRtl ? 'right' : 'left' }}>{isRtl ? 'الكفاءة' : 'Competency'}</th>
+                              <th style={{ textAlign: 'center' }}>{isRtl ? 'النسبة' : 'Percentage'}</th>
+                              <th style={{ textAlign: 'center' }}>{isRtl ? 'التقدير' : 'Grade'}</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {entries.map(([name, data]: any) => (
+                              <tr key={name}>
+                                <td style={{ fontWeight: 500 }}>{name}</td>
+                                <td style={{ textAlign: 'center' }}>
+                                  <span className="badge-pill">{data.percentage}%</span>
+                                </td>
+                                <td style={{ textAlign: 'center' }}>
+                                  <span style={{ fontWeight: 700, color: primaryColor }}>{data.grade}</span>
+                                  <span style={{ color: '#64748b', fontSize: 12, marginInlineStart: 6 }}>
+                                    ({getGradeLabel(data.grade, lang)})
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()
+                )}
               </div>
             )}
 
