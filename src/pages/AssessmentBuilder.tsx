@@ -194,14 +194,16 @@ export default function AssessmentBuilder() {
         setOrganizationId(data.organization_id);
         
         // Fetch organization's competencies
-        const { data: competencies } = await supabase
+        const { data: competencies, error } = await supabase
           .from("competencies")
           .select("id, name, name_ar, description, description_ar")
           .eq("organization_id", data.organization_id)
           .eq("is_active", true)
           .order("name");
         
-        if (competencies) {
+        console.log("Fetched competencies:", competencies, "Error:", error);
+        
+        if (competencies && competencies.length > 0) {
           setOrgCompetencies(competencies);
         }
       }
@@ -215,6 +217,12 @@ export default function AssessmentBuilder() {
       return;
     }
 
+    // For SJT: require organization competencies
+    if (assessmentType === "situational" && orgCompetencies.length === 0) {
+      toast.error("No competencies found. Please add competencies in Organization Settings first.");
+      return;
+    }
+
     // For SJT: auto-include all org competencies if none selected, with descriptions
     let configToSend = { ...typeConfig };
     if (assessmentType === "situational") {
@@ -223,15 +231,15 @@ export default function AssessmentBuilder() {
         ? orgCompetencies 
         : orgCompetencies.filter(c => selectedCompetencies.includes(c.name));
       
-      if (competenciesToUse.length > 0) {
-        // Send competencies with both EN/AR names and descriptions
-        configToSend.competencies = competenciesToUse.map(c => ({
-          name: c.name,
-          name_ar: c.name_ar || "",
-          description: c.description || "",
-          description_ar: c.description_ar || "",
-        }));
-      }
+      // Send competencies with both EN/AR names and descriptions
+      configToSend.competencies = competenciesToUse.map(c => ({
+        name: c.name,
+        name_ar: c.name_ar || "",
+        description: c.description || "",
+        description_ar: c.description_ar || "",
+      }));
+      
+      console.log("Sending competencies to AI:", configToSend.competencies);
     }
 
     setGenerating(true);
