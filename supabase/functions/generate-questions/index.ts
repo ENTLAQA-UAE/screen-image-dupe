@@ -183,16 +183,20 @@ serve(async (req) => {
       configInstructions += `\nMeasure these traits: ${config.traits.join(", ")}`;
     }
     if (config.competencies?.length) {
-      // Support both string array (legacy) and object array with descriptions
+      // Support both string array (legacy) and object array with bilingual descriptions
       const competencyList = config.competencies.map((c: any) => {
         if (typeof c === "string") return c;
-        return c.description ? `${c.name} (${c.description})` : c.name;
+        const nameStr = c.name_ar ? `${c.name} / ${c.name_ar}` : c.name;
+        const descEn = c.description ? `EN: ${c.description}` : "";
+        const descAr = c.description_ar ? `AR: ${c.description_ar}` : "";
+        const descriptions = [descEn, descAr].filter(Boolean).join(" | ");
+        return descriptions ? `- ${nameStr}: ${descriptions}` : `- ${nameStr}`;
       });
       const competencyNames = config.competencies.map((c: any) => 
         typeof c === "string" ? c : c.name
       );
       configInstructions += `\nTarget these competencies:\n${competencyList.join("\n")}`;
-      configInstructions += `\n\nIMPORTANT: Use ONLY these exact competency names for subdomain: ${competencyNames.join(", ")}`;
+      configInstructions += `\n\nIMPORTANT: Use ONLY these exact competency names (English) for subdomain: ${competencyNames.join(", ")}`;
     }
     if (config.skills?.length) {
       configInstructions += `\nAssess these skills: ${config.skills.join(", ")}`;
