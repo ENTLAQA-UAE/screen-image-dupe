@@ -183,7 +183,16 @@ serve(async (req) => {
       configInstructions += `\nMeasure these traits: ${config.traits.join(", ")}`;
     }
     if (config.competencies?.length) {
-      configInstructions += `\nTarget these competencies: ${config.competencies.join(", ")}`;
+      // Support both string array (legacy) and object array with descriptions
+      const competencyList = config.competencies.map((c: any) => {
+        if (typeof c === "string") return c;
+        return c.description ? `${c.name} (${c.description})` : c.name;
+      });
+      const competencyNames = config.competencies.map((c: any) => 
+        typeof c === "string" ? c : c.name
+      );
+      configInstructions += `\nTarget these competencies:\n${competencyList.join("\n")}`;
+      configInstructions += `\n\nIMPORTANT: Use ONLY these exact competency names for subdomain: ${competencyNames.join(", ")}`;
     }
     if (config.skills?.length) {
       configInstructions += `\nAssess these skills: ${config.skills.join(", ")}`;

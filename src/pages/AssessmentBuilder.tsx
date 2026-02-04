@@ -214,13 +214,20 @@ export default function AssessmentBuilder() {
       return;
     }
 
-    // For SJT: auto-include all org competencies if none selected
+    // For SJT: auto-include all org competencies if none selected, with descriptions
     let configToSend = { ...typeConfig };
     if (assessmentType === "situational") {
       const selectedCompetencies = typeConfig.competencies || [];
-      if (selectedCompetencies.length === 0 && orgCompetencies.length > 0) {
-        // Use all org competencies if none explicitly selected
-        configToSend.competencies = orgCompetencies.map(c => c.name);
+      const competenciesToUse = selectedCompetencies.length === 0 
+        ? orgCompetencies 
+        : orgCompetencies.filter(c => selectedCompetencies.includes(c.name));
+      
+      if (competenciesToUse.length > 0) {
+        // Send competencies with descriptions to help AI understand them
+        configToSend.competencies = competenciesToUse.map(c => ({
+          name: c.name,
+          description: c.description || "",
+        }));
       }
     }
 
@@ -503,12 +510,19 @@ export default function AssessmentBuilder() {
   const handleRegenerateQuestion = async (questionIndex: number) => {
     if (regeneratingIndex !== null) return;
     
-    // For SJT: auto-include all org competencies if none selected
+    // For SJT: auto-include all org competencies if none selected, with descriptions
     let configToSend = { ...typeConfig };
     if (assessmentType === "situational") {
       const selectedCompetencies = typeConfig.competencies || [];
-      if (selectedCompetencies.length === 0 && orgCompetencies.length > 0) {
-        configToSend.competencies = orgCompetencies.map(c => c.name);
+      const competenciesToUse = selectedCompetencies.length === 0 
+        ? orgCompetencies 
+        : orgCompetencies.filter(c => selectedCompetencies.includes(c.name));
+      
+      if (competenciesToUse.length > 0) {
+        configToSend.competencies = competenciesToUse.map(c => ({
+          name: c.name,
+          description: c.description || "",
+        }));
       }
     }
 
