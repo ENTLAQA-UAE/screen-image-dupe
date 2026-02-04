@@ -241,6 +241,11 @@ serve(async (req) => {
     let aiReportText = null;
     const config = assessment.config || {};
     
+    console.log("Assessment config:", JSON.stringify(config));
+    console.log("showResultsToEmployee:", config.showResultsToEmployee);
+    console.log("allowEmployeePdfDownload:", config.allowEmployeePdfDownload);
+    console.log("aiFeedbackEnabled:", config.aiFeedbackEnabled);
+    
     if (config.aiFeedbackEnabled) {
       try {
         aiReportText = await generateAIReport(assessment, scoreSummary, participant.full_name);
