@@ -187,10 +187,9 @@ serve(async (req) => {
       const competencyList = config.competencies.map((c: any) => {
         if (typeof c === "string") return c;
         const nameStr = c.name_ar ? `${c.name} / ${c.name_ar}` : c.name;
-        const descEn = c.description ? `EN: ${c.description}` : "";
-        const descAr = c.description_ar ? `AR: ${c.description_ar}` : "";
-        const descriptions = [descEn, descAr].filter(Boolean).join(" | ");
-        return descriptions ? `- ${nameStr}: ${descriptions}` : `- ${nameStr}`;
+        // Fallback: use Arabic if English is empty, and vice versa
+        const description = c.description || c.description_ar || "";
+        return description ? `- ${nameStr}: ${description}` : `- ${nameStr}`;
       });
       const competencyNames = config.competencies.map((c: any) => 
         typeof c === "string" ? c : c.name
