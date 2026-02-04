@@ -280,17 +280,21 @@ serve(async (req) => {
 
     // Return results if allowed
     const showResults = config.showResultsToEmployee || false;
+    
+    const responsePayload = {
+      success: true,
+      showResults,
+      results: showResults ? {
+        scoreSummary,
+        aiReport: aiReportText,
+        allowPdfDownload: config.allowEmployeePdfDownload || false,
+      } : null,
+    };
+    
+    console.log("Returning response:", JSON.stringify(responsePayload));
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        showResults,
-        results: showResults ? {
-          scoreSummary,
-          aiReport: aiReportText,
-          allowPdfDownload: config.allowEmployeePdfDownload || false,
-        } : null,
-      }),
+      JSON.stringify(responsePayload),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
