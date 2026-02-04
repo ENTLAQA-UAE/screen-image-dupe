@@ -166,7 +166,7 @@ const AssessmentGroups = () => {
     fetchOrganization();
   }, [user]);
 
-  // Fetch assessments for dropdown (exclude drafts)
+  // Fetch assessments for dropdown (exclude drafts, newest first)
   useEffect(() => {
     const fetchAssessments = async () => {
       if (!organizationId) return;
@@ -176,7 +176,7 @@ const AssessmentGroups = () => {
         .select('id, title, type, status')
         .eq('organization_id', organizationId)
         .neq('status', 'draft')
-        .order('title');
+        .order('created_at', { ascending: false });
 
       if (!error && data) {
         setAssessments(data);
