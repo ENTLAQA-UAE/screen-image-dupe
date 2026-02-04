@@ -10,7 +10,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.generate-group-narrative]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-talent-snapshot]
 verify_jwt = false
