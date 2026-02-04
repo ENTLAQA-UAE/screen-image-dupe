@@ -166,15 +166,16 @@ const AssessmentGroups = () => {
     fetchOrganization();
   }, [user]);
 
-  // Fetch assessments for dropdown
+  // Fetch assessments for dropdown (exclude drafts)
   useEffect(() => {
     const fetchAssessments = async () => {
       if (!organizationId) return;
 
       const { data, error } = await supabase
         .from('assessments')
-        .select('id, title, type')
+        .select('id, title, type, status')
         .eq('organization_id', organizationId)
+        .neq('status', 'draft')
         .order('title');
 
       if (!error && data) {
