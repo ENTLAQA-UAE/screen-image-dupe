@@ -118,6 +118,7 @@ interface Competency {
   name: string;
   name_ar: string | null;
   description: string | null;
+  description_ar: string | null;
 }
 
 interface GeneratedQuestion {
@@ -195,7 +196,7 @@ export default function AssessmentBuilder() {
         // Fetch organization's competencies
         const { data: competencies } = await supabase
           .from("competencies")
-          .select("id, name, name_ar, description")
+          .select("id, name, name_ar, description, description_ar")
           .eq("organization_id", data.organization_id)
           .eq("is_active", true)
           .order("name");
@@ -223,10 +224,12 @@ export default function AssessmentBuilder() {
         : orgCompetencies.filter(c => selectedCompetencies.includes(c.name));
       
       if (competenciesToUse.length > 0) {
-        // Send competencies with descriptions to help AI understand them
+        // Send competencies with both EN/AR names and descriptions
         configToSend.competencies = competenciesToUse.map(c => ({
           name: c.name,
+          name_ar: c.name_ar || "",
           description: c.description || "",
+          description_ar: c.description_ar || "",
         }));
       }
     }
@@ -521,7 +524,9 @@ export default function AssessmentBuilder() {
       if (competenciesToUse.length > 0) {
         configToSend.competencies = competenciesToUse.map(c => ({
           name: c.name,
+          name_ar: c.name_ar || "",
           description: c.description || "",
+          description_ar: c.description_ar || "",
         }));
       }
     }
