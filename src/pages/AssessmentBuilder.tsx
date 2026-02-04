@@ -214,6 +214,16 @@ export default function AssessmentBuilder() {
       return;
     }
 
+    // For SJT: auto-include all org competencies if none selected
+    let configToSend = { ...typeConfig };
+    if (assessmentType === "situational") {
+      const selectedCompetencies = typeConfig.competencies || [];
+      if (selectedCompetencies.length === 0 && orgCompetencies.length > 0) {
+        // Use all org competencies if none explicitly selected
+        configToSend.competencies = orgCompetencies.map(c => c.name);
+      }
+    }
+
     setGenerating(true);
     try {
       const response = await supabase.functions.invoke("generate-questions", {
@@ -224,7 +234,7 @@ export default function AssessmentBuilder() {
           description: formData.description,
           questionCount: formData.questionCount,
           difficulty: formData.difficulty,
-          config: typeConfig,
+          config: configToSend,
         },
       });
 
@@ -493,6 +503,15 @@ export default function AssessmentBuilder() {
   const handleRegenerateQuestion = async (questionIndex: number) => {
     if (regeneratingIndex !== null) return;
     
+    // For SJT: auto-include all org competencies if none selected
+    let configToSend = { ...typeConfig };
+    if (assessmentType === "situational") {
+      const selectedCompetencies = typeConfig.competencies || [];
+      if (selectedCompetencies.length === 0 && orgCompetencies.length > 0) {
+        configToSend.competencies = orgCompetencies.map(c => c.name);
+      }
+    }
+
     setRegeneratingIndex(questionIndex);
     try {
       const currentQuestion = generatedQuestions[questionIndex];
@@ -504,7 +523,7 @@ export default function AssessmentBuilder() {
           description: `${formData.description}\n\nGenerate exactly 1 new question similar in style to: "${currentQuestion.text}" but with different content.`,
           questionCount: 1,
           difficulty: currentQuestion.metadata?.difficulty || formData.difficulty,
-          config: typeConfig,
+          config: configToSend,
         },
       });
 
