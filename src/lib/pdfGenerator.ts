@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { format } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
+import { getGradeLabel as getGradeLabelUtil } from './gradeLabels';
 
 // ============= Types =============
 export type Language = 'en' | 'ar';
@@ -93,26 +94,8 @@ function escapeHtml(unsafe: string | null | undefined): string {
 }
 
 // ============= Grade Label Mapping =============
-const gradeLabels = {
-  en: {
-    A: "Outstanding",
-    B: "Exceed Expectations \"EE\"",
-    C: "Meet Expectations \"ME\"",
-    D: "Below Expectations \"BE\"",
-    F: "Doesn't Meet \"DM\"",
-  },
-  ar: {
-    A: "متميز",
-    B: "يتجاوز التوقعات",
-    C: "يحقق التوقعات",
-    D: "أقل من التوقعات",
-    F: "لا يحقق المتطلبات",
-  }
-};
-
-function getGradeLabel(grade: string, lang: Language): string {
-  const labels = gradeLabels[lang];
-  return labels[grade as keyof typeof labels] || grade;
+function getGradeLabel(grade: string, _lang?: Language): string {
+  return getGradeLabelUtil(grade);
 }
 
 // ============= Translations =============
