@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { openGroupPrintPreview, openParticipantPrintPreview } from "@/lib/printPreview";
 import { autoDir, autoAlign } from "@/lib/textDirection";
+import { getGradeFullLabel, getGradeWithAbbreviation } from "@/lib/gradeLabels";
 import {
   BarChart,
   Bar,
@@ -863,11 +864,7 @@ const GroupReport = () => {
                             </span>
                           </div>
                           <p className="text-xs text-muted-foreground mt-2">
-                            {item.grade === 'A' ? 'Outstanding' :
-                             item.grade === 'B' ? 'Exceed Expectations' :
-                             item.grade === 'C' ? 'Meet Expectations' :
-                             item.grade === 'D' ? 'Below Expectations' :
-                             "Doesn't Meet"}
+                            {getGradeFullLabel(item.grade)}
                           </p>
                         </motion.div>
                       ))}
@@ -1101,13 +1098,7 @@ const GroupReport = () => {
                       </div>
                       {selectedParticipant.score_summary.grade && (
                         <Badge className="mt-3 text-base px-4 py-1" variant="secondary">
-                          {selectedParticipant.score_summary.grade} - {
-                            selectedParticipant.score_summary.grade === 'A' ? 'Outstanding' :
-                            selectedParticipant.score_summary.grade === 'B' ? 'Exceed Expectations "EE"' :
-                            selectedParticipant.score_summary.grade === 'C' ? 'Meet Expectations "ME"' :
-                            selectedParticipant.score_summary.grade === 'D' ? 'Below Expectations "BE"' :
-                            'Doesn\'t Meet "DM"'
-                          }
+                          {getGradeFullLabel(selectedParticipant.score_summary.grade)}
                         </Badge>
                       )}
                     </div>
@@ -1124,13 +1115,7 @@ const GroupReport = () => {
                                 <div className="flex items-center justify-between gap-4 mb-2">
                                   <span className="font-medium text-sm">{competency}</span>
                                   <Badge variant="outline" className="text-xs">
-                                    {data.grade} - {
-                                      data.grade === 'A' ? 'Outstanding' :
-                                      data.grade === 'B' ? 'EE' :
-                                      data.grade === 'C' ? 'ME' :
-                                      data.grade === 'D' ? 'BE' :
-                                      'DM'
-                                    } ({data.percentage}%)
+                                    {getGradeWithAbbreviation(data.grade)} ({data.percentage}%)
                                   </Badge>
                                 </div>
                                 <Progress value={data.percentage} className="h-2" />

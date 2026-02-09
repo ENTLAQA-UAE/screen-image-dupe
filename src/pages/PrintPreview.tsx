@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { ar, enUS } from "date-fns/locale";
 import { autoDir, autoAlign } from "@/lib/textDirection";
+import { getGradeLabel as getGradeLabelUtil } from '@/lib/gradeLabels';
 
 type ReportType = "talent-snapshot" | "participant" | "group";
 
@@ -136,27 +137,9 @@ const translations = {
   },
 };
 
-// Grade label mapping (matches in-app report view)
-const gradeLabels = {
-  en: {
-    A: "Outstanding",
-    B: "Exceed Expectations \"EE\"",
-    C: "Meet Expectations \"ME\"",
-    D: "Below Expectations \"BE\"",
-    F: "Doesn't Meet \"DM\"",
-  },
-  ar: {
-    A: "متميز",
-    B: "يتجاوز التوقعات",
-    C: "يحقق التوقعات",
-    D: "أقل من التوقعات",
-    F: "لا يحقق المتطلبات",
-  },
-} as const;
-
-function getGradeLabel(grade: string, lang: "en" | "ar"): string {
-  const labels = gradeLabels[lang];
-  return (labels as any)?.[grade] || grade;
+// Grade label mapping - always English abbreviations
+function getGradeLabel(grade: string, _lang?: "en" | "ar"): string {
+  return getGradeLabelUtil(grade);
 }
 
 const PrintPreview = () => {

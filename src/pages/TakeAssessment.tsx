@@ -30,6 +30,7 @@ import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 import { SwipeIndicator } from "@/components/assessment/SwipeIndicator";
 import { MobileQuestionCard } from "@/components/assessment/MobileQuestionCard";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { getGradeFullLabel } from "@/lib/gradeLabels";
 
 // Celebration confetti function
 const triggerCelebration = () => {
@@ -1705,13 +1706,7 @@ export default function TakeAssessment() {
                         background: resultPrimaryColor ? `linear-gradient(135deg, ${resultPrimaryColor}, ${resultPrimaryColor}dd)` : 'linear-gradient(135deg, #10b981, #059669)'
                       }}
                     >
-                      {t.grade}: {scoreSummary.grade} - {
-                        scoreSummary.grade === 'A' ? 'Outstanding' :
-                        scoreSummary.grade === 'B' ? 'Exceed Expectations "EE"' :
-                        scoreSummary.grade === 'C' ? 'Meet Expectations "ME"' :
-                        scoreSummary.grade === 'D' ? 'Below Expectations "BE"' :
-                        'Doesn\'t Meet "DM"'
-                      }
+                      {t.grade}: {getGradeFullLabel(scoreSummary.grade)}
                     </div>
                     
                     {/* Competency Breakdown for SJT */}
