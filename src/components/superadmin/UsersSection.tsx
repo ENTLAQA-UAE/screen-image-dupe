@@ -395,12 +395,12 @@ export function UsersSection({
             </div>
             <div className="space-y-2">
               <Label htmlFor="edit-org">Organization</Label>
-              <Select value={editUserOrgId} onValueChange={setEditUserOrgId}>
+              <Select value={editUserOrgId || "none"} onValueChange={(v) => setEditUserOrgId(v === "none" ? "" : v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="No organization" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No organization</SelectItem>
+                  <SelectItem value="none">No organization</SelectItem>
                   {organizations.map((org) => (
                     <SelectItem key={org.id} value={org.id}>
                       {org.name}
