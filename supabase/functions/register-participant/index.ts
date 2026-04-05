@@ -174,7 +174,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Registration error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Registration failed" }),
+      JSON.stringify({ error: "Registration failed" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
