@@ -404,7 +404,7 @@ export default function TakeAssessment() {
 
   const loadAssessment = async () => {
     try {
-      const funcUrl = `https://ephwmhikhiiyrnikvrwp.supabase.co/functions/v1/get-assessment?token=${token}&isGroupLink=${isGroupLink}`;
+      const funcUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-assessment?token=${token}&isGroupLink=${isGroupLink}`;
       const res = await fetch(funcUrl, {
         headers: {
           "Content-Type": "application/json",
