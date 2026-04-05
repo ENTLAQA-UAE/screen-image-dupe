@@ -127,6 +127,8 @@ export function UsersSection({
     setIsUpdatingUser(true);
     
     try {
+      console.log('Updating user:', editingUser.id, 'Name:', editUserName, 'OrgId:', editUserOrgId, 'Roles:', editUserRoles);
+      
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -135,11 +137,16 @@ export function UsersSection({
         })
         .eq('id', editingUser.id);
       
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        throw profileError;
+      }
       
       const currentRoles = editingUser.roles as AppRole[];
       const rolesToAdd = editUserRoles.filter(r => !currentRoles.includes(r));
       const rolesToRemove = currentRoles.filter(r => !editUserRoles.includes(r as AppRole));
+      
+      console.log('Roles to add:', rolesToAdd, 'Roles to remove:', rolesToRemove);
       
       if (rolesToRemove.length > 0) {
         const { error: removeError } = await supabase
@@ -148,7 +155,10 @@ export function UsersSection({
           .eq('user_id', editingUser.id)
           .in('role', rolesToRemove);
         
-        if (removeError) throw removeError;
+        if (removeError) {
+          console.error('Role remove error:', removeError);
+          throw removeError;
+        }
       }
       
       if (rolesToAdd.length > 0) {
@@ -159,7 +169,10 @@ export function UsersSection({
             role,
           })));
         
-        if (addError) throw addError;
+        if (addError) {
+          console.error('Role add error:', addError);
+          throw addError;
+        }
       }
       
       toast({
@@ -171,6 +184,7 @@ export function UsersSection({
       setEditingUser(null);
       onRefresh();
     } catch (error: any) {
+      console.error('Update user failed:', error);
       toast({
         variant: "destructive",
         title: "Failed to update user",
