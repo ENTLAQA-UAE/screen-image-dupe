@@ -12,19 +12,45 @@ serve(async (req) => {
   }
 
   try {
-    const { 
-      groupToken, 
-      fullName, 
-      email, 
-      employeeCode, 
-      department, 
-      jobTitle 
-    } = await req.json();
+    const body = await req.json();
+    const { groupToken, fullName, email, employeeCode, department, jobTitle } = body;
 
     // Validate required fields
     if (!groupToken || !fullName || !email || !employeeCode) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate field types and lengths
+    if (typeof fullName !== "string" || fullName.trim().length < 1 || fullName.trim().length > 200) {
+      return new Response(
+        JSON.stringify({ error: "Invalid name (1-200 characters)" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (typeof email !== "string" || !emailRegex.test(email.trim()) || email.trim().length > 255) {
+      return new Response(
+        JSON.stringify({ error: "Invalid email address" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (typeof employeeCode !== "string" || employeeCode.trim().length < 1 || employeeCode.trim().length > 50) {
+      return new Response(
+        JSON.stringify({ error: "Invalid employee code (1-50 characters)" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate UUID format for groupToken
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (typeof groupToken !== "string" || !uuidRegex.test(groupToken)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid group token" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -148,7 +174,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Registration error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Registration failed" }),
+      JSON.stringify({ error: "Registration failed" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
