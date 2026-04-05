@@ -482,7 +482,7 @@ export default function TakeAssessment() {
 
     try {
       // Use edge function for registration to bypass RLS issues
-      const funcUrl = `https://ephwmhikhiiyrnikvrwp.supabase.co/functions/v1/register-participant`;
+      const funcUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/register-participant`;
       const res = await fetch(funcUrl, {
         method: "POST",
         headers: {
