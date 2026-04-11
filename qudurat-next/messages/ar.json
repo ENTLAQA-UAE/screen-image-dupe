@@ -98,7 +98,112 @@
     "previous": "السابق",
     "confirm": "تأكيد",
     "yes": "نعم",
-    "no": "لا"
+    "no": "لا",
+    "all": "الكل",
+    "noResults": "لا توجد نتائج"
+  },
+  "assessments": {
+    "title": "التقييمات",
+    "subtitle": "إنشاء وإدارة وإطلاق التقييمات",
+    "new": "تقييم جديد",
+    "empty": {
+      "title": "لا توجد تقييمات بعد",
+      "description": "أنشئ أول تقييم لك لبدء قياس قدرات المرشحين والموظفين.",
+      "cta": "إنشاء تقييم"
+    },
+    "columns": {
+      "title": "العنوان",
+      "type": "النوع",
+      "status": "الحالة",
+      "language": "اللغة",
+      "questions": "الأسئلة",
+      "created": "تاريخ الإنشاء",
+      "actions": "الإجراءات"
+    },
+    "types": {
+      "cognitive": "معرفي",
+      "personality": "شخصية",
+      "situational": "الحكم الموقفي",
+      "behavioral": "سلوكي",
+      "language": "لغوي",
+      "custom": "مخصص"
+    },
+    "status": {
+      "draft": "مسودة",
+      "active": "نشط",
+      "archived": "مؤرشف"
+    },
+    "form": {
+      "title": "إنشاء تقييم",
+      "titleLabel": "عنوان التقييم",
+      "titlePlaceholder": "مثال: اختبار معرفي لمهندس برمجيات",
+      "descriptionLabel": "الوصف",
+      "descriptionPlaceholder": "وصف مختصر لما يقيسه هذا الاختبار",
+      "typeLabel": "النوع",
+      "languageLabel": "اللغة",
+      "isGradedLabel": "مُصنّف (له إجابات صحيحة)",
+      "submit": "إنشاء التقييم"
+    }
+  },
+  "groups": {
+    "title": "مجموعات التقييم",
+    "subtitle": "نظّم المشاركين في مجموعات وأطلق التقييمات",
+    "new": "مجموعة جديدة",
+    "empty": {
+      "title": "لا توجد مجموعات بعد",
+      "description": "أنشئ مجموعة لدعوة المشاركين لأداء التقييم معاً.",
+      "cta": "إنشاء مجموعة"
+    },
+    "columns": {
+      "name": "الاسم",
+      "assessment": "التقييم",
+      "status": "الحالة",
+      "participants": "المشاركون",
+      "completion": "الإكمال",
+      "deadline": "الموعد النهائي",
+      "created": "تاريخ الإنشاء"
+    },
+    "status": {
+      "draft": "مسودة",
+      "active": "نشط",
+      "completed": "مكتمل",
+      "archived": "مؤرشف"
+    }
+  },
+  "employees": {
+    "title": "الموظفون",
+    "subtitle": "إدارة مجموعة المواهب في مؤسستك",
+    "new": "إضافة موظف",
+    "import": "استيراد CSV",
+    "empty": {
+      "title": "لا يوجد موظفون بعد",
+      "description": "أضف أول موظف أو قم بالاستيراد من CSV لبدء تتبع سجلاتهم.",
+      "cta": "إضافة موظف"
+    },
+    "columns": {
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "code": "الرمز الوظيفي",
+      "department": "القسم",
+      "jobTitle": "المسمى الوظيفي",
+      "assessments": "التقييمات",
+      "lastAssessment": "آخر تقييم"
+    }
+  },
+  "results": {
+    "title": "النتائج",
+    "subtitle": "عرض نتائج التقييمات والرؤى",
+    "empty": {
+      "title": "لا توجد نتائج بعد",
+      "description": "ستظهر النتائج هنا بمجرد إكمال المشاركين لتقييماتهم."
+    },
+    "columns": {
+      "participant": "المشارك",
+      "assessment": "التقييم",
+      "type": "النوع",
+      "score": "النتيجة",
+      "completed": "تاريخ الإكمال"
+    }
   },
   "errors": {
     "notFound": {
