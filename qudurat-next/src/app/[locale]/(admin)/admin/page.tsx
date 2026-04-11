@@ -1,7 +1,16 @@
-import { Building2, Globe, ShieldAlert, Users } from 'lucide-react';
+import {
+  Building2,
+  CreditCard,
+  FileText,
+  Globe,
+  Receipt,
+  ShieldAlert,
+  Users,
+} from 'lucide-react';
 import type { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
 
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -9,6 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Link } from '@/lib/i18n/routing';
 import { createAdminClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
@@ -84,6 +94,38 @@ export default async function AdminDashboardPage({
         />
       </div>
 
+      <div className="mt-8">
+        <h2 className="mb-4 font-display text-xl font-semibold">
+          Billing & subscriptions
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <ModuleCard
+            href="/admin/billing/providers"
+            icon={CreditCard}
+            title="Payment providers"
+            description="Configure Stripe and bank transfer details"
+          />
+          <ModuleCard
+            href="/admin/billing/subscriptions"
+            icon={Receipt}
+            title="All subscriptions"
+            description="Cross-tenant subscription management"
+          />
+          <ModuleCard
+            href="/admin/billing/requests"
+            icon={FileText}
+            title="Bank transfer requests"
+            description="Review and activate offline payment requests"
+          />
+          <ModuleCard
+            href="/admin/billing/activate"
+            icon={ShieldAlert}
+            title="Manual activation"
+            description="Activate enterprise or complimentary subscriptions"
+          />
+        </div>
+      </div>
+
       <Card className="mt-8">
         <CardHeader>
           <CardTitle>Admin modules (coming in Phase 2)</CardTitle>
@@ -98,13 +140,40 @@ export default async function AdminDashboardPage({
             <li>• User management and role assignment</li>
             <li>• Custom domain registry with DNS status</li>
             <li>• Audit log timeline</li>
-            <li>• Subscription and billing overview</li>
             <li>• Edge function logs and performance</li>
             <li>• Feature flags</li>
           </ul>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function ModuleCard({
+  href,
+  icon: Icon,
+  title,
+  description,
+}: {
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  description: string;
+}) {
+  return (
+    <Button
+      asChild
+      variant="outline"
+      className="h-auto flex-col items-start gap-2 p-5 text-start"
+    >
+      <Link href={href}>
+        <Icon className="h-5 w-5 text-primary" />
+        <div className="font-semibold">{title}</div>
+        <div className="text-xs font-normal text-muted-foreground">
+          {description}
+        </div>
+      </Link>
+    </Button>
   );
 }
 
