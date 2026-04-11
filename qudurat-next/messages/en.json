@@ -1,0 +1,124 @@
+{
+  "meta": {
+    "title": "Qudurat — Enterprise Assessment Platform",
+    "description": "Bilingual enterprise HR assessment platform for MENA. Cognitive, personality, behavioral, and skills testing with AI-powered insights."
+  },
+  "nav": {
+    "features": "Features",
+    "pricing": "Pricing",
+    "about": "About",
+    "blog": "Blog",
+    "docs": "Documentation",
+    "login": "Log in",
+    "signup": "Start free trial"
+  },
+  "landing": {
+    "hero": {
+      "tagline": "Enterprise Assessment Platform",
+      "title": "Hire smarter. Retain longer.",
+      "titleHighlight": "In Arabic and English.",
+      "subtitle": "Qudurat is the MENA-first HR assessment platform that combines cognitive, personality, behavioral, and skills testing with AI-powered bilingual insights.",
+      "ctaPrimary": "Start 14-day free trial",
+      "ctaSecondary": "Watch demo",
+      "noCreditCard": "No credit card required"
+    },
+    "features": {
+      "title": "Everything you need to assess talent",
+      "subtitle": "From first screening to final decision, Qudurat covers the full hiring and development lifecycle."
+    },
+    "stats": {
+      "assessments": "Assessments delivered",
+      "organizations": "Organizations",
+      "languages": "Languages supported",
+      "countries": "Countries served"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Log in to your Qudurat account",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@company.com",
+      "passwordLabel": "Password",
+      "forgotPassword": "Forgot password?",
+      "submit": "Log in",
+      "noAccount": "Don't have an account?",
+      "signupLink": "Sign up",
+      "or": "or",
+      "continueWithGoogle": "Continue with Google",
+      "continueWithMicrosoft": "Continue with Microsoft"
+    },
+    "register": {
+      "title": "Create your account",
+      "subtitle": "Start your 14-day free trial",
+      "nameLabel": "Full name",
+      "emailLabel": "Work email",
+      "orgNameLabel": "Organization name",
+      "passwordLabel": "Password",
+      "passwordHint": "At least 8 characters with one uppercase letter and one number",
+      "termsAgree": "I agree to the Terms of Service and Privacy Policy",
+      "submit": "Create account",
+      "hasAccount": "Already have an account?",
+      "loginLink": "Log in"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back, {name}",
+    "subtitle": "Here's what's happening in your organization today",
+    "stats": {
+      "totalAssessments": "Total assessments",
+      "activeParticipants": "Active participants",
+      "completionRate": "Completion rate",
+      "avgScore": "Average score"
+    },
+    "quickActions": {
+      "title": "Quick actions",
+      "createAssessment": "Create assessment",
+      "inviteParticipant": "Invite participant",
+      "createGroup": "Create group",
+      "viewResults": "View results"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "tryAgain": "Try again",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "errors": {
+    "notFound": {
+      "title": "Page not found",
+      "subtitle": "The page you're looking for doesn't exist or has been moved.",
+      "backHome": "Back to home"
+    },
+    "unauthorized": {
+      "title": "Unauthorized",
+      "subtitle": "You need to be logged in to access this page.",
+      "login": "Log in"
+    },
+    "forbidden": {
+      "title": "Forbidden",
+      "subtitle": "You don't have permission to access this page."
+    },
+    "serverError": {
+      "title": "Something went wrong",
+      "subtitle": "An unexpected error occurred. Please try again.",
+      "retry": "Try again"
+    }
+  }
+}
