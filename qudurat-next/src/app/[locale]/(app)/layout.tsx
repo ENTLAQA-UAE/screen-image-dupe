@@ -1,15 +1,15 @@
 import { redirect } from 'next/navigation';
+import { setRequestLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
-import { createClient } from '@/lib/supabase/server';
+import { AppHeader } from '@/components/layout/app-header';
+import { getCurrentUserProfile } from '@/lib/supabase/queries';
 
 /**
  * App layout — authenticated area.
  *
  * Server Component that enforces authentication. Redirects unauthenticated
- * users to /login. All child routes are guaranteed to have a user session.
- *
- * TODO (Week 3): Add sidebar navigation and header with user menu.
+ * users to /login. Fetches profile once and passes to all children via header.
  */
 export default async function AppLayout({
   children,
@@ -19,25 +19,25 @@ export default async function AppLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  setRequestLocale(locale);
 
-  if (!user) {
+  const profile = await getCurrentUserProfile();
+  if (!profile) {
     redirect(`/${locale}/login`);
   }
 
+  // Super admins go to a different console
+  if (profile.isSuperAdmin) {
+    redirect(`/${locale}/admin`);
+  }
+
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="border-b border-border bg-card/50 backdrop-blur">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="font-display text-xl font-bold">Qudurat</div>
-          <nav className="flex items-center gap-6 text-sm">
-            <span className="text-muted-foreground">{user.email}</span>
-          </nav>
-        </div>
-      </header>
+    <div className="flex min-h-screen flex-col bg-background">
+      <AppHeader
+        userName={profile.fullName}
+        userEmail={profile.email}
+        organizationName={profile.organizationName}
+      />
       <main className="flex-1">{children}</main>
     </div>
   );

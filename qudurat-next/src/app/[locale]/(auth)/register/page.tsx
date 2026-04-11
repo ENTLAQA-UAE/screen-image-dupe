@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
-import { LoginForm } from '@/app/[locale]/(auth)/login/login-form';
+import { RegisterForm } from '@/app/[locale]/(auth)/register/register-form';
 import {
   Card,
   CardContent,
@@ -19,17 +19,17 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: 'auth.login' });
+  const t = await getTranslations({ locale, namespace: 'auth.register' });
   return {
     title: t('title'),
     alternates: {
-      canonical: `/${locale}/login`,
-      languages: { en: '/en/login', ar: '/ar/login' },
+      canonical: `/${locale}/register`,
+      languages: { en: '/en/register', ar: '/ar/register' },
     },
   };
 }
 
-export default async function LoginPage({
+export default async function RegisterPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
@@ -37,7 +37,6 @@ export default async function LoginPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  // If already authenticated, redirect to dashboard
   const supabase = await createClient();
   const {
     data: { user },
@@ -46,7 +45,7 @@ export default async function LoginPage({
     redirect(`/${locale}/dashboard`);
   }
 
-  const t = await getTranslations('auth.login');
+  const t = await getTranslations('auth.register');
 
   return (
     <Card className="shadow-xl">
@@ -55,14 +54,14 @@ export default async function LoginPage({
         <CardDescription>{t('subtitle')}</CardDescription>
       </CardHeader>
       <CardContent>
-        <LoginForm />
+        <RegisterForm />
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          {t('noAccount')}{' '}
+          {t('hasAccount')}{' '}
           <Link
-            href="/register"
+            href="/login"
             className="font-semibold text-primary hover:text-primary-600"
           >
-            {t('signupLink')}
+            {t('loginLink')}
           </Link>
         </p>
       </CardContent>
