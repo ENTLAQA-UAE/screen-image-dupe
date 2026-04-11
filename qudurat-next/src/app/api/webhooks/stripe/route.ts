@@ -1,16 +1,15 @@
 import { type NextRequest, NextResponse } from 'next/server';
+import type Stripe from 'stripe';
 
-import { getActiveStripeCredentials } from '@/lib/domain/billing-queries';
+import { constructStripeEvent } from '@/lib/stripe/server';
 import { createAdminClient } from '@/lib/supabase/server';
 
 /**
  * Stripe webhook handler.
  *
- * Listens for subscription lifecycle events and updates the local
- * `subscriptions` and `invoices` tables accordingly.
- *
- * IMPORTANT: This handler does NOT trust the event until it verifies the
- * signature using the webhook secret (retrieved from payment_providers).
+ * Verifies the signature against the webhook secret stored in
+ * payment_providers (encrypted via Supabase Vault), then dispatches
+ * known events to update local subscriptions and invoices.
  *
  * Events handled:
  *   - checkout.session.completed → create/upsert subscription
@@ -19,18 +18,14 @@ import { createAdminClient } from '@/lib/supabase/server';
  *   - invoice.paid → record paid invoice
  *   - invoice.payment_failed → mark subscription past_due
  *
- * TODO: Install `stripe` package and wire up signature verification.
- * For now, this is a scaffold that documents the contract.
+ * Webhook endpoint setup:
+ *   1. Super admin configures Stripe at /admin/billing/providers
+ *   2. In Stripe Dashboard → Developers → Webhooks, add endpoint:
+ *      https://YOUR_DOMAIN/api/webhooks/stripe
+ *   3. Select the 5 events above
+ *   4. Copy the signing secret back into the admin config
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  const credentials = await getActiveStripeCredentials();
-  if (!credentials) {
-    return NextResponse.json(
-      { error: 'Stripe not configured' },
-      { status: 503 },
-    );
-  }
-
   const signature = request.headers.get('stripe-signature');
   if (!signature) {
     return NextResponse.json(
@@ -41,137 +36,209 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const rawBody = await request.text();
 
-  // ============================================================================
-  // PLACEHOLDER: Real implementation requires the `stripe` npm package.
-  // Install with: npm install stripe
-  // ============================================================================
-  //
-  // import Stripe from 'stripe';
-  // const stripe = new Stripe(credentials.apiKey, { apiVersion: '2024-06-20' });
-  //
-  // let event: Stripe.Event;
-  // try {
-  //   event = stripe.webhooks.constructEvent(
-  //     rawBody,
-  //     signature,
-  //     credentials.webhookSecret,
-  //   );
-  // } catch (err) {
-  //   console.error('Webhook signature verification failed:', err);
-  //   return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
-  // }
-  //
-  // const supabase = createAdminClient();
-  //
-  // switch (event.type) {
-  //   case 'checkout.session.completed': {
-  //     const session = event.data.object as Stripe.Checkout.Session;
-  //     const orgId = session.client_reference_id;
-  //     const planId = session.metadata?.plan_id;
-  //     const subscriptionId = session.subscription as string;
-  //     const customerId = session.customer as string;
-  //
-  //     if (!orgId || !planId) break;
-  //
-  //     // Fetch the full subscription to get period dates
-  //     const sub = await stripe.subscriptions.retrieve(subscriptionId);
-  //
-  //     await supabase.from('subscriptions').upsert(
-  //       {
-  //         organization_id: orgId,
-  //         plan_id: planId,
-  //         status: 'active',
-  //         billing_cycle: sub.items.data[0].plan.interval === 'year' ? 'annual' : 'monthly',
-  //         current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
-  //         current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
-  //         payment_method: 'stripe',
-  //         stripe_customer_id: customerId,
-  //         stripe_subscription_id: subscriptionId,
-  //         trial_end: null,
-  //       },
-  //       { onConflict: 'organization_id' },
-  //     );
-  //     break;
-  //   }
-  //
-  //   case 'customer.subscription.updated': {
-  //     const sub = event.data.object as Stripe.Subscription;
-  //     await supabase
-  //       .from('subscriptions')
-  //       .update({
-  //         status: sub.status === 'active' ? 'active'
-  //           : sub.status === 'past_due' ? 'past_due'
-  //           : sub.status === 'canceled' ? 'canceled'
-  //           : 'paused',
-  //         current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
-  //         current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
-  //         cancel_at_period_end: sub.cancel_at_period_end,
-  //       })
-  //       .eq('stripe_subscription_id', sub.id);
-  //     break;
-  //   }
-  //
-  //   case 'customer.subscription.deleted': {
-  //     const sub = event.data.object as Stripe.Subscription;
-  //     await supabase
-  //       .from('subscriptions')
-  //       .update({
-  //         status: 'canceled',
-  //         canceled_at: new Date().toISOString(),
-  //       })
-  //       .eq('stripe_subscription_id', sub.id);
-  //     break;
-  //   }
-  //
-  //   case 'invoice.paid': {
-  //     const invoice = event.data.object as Stripe.Invoice;
-  //     const { data: sub } = await supabase
-  //       .from('subscriptions')
-  //       .select('id, organization_id')
-  //       .eq('stripe_subscription_id', invoice.subscription as string)
-  //       .maybeSingle();
-  //
-  //     if (sub) {
-  //       await supabase.from('invoices').insert({
-  //         organization_id: (sub as { organization_id: string }).organization_id,
-  //         subscription_id: (sub as { id: string }).id,
-  //         amount_usd: invoice.amount_paid / 100,
-  //         currency: invoice.currency.toUpperCase(),
-  //         tax_amount: (invoice.tax ?? 0) / 100,
-  //         status: 'paid',
-  //         payment_method: 'stripe',
-  //         stripe_invoice_id: invoice.id,
-  //         stripe_hosted_url: invoice.hosted_invoice_url,
-  //         pdf_url: invoice.invoice_pdf,
-  //         paid_at: invoice.status_transitions.paid_at
-  //           ? new Date(invoice.status_transitions.paid_at * 1000).toISOString()
-  //           : new Date().toISOString(),
-  //         period_start: new Date(invoice.period_start * 1000).toISOString(),
-  //         period_end: new Date(invoice.period_end * 1000).toISOString(),
-  //       });
-  //     }
-  //     break;
-  //   }
-  //
-  //   case 'invoice.payment_failed': {
-  //     const invoice = event.data.object as Stripe.Invoice;
-  //     await supabase
-  //       .from('subscriptions')
-  //       .update({ status: 'past_due' })
-  //       .eq('stripe_subscription_id', invoice.subscription as string);
-  //     // TODO: send payment_failed email to org admin
-  //     break;
-  //   }
-  // }
-  // ============================================================================
+  let event: Stripe.Event;
+  try {
+    event = await constructStripeEvent(rawBody, signature);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Invalid signature';
+    console.error('[stripe-webhook] signature verification failed:', message);
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
 
-  // Placeholder response while stripe SDK is not yet installed
-  console.warn('[stripe-webhook] Received webhook but SDK not installed yet', {
-    bodyLength: rawBody.length,
-    signaturePrefix: signature.slice(0, 20),
-  });
+  const supabase = createAdminClient();
 
-  return NextResponse.json({ received: true, handled: false });
+  try {
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session;
+        const orgId = session.client_reference_id;
+        const planId = session.metadata?.plan_id;
+        const subscriptionId = session.subscription as string | null;
+        const customerId = session.customer as string | null;
+
+        if (!orgId || !planId || !subscriptionId || !customerId) {
+          console.warn(
+            '[stripe-webhook] checkout.session.completed missing required fields',
+            { orgId, planId, subscriptionId, customerId },
+          );
+          break;
+        }
+
+        // Retrieve full subscription to get period dates and interval
+        // Using the dynamic stripe client is not needed here because the session
+        // already contains subscription_details. But for period dates we need it.
+        // We use the previously-loaded client.
+        // Stripe event includes enough data for most use cases; fall back to
+        // a secondary fetch if needed. For simplicity here we use the session
+        // fields that are available via the expanded event.
+
+        // Period dates are not on the session object — we need to fetch the
+        // subscription to get them. Because we're in a webhook handler, we can
+        // call Stripe directly.
+        const { getStripeClient } = await import('@/lib/stripe/server');
+        const stripe = await getStripeClient();
+        const sub = await stripe.subscriptions.retrieve(subscriptionId);
+        const interval = sub.items.data[0]?.plan.interval;
+        const billingCycle = interval === 'year' ? 'annual' : 'monthly';
+
+        await supabase.from('subscriptions').upsert(
+          {
+            organization_id: orgId,
+            plan_id: planId,
+            status: 'active',
+            billing_cycle: billingCycle,
+            current_period_start: new Date(
+              sub.current_period_start * 1000,
+            ).toISOString(),
+            current_period_end: new Date(
+              sub.current_period_end * 1000,
+            ).toISOString(),
+            payment_method: 'stripe',
+            stripe_customer_id: customerId,
+            stripe_subscription_id: subscriptionId,
+            trial_end: null,
+            cancel_at_period_end: false,
+            canceled_at: null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'organization_id' },
+        );
+        break;
+      }
+
+      case 'customer.subscription.updated': {
+        const sub = event.data.object as Stripe.Subscription;
+        const mappedStatus = mapStripeStatus(sub.status);
+        await supabase
+          .from('subscriptions')
+          .update({
+            status: mappedStatus,
+            current_period_start: new Date(
+              sub.current_period_start * 1000,
+            ).toISOString(),
+            current_period_end: new Date(
+              sub.current_period_end * 1000,
+            ).toISOString(),
+            cancel_at_period_end: sub.cancel_at_period_end,
+            canceled_at: sub.canceled_at
+              ? new Date(sub.canceled_at * 1000).toISOString()
+              : null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('stripe_subscription_id', sub.id);
+        break;
+      }
+
+      case 'customer.subscription.deleted': {
+        const sub = event.data.object as Stripe.Subscription;
+        await supabase
+          .from('subscriptions')
+          .update({
+            status: 'canceled',
+            canceled_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('stripe_subscription_id', sub.id);
+        break;
+      }
+
+      case 'invoice.paid': {
+        const invoice = event.data.object as Stripe.Invoice;
+        const subscriptionId = invoice.subscription as string | null;
+        if (!subscriptionId) break;
+
+        const { data: sub } = await supabase
+          .from('subscriptions')
+          .select('id, organization_id')
+          .eq('stripe_subscription_id', subscriptionId)
+          .maybeSingle();
+
+        if (!sub) {
+          console.warn(
+            '[stripe-webhook] invoice.paid for unknown subscription:',
+            subscriptionId,
+          );
+          break;
+        }
+
+        const typedSub = sub as { id: string; organization_id: string };
+
+        await supabase.from('invoices').insert({
+          organization_id: typedSub.organization_id,
+          subscription_id: typedSub.id,
+          amount_usd: invoice.amount_paid / 100,
+          currency: invoice.currency.toUpperCase(),
+          tax_amount: (invoice.tax ?? 0) / 100,
+          status: 'paid',
+          payment_method: 'stripe',
+          stripe_invoice_id: invoice.id,
+          stripe_hosted_url: invoice.hosted_invoice_url,
+          pdf_url: invoice.invoice_pdf,
+          paid_at: invoice.status_transitions?.paid_at
+            ? new Date(invoice.status_transitions.paid_at * 1000).toISOString()
+            : new Date().toISOString(),
+          period_start: invoice.period_start
+            ? new Date(invoice.period_start * 1000).toISOString()
+            : null,
+          period_end: invoice.period_end
+            ? new Date(invoice.period_end * 1000).toISOString()
+            : null,
+        });
+        break;
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as Stripe.Invoice;
+        const subscriptionId = invoice.subscription as string | null;
+        if (!subscriptionId) break;
+
+        await supabase
+          .from('subscriptions')
+          .update({
+            status: 'past_due',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('stripe_subscription_id', subscriptionId);
+
+        // TODO: trigger payment_failed lifecycle email via Phase 2 Week 7 email system
+        break;
+      }
+
+      default:
+        // Ignore other events
+        break;
+    }
+  } catch (err) {
+    console.error('[stripe-webhook] error processing event', event.type, err);
+    return NextResponse.json(
+      { error: 'Processing failed' },
+      { status: 500 },
+    );
+  }
+
+  return NextResponse.json({ received: true, type: event.type });
 }
 
-export const runtime = 'nodejs'; // Stripe SDK needs Node runtime, not edge
+function mapStripeStatus(
+  status: Stripe.Subscription.Status,
+): 'active' | 'past_due' | 'canceled' | 'paused' | 'trialing' {
+  switch (status) {
+    case 'active':
+      return 'active';
+    case 'past_due':
+      return 'past_due';
+    case 'canceled':
+    case 'unpaid':
+    case 'incomplete_expired':
+      return 'canceled';
+    case 'paused':
+      return 'paused';
+    case 'trialing':
+      return 'trialing';
+    case 'incomplete':
+    default:
+      return 'past_due';
+  }
+}
+
+export const runtime = 'nodejs';

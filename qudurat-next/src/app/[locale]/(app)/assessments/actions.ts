@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
+import { canCreate, LimitExceededError } from '@/lib/domain/limits';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentUserProfile } from '@/lib/supabase/queries';
 
@@ -49,6 +50,16 @@ export async function createAssessmentAction(
       if (err.path[0]) errors[err.path[0] as string] = err.message;
     }
     return { ok: false, errors };
+  }
+
+  // Enforce subscription limit before insert
+  const allowed = await canCreate(profile.organizationId, 'assessments');
+  if (!allowed) {
+    return {
+      ok: false,
+      errors: {},
+      message: new LimitExceededError('assessments').message,
+    };
   }
 
   const supabase = await createClient();

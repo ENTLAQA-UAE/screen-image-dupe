@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 
+import { getStripeClient } from '@/lib/stripe/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { getCurrentUserProfile } from '@/lib/supabase/queries';
 
@@ -30,8 +31,11 @@ export async function createCheckoutSessionAction(
   formData: FormData,
 ): Promise<CheckoutResult> {
   const profile = await getCurrentUserProfile();
-  if (!profile || !profile.isOrgAdmin) {
-    return { ok: false, message: 'Only organization admins can purchase plans' };
+  if (!profile || !profile.organizationId || !profile.isOrgAdmin) {
+    return {
+      ok: false,
+      message: 'Only organization admins can purchase plans',
+    };
   }
 
   const parsed = checkoutSchema.safeParse({
@@ -42,35 +46,99 @@ export async function createCheckoutSessionAction(
     return { ok: false, message: 'Invalid plan selection' };
   }
 
-  // TODO: Replace with real Stripe SDK call once stripe package is installed.
-  //
-  // import Stripe from 'stripe';
-  // const credentials = await getActiveStripeCredentials();
-  // if (!credentials) return { ok: false, message: 'Payment provider not configured' };
-  // const stripe = new Stripe(credentials.apiKey, { apiVersion: '2024-06-20' });
-  //
-  // const plan = await getPlan(parsed.data.planId);
-  // const priceId = parsed.data.billingCycle === 'annual'
-  //   ? plan.stripe_price_annual_id
-  //   : plan.stripe_price_monthly_id;
-  //
-  // const session = await stripe.checkout.sessions.create({
-  //   mode: 'subscription',
-  //   line_items: [{ price: priceId, quantity: 1 }],
-  //   customer_email: profile.email,
-  //   client_reference_id: profile.organizationId,
-  //   success_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing?success=true`,
-  //   cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing?canceled=true`,
-  //   metadata: { organization_id: profile.organizationId, plan_id: plan.id },
-  // });
-  //
-  // return { ok: true, url: session.url! };
+  const supabase = createAdminClient();
+  const { data: plan } = await supabase
+    .from('plans')
+    .select(
+      'id, slug, stripe_price_monthly_id, stripe_price_annual_id, price_monthly_usd, price_annual_usd',
+    )
+    .eq('id', parsed.data.planId)
+    .maybeSingle();
 
-  return {
-    ok: false,
-    message:
-      'Stripe SDK integration pending. Super admin must install `stripe` package and wire up this action.',
+  if (!plan) {
+    return { ok: false, message: 'Plan not found' };
+  }
+
+  const typedPlan = plan as {
+    id: string;
+    slug: string;
+    stripe_price_monthly_id: string | null;
+    stripe_price_annual_id: string | null;
   };
+
+  const priceId =
+    parsed.data.billingCycle === 'annual'
+      ? typedPlan.stripe_price_annual_id
+      : typedPlan.stripe_price_monthly_id;
+
+  if (!priceId) {
+    return {
+      ok: false,
+      message: `Stripe price ID not configured for ${typedPlan.slug}. Super admin must set stripe_price_*_id on the plan.`,
+    };
+  }
+
+  const { data: existingSub } = await supabase
+    .from('subscriptions')
+    .select('stripe_customer_id')
+    .eq('organization_id', profile.organizationId)
+    .maybeSingle();
+
+  const existingCustomerId =
+    (existingSub as { stripe_customer_id: string | null } | null)
+      ?.stripe_customer_id ?? undefined;
+
+  let stripe;
+  try {
+    stripe = await getStripeClient();
+  } catch (err) {
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : 'Stripe is not configured',
+    };
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const locale = (formData.get('locale') as string) ?? 'en';
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      line_items: [{ price: priceId, quantity: 1 }],
+      customer: existingCustomerId,
+      customer_email: existingCustomerId ? undefined : profile.email,
+      client_reference_id: profile.organizationId,
+      billing_address_collection: 'required',
+      allow_promotion_codes: true,
+      success_url: `${appUrl}/${locale}/settings/billing?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/${locale}/settings/billing?canceled=true`,
+      metadata: {
+        organization_id: profile.organizationId,
+        plan_id: typedPlan.id,
+        plan_slug: typedPlan.slug,
+        billing_cycle: parsed.data.billingCycle,
+        created_by: profile.id,
+      },
+      subscription_data: {
+        metadata: {
+          organization_id: profile.organizationId,
+          plan_id: typedPlan.id,
+        },
+      },
+    });
+
+    if (!session.url) {
+      return { ok: false, message: 'Stripe did not return a checkout URL' };
+    }
+
+    revalidatePath(`/${locale}/settings/billing`);
+    return { ok: true, url: session.url };
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : 'Failed to create checkout session';
+    console.error('[createCheckoutSession]', message);
+    return { ok: false, message };
+  }
 }
 
 // ==============================================================================
