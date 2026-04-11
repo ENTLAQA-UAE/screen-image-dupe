@@ -144,18 +144,18 @@ export default async function AssessmentDetailPage({
 
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle>Assessment Builder</CardTitle>
+          <CardTitle>Manage questions</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            The full builder UI (question editor, drag-to-reorder, AI
-            generation, live preview) will be migrated in Phase 1 Week 5 along
-            with the Taker split. For now, use the legacy Vite app at{' '}
-            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
-              /assessment-builder/{assessment.id}
-            </code>{' '}
-            to manage questions.
+          <p className="mb-4 text-sm text-muted-foreground">
+            Add, edit, reorder, and publish your assessment questions.
           </p>
+          <Button asChild>
+            <Link href={`/assessments/${assessment.id}/edit`}>
+              <Edit className="h-4 w-4" />
+              Open question builder
+            </Link>
+          </Button>
         </CardContent>
       </Card>
     </div>

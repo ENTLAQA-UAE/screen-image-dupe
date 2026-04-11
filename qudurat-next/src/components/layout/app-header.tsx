@@ -80,6 +80,18 @@ export function AppHeader({
           >
             Results
           </Link>
+          <Link
+            href="/question-bank"
+            className="font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Questions
+          </Link>
+          <Link
+            href="/settings/organization"
+            className="font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Settings
+          </Link>
         </nav>
 
         <div className="flex items-center gap-3">

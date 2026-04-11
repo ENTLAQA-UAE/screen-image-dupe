@@ -1,4 +1,4 @@
-import { ArrowLeft, Copy, Users } from 'lucide-react';
+import { ArrowLeft, BarChart3, Copy, Users } from 'lucide-react';
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
@@ -100,6 +100,14 @@ export default async function GroupDetailPage({
         <p className="mt-1 text-sm text-muted-foreground">
           Assessment: <strong>{group.assessmentTitle}</strong>
         </p>
+        <div className="mt-4 flex gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/groups/${group.id}/report`}>
+              <BarChart3 className="h-4 w-4" />
+              View report
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
