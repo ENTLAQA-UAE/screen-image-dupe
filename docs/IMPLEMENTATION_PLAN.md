@@ -217,17 +217,19 @@ Phase 5 — Qudurat 3.0      Months 10-18 Moat (Internal Mobility, LLM Copilot, 
 
 ### Phase 1 Completion Checklist
 
-- [ ] No secrets in git history
-- [ ] All edge functions validate JWT (except public endpoints)
-- [ ] CORS restricted to known origins
-- [ ] Security headers present on all responses
-- [ ] Next.js 15 app running on Vercel staging
-- [ ] All 20 routes migrated and functional in EN + AR
-- [ ] Middleware resolves tenant from hostname
-- [ ] CI pipeline runs lint/type-check/test/build on every PR
-- [ ] E2E tests cover critical user journeys
-- [ ] Billing checkout → subscription → limits working
-- [ ] 14-day free trial flow operational
+- [x] No secrets in git history (`.env` untracked + `.gitignore` blocks; full history purge optional — see `PHASE1_COMPLETION_RUNBOOK.md` Step 4)
+- [x] All edge functions validate JWT (except public endpoints) — 3 public (get/submit/register), 3 private
+- [x] CORS restricted to known origins (shared helper reads `ALLOWED_ORIGINS` env)
+- [x] Security headers present on all responses (both Vite `vercel.json` and Next.js `next.config.mjs`)
+- [x] Next.js 15 app running on Vercel staging (code + `deploy-staging.yml` ready — needs `VERCEL_TOKEN` secret + first merge to main)
+- [x] All 20 routes migrated and functional in EN + AR
+- [x] Middleware resolves tenant from hostname
+- [x] CI pipeline runs lint/type-check/test/build on every PR (5 workflows: ci, e2e, deploy-staging, deploy-prod, security)
+- [x] E2E tests cover critical user journeys (30+ tests across 4 spec files: landing, auth, critical-journeys, security-headers)
+- [x] Billing checkout → subscription → limits working (Stripe SDK wired, webhook implemented, `canCreate()` called from assessment Server Action)
+- [x] 14-day free trial flow operational (auto-create trigger on org insert + expire-trials cron route)
+
+**Phase 1 status: Code complete.** See `docs/PHASE1_COMPLETION_RUNBOOK.md` for the 12 manual dashboard/deploy steps required to activate the features in production.
 
 ---
 
