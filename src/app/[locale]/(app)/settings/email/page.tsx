@@ -1,4 +1,4 @@
-import { Mail, Plus } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
@@ -7,7 +7,6 @@ import { EmailProviderForm } from '@/app/[locale]/(app)/settings/email/email-pro
 import { EmailLogTable } from '@/app/[locale]/(app)/settings/email/email-log-table';
 import { PageHeader } from '@/components/shared/page-header';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,

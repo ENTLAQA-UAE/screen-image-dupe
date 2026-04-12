@@ -39,14 +39,18 @@ interface Props {
   userEmail: string;
 }
 
-const PROVIDER_OPTIONS = [
+const PROVIDER_OPTIONS: Array<{
+  value: string;
+  label: string;
+  fields: string[];
+}> = [
   { value: 'resend', label: 'Resend', fields: ['apiKey'] },
   { value: 'mailgun', label: 'Mailgun', fields: ['apiKey', 'domain', 'region'] },
   { value: 'sendgrid', label: 'SendGrid', fields: ['apiKey'] },
   { value: 'postmark', label: 'Postmark', fields: ['apiKey'] },
   { value: 'ses', label: 'Amazon SES', fields: ['smtpUsername', 'smtpPassword', 'region'] },
   { value: 'smtp', label: 'Direct SMTP', fields: ['smtpHost', 'smtpPort', 'smtpUsername', 'smtpPassword', 'smtpSecure'] },
-] as const;
+];
 
 export function EmailProviderForm({ existingProvider, userEmail }: Props) {
   const locale = useLocale();
