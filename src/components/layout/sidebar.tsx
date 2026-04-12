@@ -50,6 +50,7 @@ const HR_ADMIN_NAV: NavGroup[] = [
       { icon: BarChart3, label: 'Dashboard', href: '/dashboard' },
       { icon: FileText, label: 'Assessments', href: '/assessments' },
       { icon: FolderKanban, label: 'Groups', href: '/groups' },
+      { icon: Users, label: 'Participants', href: '/participants' },
       { icon: UserCircle, label: 'Employees', href: '/employees' },
       { icon: Library, label: 'Question Bank', href: '/question-bank' },
       { icon: PieChart, label: 'Results', href: '/results' },
