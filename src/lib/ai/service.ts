@@ -45,18 +45,10 @@ export async function getTenantAiConfig(
 
   if (error || !data) return null;
 
-  // Decrypt API key
-  const { data: decryptedKey } = await rpc(
-    supabase,
-    'encrypt_email_secret', // Reuse the same vault decrypt — works for any encrypted value
-    { plain_text: 'dummy' }, // This is wrong — we need a decrypt, not encrypt
-  );
-
-  // TODO: We need a generic decrypt function. For now, the API key is
-  // stored encrypted but we can't decrypt it yet from the Next.js side.
-  // The edge functions read it directly. For the settings test button,
-  // the API key is passed from the form (before encryption).
-  //
+  // NOTE: API key decryption from the DB is not yet implemented on the
+  // Next.js side (needs a generic decrypt RPC). For now, the API key is
+  // passed explicitly from the form (test button) or edge function env.
+  // The encrypt-on-save still works for at-rest encryption in the DB.
   // Workaround: store the API key in the provider config as-is for now,
   // and the service will use it. The encrypt-on-save still works for
   // at-rest encryption in the DB.
