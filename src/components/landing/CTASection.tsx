@@ -49,7 +49,7 @@ export const CTASection = () => {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="text-lg text-primary-foreground/80 max-w-2xl mx-auto mb-8"
               >
-                Join leading organizations using Jadarat Assess to make smarter, 
+                Join leading organizations using Qudurat to make smarter, 
                 data-driven talent decisions. Start your free trial today.
               </motion.p>
 

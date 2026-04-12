@@ -290,18 +290,18 @@ export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardP
   ];
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <motion.h1
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-xl sm:text-2xl font-display font-bold text-foreground mb-1"
+            className="text-xl sm:text-2xl font-bold text-foreground mb-1"
           >
             {t.dashboard.welcome}, {userName}
           </motion.h1>
-          <p className="text-sm sm:text-base text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             {t.hrDashboard.activityOverview}
           </p>
         </div>
@@ -338,75 +338,58 @@ export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardP
         <LiveProgressDashboard organizationId={organizationId} />
       </motion.div>
 
-      {/* Stats Grid - Colorful Gradient Cards */}
+      {/* Stats Grid - Clean Professional Cards */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
       >
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-0 shadow-md p-3 sm:p-4">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shrink-0">
-              <FolderKanban className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl sm:text-2xl font-bold text-blue-700 dark:text-blue-300">{stats.activeGroups}</p>
-              <p className="text-[10px] sm:text-xs text-blue-600/70 dark:text-blue-400/70 truncate">{t.hrDashboard.activeGroups}</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 border-0 shadow-md p-3 sm:p-4">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shrink-0">
-              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl sm:text-2xl font-bold text-amber-700 dark:text-amber-300">{stats.pendingAssessments}</p>
-              <p className="text-[10px] sm:text-xs text-amber-600/70 dark:text-amber-400/70 truncate">{t.hrDashboard.pending}</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/30 dark:to-emerald-900/20 border-0 shadow-md p-3 sm:p-4">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shrink-0">
-              <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl sm:text-2xl font-bold text-emerald-700 dark:text-emerald-300">{stats.completedToday}</p>
-              <p className="text-[10px] sm:text-xs text-emerald-600/70 dark:text-emerald-400/70 truncate">{t.hrDashboard.completedToday}</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-950/30 dark:to-violet-900/20 border-0 shadow-md p-3 sm:p-4">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-lg shrink-0">
-              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xl sm:text-2xl font-bold text-violet-700 dark:text-violet-300">{stats.totalParticipants}</p>
-              <p className="text-[10px] sm:text-xs text-violet-600/70 dark:text-violet-400/70 truncate">{t.hrDashboard.totalParticipants}</p>
-            </div>
-          </div>
-        </Card>
-        <Card className="bg-gradient-to-br from-rose-50 to-pink-100 dark:from-rose-950/30 dark:to-pink-900/20 border-0 shadow-md p-3 sm:p-4">
+        <Card className="bg-card border border-border shadow-card p-4 sm:p-5 border-l-4 border-l-primary">
           <div className="flex items-center justify-between">
             <div className="min-w-0">
-              <p className="text-[10px] sm:text-xs text-rose-600/70 dark:text-rose-400/70">{t.hrDashboard.completionRate}</p>
+              <p className="text-xs text-muted-foreground truncate">{t.hrDashboard.activeGroups}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">{stats.activeGroups}</p>
             </div>
-            <div className="relative w-12 h-12 sm:w-14 sm:h-14 shrink-0">
-              <svg className="w-full h-full -rotate-90">
-                <circle cx="50%" cy="50%" r="40%" fill="none" strokeWidth="4" className="stroke-rose-200 dark:stroke-rose-800/50" />
-                <circle
-                  cx="50%" cy="50%" r="40%" fill="none" strokeWidth="4" strokeLinecap="round"
-                  strokeDasharray={`${2 * Math.PI * 40}%`}
-                  strokeDashoffset={`${2 * Math.PI * 40 * (1 - stats.completionRate / 100)}%`}
-                  className="stroke-rose-500 transition-all duration-700 ease-out"
-                />
-              </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-xs sm:text-sm font-bold text-rose-700 dark:text-rose-300">
-                {stats.completionRate}%
-              </span>
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <FolderKanban className="w-5 h-5 text-primary" />
+            </div>
+          </div>
+        </Card>
+        <Card className="bg-card border border-border shadow-card p-4 sm:p-5 border-l-4 border-l-cta">
+          <div className="flex items-center justify-between">
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">{t.hrDashboard.pending}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">{stats.pendingAssessments}</p>
+            </div>
+            <div className="w-10 h-10 rounded-lg bg-cta/10 flex items-center justify-center shrink-0">
+              <Clock className="w-5 h-5 text-cta" />
+            </div>
+          </div>
+        </Card>
+        <Card className="bg-card border border-border shadow-card p-4 sm:p-5 border-l-4 border-l-success">
+          <div className="flex items-center justify-between">
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">{t.hrDashboard.completedToday}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">{stats.completedToday}</p>
+            </div>
+            <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5 text-success" />
+            </div>
+          </div>
+        </Card>
+        <Card className="bg-card border border-border shadow-card p-4 sm:p-5 border-l-4 border-l-accent">
+          <div className="flex items-center justify-between">
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground truncate">{t.hrDashboard.totalParticipants}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">{stats.totalParticipants}</p>
+              <div className="flex items-center gap-1 mt-1">
+                <TrendingUp className="w-3 h-3 text-success" />
+                <span className="text-[10px] text-success font-medium">{stats.completionRate}% {t.hrDashboard.completionRate}</span>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5 text-accent" />
             </div>
           </div>
         </Card>

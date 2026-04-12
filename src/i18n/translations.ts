@@ -1,4 +1,4 @@
-// Complete Arabic/English translations for Jadarat Assess
+// Complete Arabic/English translations for Qudurat
 
 export const translations = {
   en: {

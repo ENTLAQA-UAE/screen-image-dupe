@@ -608,7 +608,7 @@ export default function OrganizationSettings() {
                     {organization?.plan?.toUpperCase() || "FREE"} {language === 'ar' ? 'خطة' : 'Plan'}
                   </Badge>
                   <span className="text-muted-foreground text-sm">
-                    {language === 'ar' ? 'تواصل مع جدارات لترقية خطتك' : 'Contact Jadarat to upgrade your plan'}
+                    {language === 'ar' ? 'تواصل مع قدرات لترقية خطتك' : 'Contact Qudurat to upgrade your plan'}
                   </span>
                 </div>
 

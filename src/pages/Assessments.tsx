@@ -413,7 +413,7 @@ const Assessments = () => {
 
   return (
     <DashboardLayout activeItem="Assessments">
-      <div className="p-8">
+      <div>
         {/* Limit Warning */}
         <LimitWarning 
           resourceType="assessments" 
@@ -427,7 +427,7 @@ const Assessments = () => {
             <motion.h1 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-2xl font-display font-bold text-foreground mb-1"
+              className="text-2xl font-bold text-foreground mb-1"
             >
               {t.assessments.title}
               <LimitBadge currentUsage={usage.assessments} limit={limits.assessments} />

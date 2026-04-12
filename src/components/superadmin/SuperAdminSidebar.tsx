@@ -19,16 +19,16 @@ const navItems = [
 
 export function SuperAdminSidebar({ activeSection, setActiveSection, userName, onSignOut }: SuperAdminSidebarProps) {
   return (
-    <aside className="w-64 h-screen bg-sidebar fixed left-0 top-0 border-r border-sidebar-border flex flex-col">
+    <aside className="w-64 h-screen bg-gray-900 fixed left-0 top-0 border-r border-gray-800 flex flex-col">
       {/* Logo */}
-      <div className="p-6 border-b border-sidebar-border">
+      <div className="p-6 border-b border-gray-800">
         <Link to="/" className="flex items-center gap-3">
           <div className="w-9 h-9 gradient-accent rounded-lg flex items-center justify-center shadow-glow">
-            <span className="text-accent-foreground font-display font-bold">J</span>
+            <span className="text-accent-foreground font-bold">Q</span>
           </div>
           <div className="flex flex-col">
-            <span className="font-display font-bold text-sidebar-foreground">Jadarat</span>
-            <span className="text-[10px] text-sidebar-foreground/60 -mt-0.5 tracking-wider">ASSESS</span>
+            <span className="font-bold text-gray-100">Qudurat</span>
+            <span className="text-[10px] text-gray-400 -mt-0.5 tracking-wider">PLATFORM</span>
           </div>
         </Link>
       </div>
@@ -48,9 +48,9 @@ export function SuperAdminSidebar({ activeSection, setActiveSection, userName, o
             key={item.id}
             onClick={() => setActiveSection(item.id)}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-              activeSection === item.id 
-                ? "bg-sidebar-accent text-sidebar-primary" 
-                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+              activeSection === item.id
+                ? "bg-gray-800 text-white"
+                : "text-gray-400 hover:bg-gray-800/50 hover:text-gray-200"
             }`}
           >
             <item.icon className="w-5 h-5" />
@@ -60,7 +60,7 @@ export function SuperAdminSidebar({ activeSection, setActiveSection, userName, o
       </nav>
 
       {/* User Section */}
-      <div className="p-4 border-t border-sidebar-border">
+      <div className="p-4 border-t border-gray-800">
         <div className="flex items-center gap-3 px-3 py-2 mb-2">
           <div className="w-9 h-9 rounded-full bg-highlight/20 flex items-center justify-center">
             <span className="text-highlight font-semibold text-sm">
@@ -68,7 +68,7 @@ export function SuperAdminSidebar({ activeSection, setActiveSection, userName, o
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-sidebar-foreground truncate">{userName}</p>
+            <p className="text-sm font-medium text-gray-100 truncate">{userName}</p>
             <p className="text-xs text-highlight truncate">Super Admin</p>
           </div>
         </div>

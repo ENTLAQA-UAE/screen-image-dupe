@@ -309,14 +309,14 @@ const Employees = () => {
 
   return (
     <DashboardLayout activeItem="Employees">
-      <div className="p-8">
+      <div>
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <motion.h1
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-2xl font-display font-bold text-foreground mb-1"
+              className="text-2xl font-bold text-foreground mb-1"
             >
               {t.employees.title}
             </motion.h1>

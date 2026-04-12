@@ -1,51 +1,49 @@
 import { motion } from "framer-motion";
-import { 
-  Brain, 
-  Sparkles, 
-  Users, 
-  BarChart3, 
-  Globe2, 
-  Shield, 
-  Zap, 
-  FileText 
+import {
+  Sparkles,
+  Brain,
+  Globe2,
+  Users,
+  BarChart3,
+  Shield,
 } from "lucide-react";
 
 const features = [
   {
     icon: Sparkles,
     title: "AI Assessment Builder",
-    description: "Generate professional assessments in minutes with AI. From cognitive tests to personality profiles — no psychometrics expertise needed.",
-    color: "accent",
+    description:
+      "Generate professional assessments in minutes with AI. From cognitive tests to personality profiles — no psychometrics expertise needed.",
   },
   {
     icon: Brain,
     title: "Multiple Assessment Types",
-    description: "Cognitive, personality, behavioral, SJT, language assessments, and custom profiles like DESC — all scientifically grounded.",
-    color: "highlight",
+    description:
+      "Cognitive, personality, behavioral, SJT, language assessments, and custom profiles like DESC — all scientifically grounded.",
   },
   {
     icon: Globe2,
     title: "Bilingual EN/AR",
-    description: "Full Arabic and English support with RTL layouts. AI generates content in both languages for truly localized experiences.",
-    color: "success",
+    description:
+      "Full Arabic and English support with RTL layouts. AI generates content in both languages for truly localized experiences.",
   },
   {
     icon: Users,
     title: "Assessment Groups",
-    description: "Run assessment campaigns per cohort with time-bound groups, unique participant links, and real-time tracking.",
-    color: "accent",
+    description:
+      "Run assessment campaigns per cohort with time-bound groups, unique participant links, and real-time tracking.",
   },
   {
     icon: BarChart3,
     title: "Unified Employee Profiles",
-    description: "Aggregate all assessment history per employee. Make informed promotion, selection, and development decisions.",
-    color: "highlight",
+    description:
+      "Aggregate all assessment history per employee. Make informed promotion, selection, and development decisions.",
   },
   {
     icon: Shield,
     title: "Enterprise Security",
-    description: "Multi-tenant isolation, role-based access, and secure UUID-based assessment links for every participant.",
-    color: "success",
+    description:
+      "Multi-tenant isolation, role-based access, and secure UUID-based assessment links for every participant.",
   },
 ];
 
@@ -69,8 +67,8 @@ export const FeaturesSection = () => {
     <section id="features" className="py-24 bg-background relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-30 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-highlight/5 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
       </div>
 
       <div className="container mx-auto px-6 relative z-10">
@@ -82,17 +80,17 @@ export const FeaturesSection = () => {
           transition={{ duration: 0.6 }}
           className="text-center max-w-3xl mx-auto mb-16"
         >
-          <span className="inline-block px-4 py-1.5 rounded-full bg-accent/10 text-accent text-sm font-semibold mb-4">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-4">
             Features
           </span>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold text-foreground mb-6">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-display text-foreground mb-6">
             Everything You Need to
             <br />
             <span className="text-gradient">Assess at Scale</span>
           </h2>
           <p className="text-lg text-muted-foreground">
-            From AI-powered assessment creation to comprehensive analytics — 
-            Jadarat Assess gives HR teams the tools to make data-driven talent decisions.
+            From AI-powered assessment creation to comprehensive analytics —
+            Qudurat gives HR teams the tools to make data-driven talent decisions.
           </p>
         </motion.div>
 
@@ -104,23 +102,15 @@ export const FeaturesSection = () => {
           viewport={{ once: true }}
           className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
-          {features.map((feature, index) => (
+          {features.map((feature) => (
             <motion.div
               key={feature.title}
               variants={itemVariants}
               className="group relative"
             >
-              <div className="h-full p-8 rounded-2xl bg-card border border-border/50 shadow-elegant hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+              <div className="h-full p-8 rounded-2xl bg-card border border-border/50 shadow-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                 {/* Icon */}
-                <div
-                  className={`w-14 h-14 rounded-xl flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110 ${
-                    feature.color === "accent"
-                      ? "bg-accent/10 text-accent"
-                      : feature.color === "highlight"
-                      ? "bg-highlight/10 text-highlight"
-                      : "bg-success/10 text-success"
-                  }`}
-                >
+                <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6 bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-110">
                   <feature.icon className="w-7 h-7" />
                 </div>
 
@@ -131,17 +121,6 @@ export const FeaturesSection = () => {
                 <p className="text-muted-foreground leading-relaxed">
                   {feature.description}
                 </p>
-
-                {/* Hover Accent */}
-                <div
-                  className={`absolute bottom-0 left-0 right-0 h-1 rounded-b-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-                    feature.color === "accent"
-                      ? "gradient-accent"
-                      : feature.color === "highlight"
-                      ? "gradient-gold"
-                      : "bg-success"
-                  }`}
-                />
               </div>
             </motion.div>
           ))}

@@ -11,7 +11,7 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>Jadarat Assess | AI-Powered Employee Assessment Platform</title>
+        <title>Qudurat | AI-Powered Employee Assessment Platform</title>
         <meta 
           name="description" 
           content="Design, launch, and analyze employee assessments with AI. Cognitive tests, personality profiles, SJT, and more in English and Arabic. Enterprise-ready." 

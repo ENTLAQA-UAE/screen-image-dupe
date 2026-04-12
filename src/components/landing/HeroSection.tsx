@@ -2,7 +2,6 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Sparkles, Users, Brain, BarChart3 } from "lucide-react";
 import { Link } from "react-router-dom";
-import heroBg from "@/assets/hero-bg.jpg";
 
 const stats = [
   { label: "Organizations", value: "500+", icon: Users },
@@ -12,20 +11,9 @@ const stats = [
 
 export const HeroSection = () => {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
-      {/* Background */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src={heroBg}
-          alt=""
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/90 via-primary/80 to-primary/95" />
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/50 via-transparent to-accent/20" />
-      </div>
-
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 gradient-hero">
       {/* Floating Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
           animate={{ y: [-20, 20, -20] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
@@ -34,7 +22,7 @@ export const HeroSection = () => {
         <motion.div
           animate={{ y: [20, -20, 20] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-1/4 right-[10%] w-96 h-96 bg-highlight/10 rounded-full blur-3xl"
+          className="absolute bottom-1/4 right-[10%] w-96 h-96 bg-cta/10 rounded-full blur-3xl"
         />
       </div>
 
@@ -45,9 +33,9 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent-foreground/10 backdrop-blur-sm border border-accent-foreground/20 mb-8"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 mb-8"
           >
-            <Sparkles className="w-4 h-4 text-highlight" />
+            <Sparkles className="w-4 h-4 text-cta" />
             <span className="text-sm font-medium text-primary-foreground">
               AI-Powered Assessment Platform
             </span>
@@ -58,17 +46,19 @@ export const HeroSection = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-4xl md:text-5xl lg:text-7xl font-display font-bold text-primary-foreground leading-tight mb-6"
+            className="text-4xl md:text-5xl lg:text-7xl font-display text-primary-foreground leading-tight mb-6"
           >
-            Transform How You
+            Smarter Assessments,
             <br />
             <span className="relative inline-block">
-              <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">Assess Talent</span>
+              <span className="bg-gradient-to-r from-amber-400 to-amber-500 bg-clip-text text-transparent">
+                Stronger Teams
+              </span>
               <motion.div
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ duration: 0.8, delay: 0.8 }}
-                className="absolute -bottom-2 left-0 right-0 h-1 gradient-gold rounded-full origin-left"
+                className="absolute -bottom-2 left-0 right-0 h-1 gradient-cta rounded-full origin-left"
               />
             </span>
           </motion.h1>
@@ -80,9 +70,9 @@ export const HeroSection = () => {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="text-lg md:text-xl text-primary-foreground/80 max-w-3xl mx-auto mb-10 leading-relaxed"
           >
-            Design, launch, and analyze employee assessments with AI-powered tools.
-            From cognitive tests to personality profiles — all in one bilingual platform
-            built for enterprises.
+            Design, launch, and analyze employee assessments with AI-powered
+            tools. Get actionable insights that help you build high-performing
+            teams faster.
           </motion.p>
 
           {/* CTAs */}
@@ -93,8 +83,8 @@ export const HeroSection = () => {
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
           >
             <Link to="/dashboard">
-              <Button variant="gold" size="xl" className="group">
-                Start Now
+              <Button variant="cta" size="xl" className="group">
+                Start Free Trial
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
@@ -120,8 +110,8 @@ export const HeroSection = () => {
                 className="text-center"
               >
                 <div className="flex items-center justify-center mb-2">
-                  <stat.icon className="w-5 h-5 text-highlight mr-2" />
-                  <span className="text-2xl md:text-3xl font-display font-bold text-primary-foreground">
+                  <stat.icon className="w-5 h-5 text-cta mr-2" />
+                  <span className="text-2xl md:text-3xl font-display text-primary-foreground">
                     {stat.value}
                   </span>
                 </div>

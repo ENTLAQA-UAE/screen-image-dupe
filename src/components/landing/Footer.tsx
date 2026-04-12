@@ -39,8 +39,8 @@ export const Footer = () => {
                 <span className="text-accent-foreground font-display font-bold text-lg">J</span>
               </div>
               <div className="flex flex-col">
-                <span className="font-display font-bold text-xl text-primary-foreground">Jadarat</span>
-                <span className="text-xs text-primary-foreground/60 -mt-1 tracking-wider">ASSESS</span>
+                <span className="font-display font-bold text-xl text-primary-foreground">Qudurat</span>
+                <span className="text-xs text-primary-foreground/60 -mt-1 tracking-wider">PLATFORM</span>
               </div>
             </Link>
             <p className="text-primary-foreground/70 max-w-sm mb-6 leading-relaxed">
@@ -110,7 +110,7 @@ export const Footer = () => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-primary-foreground/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-primary-foreground/50 text-sm">
-            © 2024 Jadarat. All rights reserved.
+            © 2026 Qudurat. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
             {footerLinks.legal.map((link) => (

@@ -39,7 +39,7 @@ export function DashboardSection({
           Platform Overview
         </h1>
         <p className="text-muted-foreground">
-          Welcome back! Here's what's happening on Jadarat Assess.
+          Welcome back! Here's what's happening on Qudurat.
         </p>
       </div>
 

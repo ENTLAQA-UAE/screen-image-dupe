@@ -374,14 +374,14 @@ export default function UserManagement() {
 
   return (
     <DashboardLayout activeItem="User Management">
-      <div className="p-8 space-y-6">
+      <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <motion.h1
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-2xl font-display font-bold text-foreground mb-1"
+              className="text-2xl font-bold text-foreground mb-1"
             >
               {t.userManagement.title}
             </motion.h1>

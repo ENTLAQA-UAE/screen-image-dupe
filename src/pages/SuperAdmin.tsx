@@ -126,7 +126,7 @@ export default function SuperAdmin() {
       />
 
       <div className="pl-64 flex-1">
-        <main className="p-8">
+        <main className="p-4 sm:p-6 lg:p-8 max-w-[1400px]">
           {activeSection === 'dashboard' && (
             <DashboardSection
               organizations={organizations}

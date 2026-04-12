@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, Globe } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const navLinks = [
   { label: "Features", href: "#features" },
-  { label: "Assessment Types", href: "#assessments" },
+  { label: "Assessments", href: "#assessments" },
   { label: "How It Works", href: "#how-it-works" },
   { label: "Pricing", href: "#pricing" },
 ];
@@ -25,13 +25,10 @@ export const Navbar = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 gradient-accent rounded-xl flex items-center justify-center shadow-glow transition-smooth group-hover:scale-105">
-              <span className="text-accent-foreground font-display font-bold text-lg">J</span>
+            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-glow transition-all duration-300 group-hover:scale-105">
+              <span className="text-primary-foreground font-display text-lg">Q</span>
             </div>
-            <div className="flex flex-col">
-              <span className="font-display font-bold text-xl text-foreground">Jadarat</span>
-              <span className="text-xs text-muted-foreground -mt-1 tracking-wider">ASSESS</span>
-            </div>
+            <span className="font-display text-xl text-foreground">Qudurat</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -40,22 +37,28 @@ export const Navbar = () => {
               <a
                 key={link.label}
                 href={link.href}
-                className="text-muted-foreground hover:text-foreground transition-smooth font-medium text-sm"
+                className="text-muted-foreground hover:text-primary transition-smooth font-medium text-sm"
               >
                 {link.label}
               </a>
             ))}
           </div>
 
-          {/* Desktop CTA */}
-          <div className="hidden lg:flex items-center gap-4">
+          {/* Desktop CTA + Language Switcher */}
+          <div className="hidden lg:flex items-center gap-3">
+            {/* Language Switcher Placeholder */}
+            <button className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-smooth text-sm">
+              <Globe className="w-4 h-4" />
+              <span>EN</span>
+            </button>
+
             <Link to="/dashboard">
               <Button variant="ghost" size="sm">
                 Sign In
               </Button>
             </Link>
             <Link to="/dashboard">
-              <Button variant="hero" size="default">
+              <Button variant="cta" size="default">
                 Get Started
               </Button>
             </Link>
@@ -86,20 +89,27 @@ export const Navbar = () => {
                   <a
                     key={link.label}
                     href={link.href}
-                    className="block text-muted-foreground hover:text-foreground transition-smooth font-medium py-2"
+                    className="block text-muted-foreground hover:text-primary transition-smooth font-medium py-2"
                     onClick={() => setIsOpen(false)}
                   >
                     {link.label}
                   </a>
                 ))}
+
+                {/* Language Switcher in Mobile */}
+                <button className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-smooth text-sm py-2">
+                  <Globe className="w-4 h-4" />
+                  <span>EN</span>
+                </button>
+
                 <div className="pt-4 space-y-3">
                   <Link to="/dashboard" className="block">
-                    <Button variant="outline" className="w-full">
+                    <Button variant="ghost" className="w-full">
                       Sign In
                     </Button>
                   </Link>
                   <Link to="/dashboard" className="block">
-                    <Button variant="hero" className="w-full">
+                    <Button variant="cta" className="w-full">
                       Get Started
                     </Button>
                   </Link>

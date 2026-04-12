@@ -203,7 +203,7 @@ export default function Auth() {
               </div>
               <div>
                 <h1 className="text-3xl font-display font-bold text-white">
-                  Jadarat Assess
+                  Qudurat
                 </h1>
                 <p className="text-white/60 text-sm tracking-wide">ENTERPRISE PLATFORM</p>
               </div>
@@ -273,7 +273,7 @@ export default function Auth() {
               </div>
               <div className={`text-${isRTL ? 'right' : 'left'}`}>
                 <h1 className="text-2xl font-display font-bold text-foreground">
-                  Jadarat Assess
+                  Qudurat
                 </h1>
                 <p className="text-muted-foreground text-xs tracking-wide">ENTERPRISE PLATFORM</p>
               </div>
@@ -319,7 +319,7 @@ export default function Auth() {
                         {t.auth.email}
                       </Label>
                       <div className="relative group">
-                        <Mail className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors ${isRTL ? 'right-3' : 'left-3'}`} />
+                        <Mail className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors ${isRTL ? 'right-3' : 'left-3'}`} />
                         <Input
                           id="login-email"
                           type="email"
@@ -346,7 +346,7 @@ export default function Auth() {
                         {t.auth.password}
                       </Label>
                       <div className="relative group">
-                        <Lock className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors ${isRTL ? 'right-3' : 'left-3'}`} />
+                        <Lock className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors ${isRTL ? 'right-3' : 'left-3'}`} />
                         <Input
                           id="login-password"
                           type={showPassword ? "text" : "password"}
@@ -408,7 +408,7 @@ export default function Auth() {
                         {t.auth.fullName}
                       </Label>
                       <div className="relative group">
-                        <User className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors ${isRTL ? 'right-3' : 'left-3'}`} />
+                        <User className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors ${isRTL ? 'right-3' : 'left-3'}`} />
                         <Input
                           id="signup-name"
                           type="text"
@@ -434,7 +434,7 @@ export default function Auth() {
                         {t.auth.email}
                       </Label>
                       <div className="relative group">
-                        <Mail className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors ${isRTL ? 'right-3' : 'left-3'}`} />
+                        <Mail className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors ${isRTL ? 'right-3' : 'left-3'}`} />
                         <Input
                           id="signup-email"
                           type="email"
@@ -460,7 +460,7 @@ export default function Auth() {
                         {t.auth.password}
                       </Label>
                       <div className="relative group">
-                        <Lock className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors ${isRTL ? 'right-3' : 'left-3'}`} />
+                        <Lock className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors ${isRTL ? 'right-3' : 'left-3'}`} />
                         <Input
                           id="signup-password"
                           type={showPassword ? "text" : "password"}
@@ -493,7 +493,7 @@ export default function Auth() {
                         {t.auth.confirmPassword}
                       </Label>
                       <div className="relative group">
-                        <Lock className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors ${isRTL ? 'right-3' : 'left-3'}`} />
+                        <Lock className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors ${isRTL ? 'right-3' : 'left-3'}`} />
                         <Input
                           id="signup-confirm"
                           type={showConfirmPassword ? "text" : "password"}

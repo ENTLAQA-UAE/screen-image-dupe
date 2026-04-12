@@ -15,10 +15,10 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        display: ["Sora", "Cairo", "system-ui", "sans-serif"],
-        body: ["Inter", "Noto Sans Arabic", "system-ui", "sans-serif"],
-        arabic: ["Noto Sans Arabic", "Cairo", "system-ui", "sans-serif"],
-        "arabic-display": ["Cairo", "Noto Sans Arabic", "system-ui", "sans-serif"],
+        display: ["Inter", "system-ui", "sans-serif"],
+        body: ["Inter", "system-ui", "sans-serif"],
+        arabic: ["Noto Sans Arabic", "system-ui", "sans-serif"],
+        "arabic-display": ["Noto Sans Arabic", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -45,6 +45,10 @@ module.exports = {
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
+        },
+        cta: {
+          DEFAULT: "hsl(var(--cta))",
+          foreground: "hsl(var(--cta-foreground))",
         },
         highlight: {
           DEFAULT: "hsl(var(--highlight))",
@@ -80,6 +84,14 @@ module.exports = {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        chart: {
+          1: "hsl(var(--chart-1))",
+          2: "hsl(var(--chart-2))",
+          3: "hsl(var(--chart-3))",
+          4: "hsl(var(--chart-4))",
+          5: "hsl(var(--chart-5))",
+          6: "hsl(var(--chart-6))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -92,6 +104,7 @@ module.exports = {
       boxShadow: {
         elegant: "var(--shadow-lg)",
         glow: "var(--shadow-glow)",
+        cta: "var(--shadow-cta)",
         gold: "var(--shadow-gold)",
         card: "var(--shadow-card)",
         button: "var(--shadow-button)",
@@ -107,36 +120,36 @@ module.exports = {
           to: { height: "0" },
         },
         "fade-in": {
-          from: { opacity: "0", transform: "translateY(10px)" },
+          from: { opacity: "0", transform: "translateY(8px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
         "fade-in-up": {
-          from: { opacity: "0", transform: "translateY(20px)" },
+          from: { opacity: "0", transform: "translateY(16px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
         "fade-in-down": {
-          from: { opacity: "0", transform: "translateY(-10px)" },
+          from: { opacity: "0", transform: "translateY(-8px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
         "slide-in-right": {
-          from: { opacity: "0", transform: "translateX(20px)" },
+          from: { opacity: "0", transform: "translateX(16px)" },
           to: { opacity: "1", transform: "translateX(0)" },
         },
         "slide-in-left": {
-          from: { opacity: "0", transform: "translateX(-20px)" },
+          from: { opacity: "0", transform: "translateX(-16px)" },
           to: { opacity: "1", transform: "translateX(0)" },
         },
         "scale-in": {
-          from: { opacity: "0", transform: "scale(0.95)" },
+          from: { opacity: "0", transform: "scale(0.96)" },
           to: { opacity: "1", transform: "scale(1)" },
         },
         "scale-out": {
           from: { opacity: "1", transform: "scale(1)" },
-          to: { opacity: "0", transform: "scale(0.95)" },
+          to: { opacity: "0", transform: "scale(0.96)" },
         },
         float: {
           "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-10px)" },
+          "50%": { transform: "translateY(-8px)" },
         },
         pulse: {
           "0%, 100%": { opacity: "1" },
@@ -150,41 +163,31 @@ module.exports = {
           from: { transform: "rotate(0deg)" },
           to: { transform: "rotate(360deg)" },
         },
-        wiggle: {
-          "0%, 100%": { transform: "rotate(-3deg)" },
-          "50%": { transform: "rotate(3deg)" },
-        },
         "bounce-subtle": {
           "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-5px)" },
+          "50%": { transform: "translateY(-4px)" },
         },
         "gradient-x": {
           "0%, 100%": { backgroundPosition: "0% 50%" },
           "50%": { backgroundPosition: "100% 50%" },
         },
-        "border-pulse": {
-          "0%, 100%": { borderColor: "hsl(var(--accent) / 0.5)" },
-          "50%": { borderColor: "hsl(var(--accent))" },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in": "fade-in 0.5s ease-out forwards",
-        "fade-in-up": "fade-in-up 0.6s ease-out forwards",
-        "fade-in-down": "fade-in-down 0.5s ease-out forwards",
-        "slide-in-right": "slide-in-right 0.5s ease-out forwards",
-        "slide-in-left": "slide-in-left 0.5s ease-out forwards",
-        "scale-in": "scale-in 0.4s ease-out forwards",
-        "scale-out": "scale-out 0.3s ease-out forwards",
+        "fade-in": "fade-in 0.4s ease-out forwards",
+        "fade-in-up": "fade-in-up 0.5s ease-out forwards",
+        "fade-in-down": "fade-in-down 0.4s ease-out forwards",
+        "slide-in-right": "slide-in-right 0.4s ease-out forwards",
+        "slide-in-left": "slide-in-left 0.4s ease-out forwards",
+        "scale-in": "scale-in 0.3s ease-out forwards",
+        "scale-out": "scale-out 0.2s ease-out forwards",
         float: "float 3s ease-in-out infinite",
         pulse: "pulse 2s ease-in-out infinite",
         shimmer: "shimmer 2s linear infinite",
         "spin-slow": "spin-slow 8s linear infinite",
-        wiggle: "wiggle 0.5s ease-in-out infinite",
         "bounce-subtle": "bounce-subtle 2s ease-in-out infinite",
         "gradient-x": "gradient-x 3s ease infinite",
-        "border-pulse": "border-pulse 2s ease-in-out infinite",
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
@@ -198,4 +201,3 @@ module.exports = {
   },
   plugins: [require("tailwindcss-animate")],
 };
-

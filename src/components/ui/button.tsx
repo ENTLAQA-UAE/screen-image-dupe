@@ -9,25 +9,27 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-md",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-md",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm",
         outline: "border-2 border-input bg-background hover:bg-secondary hover:border-primary/20",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent/10 hover:text-accent",
-        link: "text-accent underline-offset-4 hover:underline",
+        ghost: "hover:bg-primary/5 hover:text-primary",
+        link: "text-primary underline-offset-4 hover:underline",
+        // CTA — warm amber for conversions
+        cta: "gradient-cta text-cta-foreground shadow-cta hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] font-bold",
         // Hero variants for landing page
-        hero: "gradient-accent text-accent-foreground shadow-glow hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]",
-        heroOutline: "border-2 border-accent-foreground/30 bg-transparent text-accent-foreground hover:bg-accent-foreground/10 backdrop-blur-sm",
-        // Gold accent variant
-        gold: "gradient-gold text-highlight-foreground shadow-gold hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]",
+        hero: "gradient-primary text-primary-foreground shadow-glow hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]",
+        heroOutline: "border-2 border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 backdrop-blur-sm",
+        // Gold accent variant (alias for CTA)
+        gold: "gradient-cta text-cta-foreground shadow-cta hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] font-bold",
         // Subtle accent
         accent: "bg-accent/10 text-accent hover:bg-accent/20 border border-accent/20",
       },
       size: {
-        default: "h-11 px-5 py-2.5",
+        default: "h-10 px-5 py-2",
         sm: "h-9 rounded-md px-4 text-xs",
-        lg: "h-12 rounded-xl px-8 text-base",
-        xl: "h-14 rounded-xl px-10 text-lg",
+        lg: "h-11 rounded-xl px-8 text-base",
+        xl: "h-12 rounded-xl px-10 text-base font-bold",
         icon: "h-10 w-10",
       },
     },
