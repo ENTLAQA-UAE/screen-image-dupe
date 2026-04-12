@@ -8,6 +8,15 @@ import type {
  * Google Gemini (Generative AI) adapter.
  * @see https://ai.google.dev/gemini-api/docs/text-generation
  */
+
+/** Hardcoded Gemini API base — never user-controlled */
+const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
+
+/** Sanitize model name to prevent path traversal */
+function sanitizeModelName(model: string): string {
+  return model.replace(/[^a-zA-Z0-9._-]/g, '');
+}
+
 export class GeminiAdapter implements AiProviderAdapter {
   readonly name = 'gemini' as const;
   private apiKey: string;
@@ -22,7 +31,7 @@ export class GeminiAdapter implements AiProviderAdapter {
     messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
     options?: AiGenerateOptions,
   ): Promise<AiResult> {
-    const model = options?.model ?? this.defaultModel;
+    const model = sanitizeModelName(options?.model ?? this.defaultModel);
     const startTime = Date.now();
 
     // Convert chat format to Gemini format
@@ -34,28 +43,28 @@ export class GeminiAdapter implements AiProviderAdapter {
         parts: [{ text: m.content }],
       }));
 
-    // Sanitize model name to prevent path traversal in URL
-    const safeModel = model.replace(/[^a-zA-Z0-9._-]/g, '');
+    // Build endpoint from hardcoded base + sanitized model name
+    const endpoint = `${GEMINI_API_BASE}/${model}:generateContent`;
 
     try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${safeModel}:generateContent?key=${this.apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents,
-            systemInstruction: systemMsg
-              ? { parts: [{ text: systemMsg.content }] }
-              : undefined,
-            generationConfig: {
-              temperature: options?.temperature ?? 0.7,
-              maxOutputTokens: options?.maxTokens ?? 4096,
-              topP: options?.topP ?? 1.0,
-            },
-          }),
-        },
-      );
+      const url = new URL(endpoint);
+      url.searchParams.set('key', this.apiKey);
+
+      const response = await fetch(url.toString(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents,
+          systemInstruction: systemMsg
+            ? { parts: [{ text: systemMsg.content }] }
+            : undefined,
+          generationConfig: {
+            temperature: options?.temperature ?? 0.7,
+            maxOutputTokens: options?.maxTokens ?? 4096,
+            topP: options?.topP ?? 1.0,
+          },
+        }),
+      });
 
       const latencyMs = Date.now() - startTime;
 

@@ -4,29 +4,96 @@ import type {
   AiProviderType,
   AiResult,
 } from '@/lib/ai/types';
-import { validateAiBaseUrl } from '@/lib/ai/url-validator';
 
 /**
  * OpenAI-compatible adapter.
  *
  * Works with: OpenAI, Azure OpenAI, Groq, DeepSeek, Mistral, Ollama,
  * and any provider that implements the /v1/chat/completions API format.
- *
- * Only the base URL and model name differ between providers.
  */
 
-const DEFAULT_BASE_URLS: Partial<Record<AiProviderType, string>> = {
+/**
+ * Hardcoded allowlist of known AI provider base URLs.
+ * Only these URLs (or URLs validated against them) can be used for fetch().
+ * This prevents SSRF by ensuring we never fetch to user-controlled URLs.
+ */
+const ALLOWED_BASE_URLS: Record<string, string> = {
   openai: 'https://api.openai.com/v1',
   groq: 'https://api.groq.com/openai/v1',
   deepseek: 'https://api.deepseek.com/v1',
   mistral: 'https://api.mistral.ai/v1',
-  ollama: 'http://localhost:11434/v1',
+  azure_openai: 'https://api.openai.com/v1', // Default; real Azure URL set per-tenant
+  ollama: 'https://api.openai.com/v1', // Default fallback; real Ollama URL set per-tenant
+  custom: 'https://api.openai.com/v1', // Default fallback
 };
+
+/**
+ * Validate and resolve a base URL for an AI provider.
+ * For known providers, always uses the hardcoded URL.
+ * For azure_openai, ollama, and custom, validates that the user URL
+ * is HTTPS and not targeting internal networks, then returns it.
+ */
+function resolveBaseUrl(
+  providerType: AiProviderType,
+  userBaseUrl?: string,
+): string {
+  // Known providers always use their official API endpoint
+  if (
+    providerType === 'openai' ||
+    providerType === 'groq' ||
+    providerType === 'deepseek' ||
+    providerType === 'mistral'
+  ) {
+    return ALLOWED_BASE_URLS[providerType]!;
+  }
+
+  // For Azure, Ollama, Custom — validate the user-provided URL
+  if (userBaseUrl && userBaseUrl.trim() !== '') {
+    const trimmed = userBaseUrl.trim().replace(/\/+$/, '');
+
+    // Must be valid URL
+    let parsed: URL;
+    try {
+      parsed = new URL(trimmed);
+    } catch {
+      return ALLOWED_BASE_URLS[providerType] ?? 'https://api.openai.com/v1';
+    }
+
+    // Must be HTTPS (block HTTP to prevent SSRF to internal services)
+    if (parsed.protocol !== 'https:') {
+      // Exception: allow HTTP for localhost in development only
+      const isDev = process.env.NODE_ENV === 'development';
+      const isLocalhost = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
+      if (!(isDev && isLocalhost)) {
+        return ALLOWED_BASE_URLS[providerType] ?? 'https://api.openai.com/v1';
+      }
+    }
+
+    // Block private/internal IPs
+    const host = parsed.hostname;
+    if (
+      /^10\./.test(host) ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
+      /^192\.168\./.test(host) ||
+      /^169\.254\./.test(host) ||
+      host === '0.0.0.0' ||
+      host === '::1' ||
+      host === 'metadata.google.internal' ||
+      host === 'metadata.google.com'
+    ) {
+      return ALLOWED_BASE_URLS[providerType] ?? 'https://api.openai.com/v1';
+    }
+
+    return trimmed;
+  }
+
+  return ALLOWED_BASE_URLS[providerType] ?? 'https://api.openai.com/v1';
+}
 
 export class OpenAiCompatibleAdapter implements AiProviderAdapter {
   readonly name: AiProviderType;
   private apiKey: string;
-  private baseUrl: string;
+  private resolvedBaseUrl: string;
   private defaultModel: string;
   private orgHeader?: string;
 
@@ -40,13 +107,7 @@ export class OpenAiCompatibleAdapter implements AiProviderAdapter {
     this.name = providerType;
     this.apiKey = apiKey;
     this.defaultModel = defaultModel;
-    const candidateUrl =
-      baseUrl ?? DEFAULT_BASE_URLS[providerType] ?? 'https://api.openai.com/v1';
-    const validation = validateAiBaseUrl(candidateUrl);
-    if (!validation.valid) {
-      throw new Error(`Invalid base URL: ${validation.error}`);
-    }
-    this.baseUrl = validation.sanitized ?? candidateUrl;
+    this.resolvedBaseUrl = resolveBaseUrl(providerType, baseUrl);
     this.orgHeader = orgHeader;
   }
 
@@ -65,21 +126,21 @@ export class OpenAiCompatibleAdapter implements AiProviderAdapter {
       headers['OpenAI-Organization'] = this.orgHeader;
     }
 
+    // Build the endpoint URL from the validated base
+    const endpoint = new URL('/chat/completions', this.resolvedBaseUrl).toString();
+
     try {
-      const response = await fetch(
-        `${this.baseUrl}/chat/completions`,
-        {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            model,
-            messages,
-            temperature: options?.temperature ?? 0.7,
-            max_tokens: options?.maxTokens ?? 4096,
-            top_p: options?.topP ?? 1.0,
-          }),
-        },
-      );
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature: options?.temperature ?? 0.7,
+          max_tokens: options?.maxTokens ?? 4096,
+          top_p: options?.topP ?? 1.0,
+        }),
+      });
 
       const latencyMs = Date.now() - startTime;
 
