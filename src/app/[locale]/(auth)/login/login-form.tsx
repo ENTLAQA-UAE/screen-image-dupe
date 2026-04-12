@@ -57,7 +57,7 @@ export function LoginForm() {
           <Label htmlFor="password">{t('passwordLabel')}</Label>
           <Link
             href="/forgot-password"
-            className="text-xs font-medium text-primary hover:text-primary-600"
+            className="text-xs font-medium text-primary hover:underline"
           >
             {t('forgotPassword')}
           </Link>

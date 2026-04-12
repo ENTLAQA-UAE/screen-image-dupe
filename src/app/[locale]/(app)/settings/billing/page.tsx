@@ -60,7 +60,7 @@ export default async function BillingPage({
     : 0;
 
   return (
-    <div className="container max-w-5xl py-10">
+    <div className="mx-auto max-w-5xl p-6 lg:p-8">
       <PageHeader
         title="Billing & Subscription"
         description="Manage your subscription, payment method, and invoices"

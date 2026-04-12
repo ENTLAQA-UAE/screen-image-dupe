@@ -27,7 +27,7 @@ export default async function ProfilePage({
   if (!profile) return null;
 
   return (
-    <div className="container max-w-3xl py-10">
+    <div className="mx-auto max-w-3xl p-6 lg:p-8">
       <div className="mb-8">
         <h1 className="font-display text-3xl font-bold tracking-tight">
           Profile

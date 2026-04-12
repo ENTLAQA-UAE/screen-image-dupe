@@ -193,7 +193,7 @@ export async function testEmailProvider(
       subject: 'Qudurat — Test email',
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #4f46e5;">Email provider test</h1>
+          <h1 style="color: #0D9488;">Email provider test</h1>
           <p>If you're reading this, your email provider is configured correctly.</p>
           <p style="color: #6b7280; font-size: 14px;">
             Sent at ${new Date().toISOString()} from Qudurat.

@@ -102,7 +102,7 @@ export default async function PricingPage({
       <div className="mx-auto max-w-2xl text-center">
         <h1 className="font-display text-5xl font-bold tracking-tight sm:text-6xl">
           Simple pricing,{' '}
-          <span className="bg-gradient-to-r from-primary-600 to-accent bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-teal-600 to-amber-500 bg-clip-text text-transparent">
             premium value
           </span>
         </h1>

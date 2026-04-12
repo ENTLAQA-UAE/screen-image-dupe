@@ -25,7 +25,7 @@ export default async function NewAssessmentPage({
   setRequestLocale(locale);
 
   return (
-    <div className="container max-w-2xl py-10">
+    <div className="mx-auto max-w-2xl p-6 lg:p-8">
       <Link
         href="/assessments"
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"

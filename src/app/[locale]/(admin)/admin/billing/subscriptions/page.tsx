@@ -36,7 +36,7 @@ export default async function AllSubscriptionsPage({
   ]);
 
   return (
-    <div className="container max-w-6xl py-10">
+    <div className="mx-auto max-w-6xl p-6 lg:p-8">
       <PageHeader
         title="All Subscriptions"
         description="Cross-tenant subscription management"

@@ -136,7 +136,7 @@ export function NotificationBell() {
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="flex items-center gap-1 text-xs text-primary hover:text-primary-600"
+                  className="flex items-center gap-1 text-xs text-primary hover:underline"
                 >
                   <CheckCheck className="h-3 w-3" />
                   Mark all read

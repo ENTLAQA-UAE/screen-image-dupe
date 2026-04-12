@@ -140,7 +140,7 @@ export default async function EmployeeDetailPage({
       : null;
 
   return (
-    <div className="container max-w-5xl py-10">
+    <div className="mx-auto max-w-5xl p-6 lg:p-8">
       <Link
         href="/employees"
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"

@@ -54,7 +54,7 @@ export default async function OrganizationSettingsPage({
   if (!org) notFound();
 
   return (
-    <div className="container max-w-4xl py-10">
+    <div className="mx-auto max-w-4xl p-6 lg:p-8">
       <PageHeader
         title="Organization settings"
         description="Manage your organization's branding, providers, and access"

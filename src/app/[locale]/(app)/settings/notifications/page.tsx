@@ -97,7 +97,7 @@ export default async function NotificationSettingsPage({
   const firstPref = preferences[0];
 
   return (
-    <div className="container max-w-4xl py-10">
+    <div className="mx-auto max-w-4xl p-6 lg:p-8">
       <PageHeader
         title="Notification preferences"
         description="Choose which notifications you receive and how they're delivered"

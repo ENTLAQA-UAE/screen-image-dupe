@@ -32,7 +32,7 @@ export default async function PaymentProvidersPage({
   const bank = providers.find((p) => p.providerType === 'bank_transfer');
 
   return (
-    <div className="container max-w-4xl py-10">
+    <div className="mx-auto max-w-4xl p-6 lg:p-8">
       <PageHeader
         title="Payment Providers"
         description="Configure how customers pay for their subscriptions"
