@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS public.tenant_ai_usage (
 
 CREATE INDEX IF NOT EXISTS idx_tau_org_month ON public.tenant_ai_usage(
   organization_id,
-  (date_trunc('month', created_at))
+  created_at DESC
 );
 CREATE INDEX IF NOT EXISTS idx_tau_use_case ON public.tenant_ai_usage(organization_id, use_case);
 
