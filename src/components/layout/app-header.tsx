@@ -1,11 +1,9 @@
 'use client';
 
-import { Globe, LogOut, Moon, Search, Sun, User } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+import { Globe, Moon, Search, Sun } from 'lucide-react';
+import { useLocale } from 'next-intl';
 import { useTheme } from 'next-themes';
-import { useTransition } from 'react';
 
-import { logoutAction } from '@/app/[locale]/(auth)/actions';
 import { Button } from '@/components/ui/button';
 import { NotificationBell } from '@/components/layout/notification-bell';
 import { Link, useRouter } from '@/lib/i18n/routing';

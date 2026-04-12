@@ -5,7 +5,6 @@ import { renderEmailTemplate } from '@/lib/email/templates';
 import type { EmailTemplateKey, EmailTemplateVars } from '@/lib/email/types';
 import type {
   NotificationChannel,
-  NotificationEventKey,
   NotificationPayload,
 } from '@/lib/notifications/types';
 import { createAdminClient } from '@/lib/supabase/server';
@@ -163,7 +162,7 @@ export async function dispatchToOrg(
   const supabase = createAdminClient();
 
   // Get all users in this org
-  let query = supabase
+  const query = supabase
     .from('profiles')
     .select('id, email')
     .eq('organization_id', organizationId);

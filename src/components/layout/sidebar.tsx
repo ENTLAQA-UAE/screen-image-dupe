@@ -20,7 +20,7 @@ import {
   UserCircle,
   Users,
 } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { useState, useTransition } from 'react';
 
@@ -132,7 +132,7 @@ interface SidebarProps {
 
 export function AppSidebar({
   userName,
-  userEmail,
+  userEmail: _userEmail,
   userRole,
   organizationName,
   organizationLogo,
