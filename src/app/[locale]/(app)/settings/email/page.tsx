@@ -95,7 +95,7 @@ export default async function EmailSettingsPage({
   const hasProvider = providers.length > 0;
 
   return (
-    <div className="container max-w-4xl py-10">
+    <div className="mx-auto max-w-4xl p-6 lg:p-8">
       <PageHeader
         title="Email provider"
         description="Configure how your organization sends assessment invites, reminders, and notifications"

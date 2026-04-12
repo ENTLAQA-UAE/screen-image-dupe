@@ -52,7 +52,7 @@ export default async function EmployeesPage({
   });
 
   return (
-    <div className="container py-10">
+    <div className="p-6 lg:p-8">
       <PageHeader
         title={t('title')}
         description={t('subtitle')}

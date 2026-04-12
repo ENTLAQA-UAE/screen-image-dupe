@@ -34,14 +34,14 @@ const TEMPLATES: Record<EmailTemplateKey, TemplateDefinition> = {
         <h1>Welcome to Qudurat!</h1>
         <p>Hi {recipientName},</p>
         <p>Your account has been created for <strong>{organizationName}</strong>. You can now create assessments, invite participants, and generate AI-powered insights.</p>
-        <a href="{dashboardUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Go to Dashboard</a>
+        <a href="{dashboardUrl}" style="display:inline-block;background:#0D9488;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Go to Dashboard</a>
       `,
       ar: `
         <div dir="rtl" style="text-align:right;">
           <h1>مرحباً بك في قدرات!</h1>
           <p>مرحباً {recipientName}،</p>
           <p>تم إنشاء حسابك في <strong>{organizationName}</strong>. يمكنك الآن إنشاء التقييمات ودعوة المشاركين والحصول على رؤى مدعومة بالذكاء الاصطناعي.</p>
-          <a href="{dashboardUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">الذهاب إلى لوحة التحكم</a>
+          <a href="{dashboardUrl}" style="display:inline-block;background:#0D9488;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">الذهاب إلى لوحة التحكم</a>
         </div>
       `,
     },
@@ -62,7 +62,7 @@ const TEMPLATES: Record<EmailTemplateKey, TemplateDefinition> = {
         <p>Hi {recipientName},</p>
         <p><strong>{organizationName}</strong> has invited you to complete the assessment: <strong>{assessmentTitle}</strong></p>
         <p>Group: {groupName}</p>
-        <a href="{assessmentUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Start Assessment</a>
+        <a href="{assessmentUrl}" style="display:inline-block;background:#0D9488;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Start Assessment</a>
         <p style="color:#6b7280;font-size:14px;margin-top:16px;">This link is unique to you. Do not share it.</p>
       `,
       ar: `
@@ -71,7 +71,7 @@ const TEMPLATES: Record<EmailTemplateKey, TemplateDefinition> = {
           <p>مرحباً {recipientName}،</p>
           <p>دعتك <strong>{organizationName}</strong> لإكمال التقييم: <strong>{assessmentTitle}</strong></p>
           <p>المجموعة: {groupName}</p>
-          <a href="{assessmentUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">ابدأ التقييم</a>
+          <a href="{assessmentUrl}" style="display:inline-block;background:#0D9488;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">ابدأ التقييم</a>
           <p style="color:#6b7280;font-size:14px;margin-top:16px;">هذا الرابط مخصص لك. لا تشاركه.</p>
         </div>
       `,
@@ -92,14 +92,14 @@ const TEMPLATES: Record<EmailTemplateKey, TemplateDefinition> = {
         <h1>Assessment Reminder</h1>
         <p>Hi {recipientName},</p>
         <p>This is a reminder that you have <strong>{daysRemaining} days</strong> left to complete: <strong>{assessmentTitle}</strong></p>
-        <a href="{assessmentUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Continue Assessment</a>
+        <a href="{assessmentUrl}" style="display:inline-block;background:#0D9488;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Continue Assessment</a>
       `,
       ar: `
         <div dir="rtl" style="text-align:right;">
           <h1>تذكير بالتقييم</h1>
           <p>مرحباً {recipientName}،</p>
           <p>هذا تذكير بأن لديك <strong>{daysRemaining} أيام</strong> متبقية لإكمال: <strong>{assessmentTitle}</strong></p>
-          <a href="{assessmentUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">متابعة التقييم</a>
+          <a href="{assessmentUrl}" style="display:inline-block;background:#0D9488;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">متابعة التقييم</a>
         </div>
       `,
     },
@@ -119,14 +119,14 @@ const TEMPLATES: Record<EmailTemplateKey, TemplateDefinition> = {
         <h1>Assessment Completed</h1>
         <p><strong>{recipientName}</strong> has completed the assessment: <strong>{assessmentTitle}</strong></p>
         <p>Score: <strong>{score}</strong></p>
-        <a href="{dashboardUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">View Results</a>
+        <a href="{dashboardUrl}" style="display:inline-block;background:#0D9488;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">View Results</a>
       `,
       ar: `
         <div dir="rtl" style="text-align:right;">
           <h1>تم إكمال التقييم</h1>
           <p>أكمل <strong>{recipientName}</strong> التقييم: <strong>{assessmentTitle}</strong></p>
           <p>النتيجة: <strong>{score}</strong></p>
-          <a href="{dashboardUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">عرض النتائج</a>
+          <a href="{dashboardUrl}" style="display:inline-block;background:#0D9488;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">عرض النتائج</a>
         </div>
       `,
     },
@@ -146,14 +146,14 @@ const TEMPLATES: Record<EmailTemplateKey, TemplateDefinition> = {
         <h1>Results Ready</h1>
         <p>Hi {recipientName},</p>
         <p>The AI-generated report for <strong>{assessmentTitle}</strong> is now available.</p>
-        <a href="{dashboardUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">View Report</a>
+        <a href="{dashboardUrl}" style="display:inline-block;background:#0D9488;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">View Report</a>
       `,
       ar: `
         <div dir="rtl" style="text-align:right;">
           <h1>النتائج جاهزة</h1>
           <p>مرحباً {recipientName}،</p>
           <p>التقرير المُنشأ بالذكاء الاصطناعي لـ <strong>{assessmentTitle}</strong> أصبح متاحاً الآن.</p>
-          <a href="{dashboardUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">عرض التقرير</a>
+          <a href="{dashboardUrl}" style="display:inline-block;background:#0D9488;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">عرض التقرير</a>
         </div>
       `,
     },
@@ -173,14 +173,14 @@ const TEMPLATES: Record<EmailTemplateKey, TemplateDefinition> = {
         <h1>Trial Ending Soon</h1>
         <p>Hi {recipientName},</p>
         <p>Your free trial of Qudurat ends in <strong>{daysRemaining} days</strong>. Upgrade now to keep access to all features.</p>
-        <a href="{upgradeUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Upgrade Plan</a>
+        <a href="{upgradeUrl}" style="display:inline-block;background:#0D9488;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Upgrade Plan</a>
       `,
       ar: `
         <div dir="rtl" style="text-align:right;">
           <h1>التجربة المجانية تنتهي قريباً</h1>
           <p>مرحباً {recipientName}،</p>
           <p>تنتهي تجربتك المجانية في قدرات خلال <strong>{daysRemaining} أيام</strong>. قم بالترقية الآن للحفاظ على الوصول لجميع الميزات.</p>
-          <a href="{upgradeUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">ترقية الباقة</a>
+          <a href="{upgradeUrl}" style="display:inline-block;background:#0D9488;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">ترقية الباقة</a>
         </div>
       `,
     },
@@ -200,14 +200,14 @@ const TEMPLATES: Record<EmailTemplateKey, TemplateDefinition> = {
         <h1>Trial Expired</h1>
         <p>Hi {recipientName},</p>
         <p>Your free trial of Qudurat has ended. Your data is safe — upgrade to continue using the platform.</p>
-        <a href="{upgradeUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Upgrade Now</a>
+        <a href="{upgradeUrl}" style="display:inline-block;background:#0D9488;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Upgrade Now</a>
       `,
       ar: `
         <div dir="rtl" style="text-align:right;">
           <h1>انتهت التجربة المجانية</h1>
           <p>مرحباً {recipientName}،</p>
           <p>انتهت تجربتك المجانية في قدرات. بياناتك آمنة — قم بالترقية لمتابعة استخدام المنصة.</p>
-          <a href="{upgradeUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">ترقية الآن</a>
+          <a href="{upgradeUrl}" style="display:inline-block;background:#0D9488;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">ترقية الآن</a>
         </div>
       `,
     },
@@ -254,7 +254,7 @@ const TEMPLATES: Record<EmailTemplateKey, TemplateDefinition> = {
         <h1>Password Reset</h1>
         <p>Hi {recipientName},</p>
         <p>Click the button below to reset your password. This link expires in 1 hour.</p>
-        <a href="{resetUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Reset Password</a>
+        <a href="{resetUrl}" style="display:inline-block;background:#0D9488;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Reset Password</a>
         <p style="color:#6b7280;font-size:14px;margin-top:16px;">If you didn't request this, ignore this email.</p>
       `,
       ar: `
@@ -262,7 +262,7 @@ const TEMPLATES: Record<EmailTemplateKey, TemplateDefinition> = {
           <h1>إعادة تعيين كلمة المرور</h1>
           <p>مرحباً {recipientName}،</p>
           <p>اضغط على الزر أدناه لإعادة تعيين كلمة مرورك. ينتهي هذا الرابط خلال ساعة واحدة.</p>
-          <a href="{resetUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">إعادة تعيين كلمة المرور</a>
+          <a href="{resetUrl}" style="display:inline-block;background:#0D9488;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">إعادة تعيين كلمة المرور</a>
           <p style="color:#6b7280;font-size:14px;margin-top:16px;">إذا لم تطلب ذلك، تجاهل هذا البريد.</p>
         </div>
       `,
@@ -310,7 +310,7 @@ function wrapInLayout(
     p { color:#334155; font-size:16px; line-height:1.6; margin:0 0 12px; }
     a { display:inline-block; }
     .footer { text-align:center; margin-top:32px; color:#94a3b8; font-size:12px; }
-    .footer a { color:#4f46e5; text-decoration:none; }
+    .footer a { color:#0D9488; text-decoration:none; }
   </style>
 </head>
 <body>

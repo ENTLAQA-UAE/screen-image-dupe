@@ -82,7 +82,7 @@ export default async function MembersPage({
   const members = await listMembers(profile.organizationId);
 
   return (
-    <div className="container max-w-5xl py-10">
+    <div className="mx-auto max-w-5xl p-6 lg:p-8">
       <PageHeader
         title="Members & roles"
         description="Manage who has access to your organization"

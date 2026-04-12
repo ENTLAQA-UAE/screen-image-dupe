@@ -140,7 +140,7 @@ export function TakeAssessmentClient({ token, participantId, bundle }: Props) {
   const currentAnswer =
     currentQuestion !== undefined ? answers[currentQuestion.id] : undefined;
 
-  const primaryColor = bundle.organization?.primaryColor ?? '#4f46e5';
+  const primaryColor = bundle.organization?.primaryColor ?? '#0D9488';
 
   // --- Timer ---
   useEffect(() => {

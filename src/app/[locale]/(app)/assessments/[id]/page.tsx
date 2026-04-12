@@ -40,7 +40,7 @@ export default async function AssessmentDetailPage({
   const t = await getTranslations('assessments');
 
   return (
-    <div className="container max-w-4xl py-10">
+    <div className="mx-auto max-w-4xl p-6 lg:p-8">
       <Link
         href="/assessments"
         className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"

@@ -61,7 +61,7 @@ export default async function AdminDashboardPage({
   const stats = await getPlatformStats();
 
   return (
-    <div className="container py-10">
+    <div className="p-6 lg:p-8">
       <div className="mb-8">
         <h1 className="font-display text-3xl font-bold tracking-tight">
           Platform overview

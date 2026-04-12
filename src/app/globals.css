@@ -4,88 +4,127 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    /* ================================================================
+     * Qudurat Design System — Teal Primary + Warm Neutrals
+     * ================================================================
+     * Primary: Teal (#0D9488) — professional, trust, differentiation
+     * Accent: Amber (#F59E0B) — energy, CTAs, highlights
+     * Neutrals: Warm stone palette (not cold blue-grays)
+     * ================================================================ */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --background: 60 9% 98%;        /* stone-50 warm white #FAFAF9 */
+    --foreground: 24 10% 10%;       /* stone-900 #1C1917 */
+
+    --card: 0 0% 100%;              /* pure white */
+    --card-foreground: 24 10% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 24 10% 10%;
 
-    /* Deep Indigo primary palette (seed: #4f46e5) */
-    --primary: 243 75% 59%;
+    /* Teal primary palette */
+    --primary: 173 58% 39%;         /* teal-600 #0D9488 */
     --primary-foreground: 0 0% 100%;
-    --primary-50: 238 100% 97%;
-    --primary-100: 238 100% 94%;
-    --primary-200: 239 95% 89%;
-    --primary-300: 240 93% 82%;
-    --primary-400: 242 87% 73%;
-    --primary-500: 243 75% 59%;
-    --primary-600: 244 67% 49%;
-    --primary-700: 245 58% 42%;
-    --primary-800: 245 51% 34%;
-    --primary-900: 246 44% 28%;
-    --primary-950: 249 44% 18%;
+    --primary-50: 166 76% 97%;
+    --primary-100: 167 85% 89%;
+    --primary-200: 168 84% 78%;
+    --primary-300: 171 77% 64%;
+    --primary-400: 172 66% 50%;
+    --primary-500: 173 80% 40%;
+    --primary-600: 175 84% 32%;
+    --primary-700: 175 77% 26%;
+    --primary-800: 176 69% 22%;
+    --primary-900: 176 61% 19%;
+    --primary-950: 179 81% 10%;
 
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 60 5% 96%;         /* stone-100 */
+    --secondary-foreground: 24 10% 10%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 60 5% 96%;             /* stone-100 #F5F5F4 */
+    --muted-foreground: 25 5% 45%;  /* stone-500 */
 
-    --accent: 38 92% 50%;
-    --accent-foreground: 222 47% 11%;
+    --accent: 38 92% 50%;           /* amber-500 #F59E0B */
+    --accent-foreground: 24 10% 10%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 243 75% 59%;
+    --success: 160 84% 39%;         /* emerald-600 */
+    --success-foreground: 0 0% 100%;
 
-    --radius: 0.5rem;
+    --warning: 38 92% 50%;          /* amber-500 */
+    --warning-foreground: 24 10% 10%;
+
+    --border: 24 6% 83%;            /* stone-300 #D6D3D1 lighter */
+    --input: 24 6% 83%;
+    --ring: 173 58% 39%;            /* matches primary */
+
+    --radius: 0.75rem;              /* rounded-xl feel */
+
+    /* Sidebar tokens */
+    --sidebar-width: 16rem;         /* 256px */
+    --sidebar-width-collapsed: 4.5rem; /* 72px */
+    --sidebar-bg: 0 0% 100%;
+    --sidebar-foreground: 24 10% 10%;
+    --sidebar-border: 24 6% 91%;    /* stone-200 */
+    --sidebar-active: 173 58% 39%;  /* teal-600 */
+    --sidebar-active-foreground: 0 0% 100%;
+    --sidebar-muted: 25 5% 45%;
+    --sidebar-hover: 60 5% 96%;
   }
 
   .dark {
-    --background: 222 47% 6%;
-    --foreground: 213 31% 96%;
+    --background: 20 14% 4%;        /* stone-950 #0C0A09 */
+    --foreground: 60 9% 98%;        /* stone-50 */
 
-    --card: 222 47% 8%;
-    --card-foreground: 213 31% 96%;
+    --card: 24 10% 10%;             /* stone-900 #1C1917 */
+    --card-foreground: 60 9% 98%;
 
-    --popover: 222 47% 8%;
-    --popover-foreground: 213 31% 96%;
+    --popover: 24 10% 10%;
+    --popover-foreground: 60 9% 98%;
 
-    --primary: 243 85% 70%;
-    --primary-foreground: 222 47% 11%;
-    --primary-50: 249 44% 18%;
-    --primary-100: 246 44% 28%;
-    --primary-200: 245 51% 34%;
-    --primary-300: 245 58% 42%;
-    --primary-400: 244 67% 49%;
-    --primary-500: 243 75% 59%;
-    --primary-600: 242 87% 73%;
-    --primary-700: 240 93% 82%;
-    --primary-800: 239 95% 89%;
-    --primary-900: 238 100% 94%;
-    --primary-950: 238 100% 97%;
+    --primary: 170 70% 55%;         /* teal-400 brighter for dark */
+    --primary-foreground: 20 14% 4%;
+    --primary-50: 179 81% 10%;
+    --primary-100: 176 61% 19%;
+    --primary-200: 176 69% 22%;
+    --primary-300: 175 77% 26%;
+    --primary-400: 175 84% 32%;
+    --primary-500: 173 80% 40%;
+    --primary-600: 172 66% 50%;
+    --primary-700: 171 77% 64%;
+    --primary-800: 168 84% 78%;
+    --primary-900: 167 85% 89%;
+    --primary-950: 166 76% 97%;
 
-    --secondary: 222 47% 14%;
-    --secondary-foreground: 213 31% 96%;
+    --secondary: 12 6% 15%;         /* stone-800 */
+    --secondary-foreground: 60 9% 98%;
 
-    --muted: 222 47% 14%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 12 6% 15%;
+    --muted-foreground: 24 6% 64%;  /* stone-400 */
 
     --accent: 38 92% 55%;
-    --accent-foreground: 222 47% 11%;
+    --accent-foreground: 20 14% 4%;
 
     --destructive: 0 72% 58%;
-    --destructive-foreground: 213 31% 96%;
+    --destructive-foreground: 60 9% 98%;
 
-    --border: 222 47% 14%;
-    --input: 222 47% 14%;
-    --ring: 243 85% 70%;
+    --success: 160 84% 39%;
+    --success-foreground: 60 9% 98%;
+
+    --warning: 38 92% 55%;
+    --warning-foreground: 20 14% 4%;
+
+    --border: 12 6% 15%;
+    --input: 12 6% 15%;
+    --ring: 170 70% 55%;
+
+    --sidebar-bg: 24 10% 10%;
+    --sidebar-foreground: 60 9% 98%;
+    --sidebar-border: 12 6% 15%;
+    --sidebar-active: 170 70% 55%;
+    --sidebar-active-foreground: 20 14% 4%;
+    --sidebar-muted: 24 6% 64%;
+    --sidebar-hover: 12 6% 15%;
   }
 }
 
@@ -104,7 +143,7 @@
     text-rendering: optimizeLegibility;
   }
 
-  /* RTL support for Arabic */
+  /* RTL support for Arabic — sidebar flips automatically */
   html[dir='rtl'] body {
     @apply font-arabic;
   }
@@ -112,6 +151,27 @@
   /* Smooth focus outlines */
   :focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
   }
 
   /* Respect reduced motion */
@@ -124,5 +184,42 @@
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+  }
+}
+
+/* ================================================================
+ * Utility classes for the design system
+ * ================================================================ */
+@layer utilities {
+  /* Gradient backgrounds */
+  .bg-gradient-primary {
+    @apply bg-gradient-to-br from-teal-500 to-teal-700;
+  }
+  .bg-gradient-primary-light {
+    @apply bg-gradient-to-br from-teal-50 to-teal-100;
+  }
+
+  /* Icon containers (Kawadir pattern) */
+  .icon-container {
+    @apply flex items-center justify-center w-10 h-10 rounded-lg;
+  }
+  .icon-container-sm {
+    @apply flex items-center justify-center w-8 h-8 rounded-lg;
+  }
+  .icon-container-lg {
+    @apply flex items-center justify-center w-12 h-12 rounded-xl;
+  }
+
+  /* Section labels (ORGANIZATION, BILLING, etc.) */
+  .section-label {
+    @apply text-[10px] font-semibold uppercase tracking-[0.1em] text-muted-foreground;
+  }
+
+  /* Stat card number */
+  .stat-value {
+    @apply font-display text-3xl font-bold tracking-tight;
+  }
+  .stat-label {
+    @apply text-sm text-muted-foreground;
   }
 }

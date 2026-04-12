@@ -103,7 +103,7 @@ export default async function AiSettingsPage({
   );
 
   return (
-    <div className="container max-w-4xl py-10">
+    <div className="mx-auto max-w-4xl p-6 lg:p-8">
       <PageHeader
         title="AI provider"
         description="Configure the AI model used for question generation, narratives, and talent snapshots"
