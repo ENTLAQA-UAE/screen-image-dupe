@@ -1,19 +1,12 @@
-import { ArrowLeft } from 'lucide-react';
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 
-import { NewAssessmentForm } from '@/app/[locale]/(app)/assessments/new/new-assessment-form';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Link } from '@/lib/i18n/routing';
+import { AssessmentBuilderClient } from '@/app/[locale]/(app)/assessments/new/assessment-builder-client';
+import { getCurrentUserProfile } from '@/lib/supabase/queries';
 
 export const metadata: Metadata = {
-  title: 'New assessment',
+  title: 'Create Assessment',
 };
 
 export default async function NewAssessmentPage({
@@ -24,27 +17,18 @@ export default async function NewAssessmentPage({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  return (
-    <div className="mx-auto max-w-2xl p-6 lg:p-8">
-      <Link
-        href="/assessments"
-        className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
-        Back to assessments
-      </Link>
+  const profile = await getCurrentUserProfile();
+  if (!profile?.organizationId) {
+    redirect(`/${locale}/login`);
+  }
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Create assessment</CardTitle>
-          <CardDescription>
-            Start with basic details. You can add questions after creation.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <NewAssessmentForm />
-        </CardContent>
-      </Card>
+  return (
+    <div className="p-6 lg:p-8">
+      <AssessmentBuilderClient
+        organizationId={profile.organizationId}
+        userId={profile.id}
+        locale={locale}
+      />
     </div>
   );
 }
