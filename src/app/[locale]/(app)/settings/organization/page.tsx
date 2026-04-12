@@ -103,9 +103,8 @@ export default async function OrganizationSettingsPage({
           icon={Mail}
           title="Email provider"
           description="Configure Resend, Mailgun, SMTP, or bring your own"
-          status="Phase 2 Week 7"
-          href="#"
-          disabled
+          status="Available"
+          href="/settings/email"
         />
         <ModuleTile
           icon={Globe}
