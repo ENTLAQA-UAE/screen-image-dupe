@@ -4,9 +4,8 @@ test.describe('Authentication flows', () => {
   test('login page renders form fields', async ({ page }) => {
     await page.goto('/en/login');
 
-    await expect(
-      page.getByRole('heading', { level: 1 }).first(),
-    ).toBeVisible();
+    // Wait for the page to load — CardTitle renders as <div> not <h1>
+    await expect(page.getByText(/welcome back/i).first()).toBeVisible();
 
     await expect(page.getByLabel(/email/i)).toBeVisible();
     await expect(page.getByLabel(/password/i)).toBeVisible();
@@ -23,6 +22,9 @@ test.describe('Authentication flows', () => {
 
   test('login validates email format', async ({ page }) => {
     await page.goto('/en/login');
+
+    // Wait for form to load
+    await expect(page.getByLabel(/email/i)).toBeVisible();
 
     await page.getByLabel(/email/i).fill('not-an-email');
     await page.getByLabel(/password/i).fill('password123');
@@ -42,7 +44,6 @@ test.describe('Authentication flows', () => {
     await expect(page.getByLabel(/full name/i)).toBeVisible();
     await expect(page.getByLabel(/email/i)).toBeVisible();
     await expect(page.getByLabel(/organization/i)).toBeVisible();
-    // Password and confirm password
     const passwordInputs = page.locator('input[type="password"]');
     await expect(passwordInputs).toHaveCount(2);
   });
@@ -66,7 +67,6 @@ test.describe('Authentication flows', () => {
   }) => {
     await page.goto('/en/dashboard');
 
-    // Should be redirected to login
     await page.waitForURL(/\/login/);
     expect(page.url()).toContain('/login');
   });

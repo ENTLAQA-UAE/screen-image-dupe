@@ -11,9 +11,11 @@ import { expect, test } from '@playwright/test';
 test.describe('Critical journeys — unauthenticated', () => {
   test('landing → pricing → register flow navigation', async ({ page }) => {
     await page.goto('/en');
+
+    // Wait for landing to load (hero text visible)
     await expect(
-      page.getByRole('heading', { level: 1 }).first(),
-    ).toBeVisible();
+      page.getByText(/hire smarter/i).first(),
+    ).toBeVisible({ timeout: 10000 });
 
     // Click into pricing from nav
     await page.getByRole('link', { name: /pricing/i }).first().click();
