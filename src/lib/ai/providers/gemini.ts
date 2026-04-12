@@ -7,15 +7,27 @@ import type {
 /**
  * Google Gemini (Generative AI) adapter.
  * @see https://ai.google.dev/gemini-api/docs/text-generation
+ *
+ * SSRF protection: The fetch URL is constructed entirely from hardcoded
+ * constants. The model name is resolved via an allowlist — if the
+ * requested model is not in the list, we default to gemini-2.5-flash.
+ * No user-provided data ever reaches the URL.
  */
 
-/** Hardcoded Gemini API base — never user-controlled */
-const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
+/**
+ * Allowlist of Gemini model names → their full hardcoded API endpoints.
+ * This is the ONLY place that defines valid Gemini URLs.
+ * No user input is interpolated into any URL.
+ */
+const GEMINI_ENDPOINTS: Record<string, string> = {
+  'gemini-2.5-flash': 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+  'gemini-2.5-pro': 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent',
+  'gemini-2.0-flash': 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+  'gemini-1.5-flash': 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
+  'gemini-1.5-pro': 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent',
+};
 
-/** Sanitize model name to prevent path traversal */
-function sanitizeModelName(model: string): string {
-  return model.replace(/[^a-zA-Z0-9._-]/g, '');
-}
+const DEFAULT_ENDPOINT = GEMINI_ENDPOINTS['gemini-2.5-flash']!;
 
 export class GeminiAdapter implements AiProviderAdapter {
   readonly name = 'gemini' as const;
@@ -31,8 +43,14 @@ export class GeminiAdapter implements AiProviderAdapter {
     messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
     options?: AiGenerateOptions,
   ): Promise<AiResult> {
-    const model = sanitizeModelName(options?.model ?? this.defaultModel);
+    const requestedModel = options?.model ?? this.defaultModel;
     const startTime = Date.now();
+
+    // Resolve to a hardcoded endpoint — no user data in the URL
+    const endpoint = GEMINI_ENDPOINTS[requestedModel] ?? DEFAULT_ENDPOINT;
+    const actualModel = GEMINI_ENDPOINTS[requestedModel]
+      ? requestedModel
+      : 'gemini-2.5-flash';
 
     // Convert chat format to Gemini format
     const systemMsg = messages.find((m) => m.role === 'system');
@@ -43,14 +61,11 @@ export class GeminiAdapter implements AiProviderAdapter {
         parts: [{ text: m.content }],
       }));
 
-    // Build endpoint from hardcoded base + sanitized model name
-    const endpoint = `${GEMINI_API_BASE}/${model}:generateContent`;
-
     try {
-      const url = new URL(endpoint);
-      url.searchParams.set('key', this.apiKey);
+      // endpoint is always from GEMINI_ENDPOINTS (hardcoded constant)
+      const fetchUrl = `${endpoint}?key=${encodeURIComponent(this.apiKey)}`;
 
-      const response = await fetch(url.toString(), {
+      const response = await fetch(fetchUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -75,7 +90,7 @@ export class GeminiAdapter implements AiProviderAdapter {
         return {
           success: false,
           latencyMs,
-          model,
+          model: actualModel,
           error:
             body.error?.message ?? `Gemini API error: ${response.status}`,
         };
@@ -102,14 +117,14 @@ export class GeminiAdapter implements AiProviderAdapter {
         promptTokens: usage?.promptTokenCount ?? 0,
         completionTokens: usage?.candidatesTokenCount ?? 0,
         totalTokens: usage?.totalTokenCount ?? 0,
-        model,
+        model: actualModel,
         latencyMs,
       };
     } catch (err) {
       return {
         success: false,
         latencyMs: Date.now() - startTime,
-        model,
+        model: actualModel,
         error: err instanceof Error ? err.message : 'Network error',
       };
     }
