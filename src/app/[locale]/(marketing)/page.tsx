@@ -97,14 +97,14 @@ export default async function LandingPage({
         </div>
 
         <div className="container mx-auto max-w-4xl text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary-200 bg-primary-50 px-4 py-1.5 text-sm font-medium text-primary-700 dark:border-primary-900 dark:bg-primary-950/40 dark:text-primary-300">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-teal-200 bg-teal-50 px-4 py-1.5 text-sm font-medium text-teal-700 dark:border-teal-900 dark:bg-teal-950/40 dark:text-teal-300">
             <Sparkles className="h-4 w-4" />
             {t('landing.hero.tagline')}
           </div>
 
           <h1 className="font-display text-5xl font-bold leading-[1.1] tracking-tight text-foreground sm:text-6xl md:text-7xl">
             {t('landing.hero.title')}{' '}
-            <span className="bg-gradient-to-r from-primary-600 via-primary-500 to-accent bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-teal-600 via-teal-500 to-amber-500 bg-clip-text text-transparent">
               {t('landing.hero.titleHighlight')}
             </span>
           </h1>
@@ -175,7 +175,7 @@ export default async function LandingPage({
 
       {/* CTA */}
       <section className="container pb-24">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-600 via-primary-500 to-primary-700 p-12 text-center shadow-2xl shadow-primary/30 md:p-16">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-600 via-teal-500 to-teal-700 p-12 text-center shadow-2xl shadow-teal-500/30 md:p-16">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.1),transparent)]" />
           <div className="relative">
             <h2 className="font-display text-3xl font-bold text-primary-foreground sm:text-4xl md:text-5xl">
