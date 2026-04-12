@@ -4,6 +4,7 @@ import type {
   AiProviderType,
   AiResult,
 } from '@/lib/ai/types';
+import { validateAiBaseUrl } from '@/lib/ai/url-validator';
 
 /**
  * OpenAI-compatible adapter.
@@ -39,10 +40,13 @@ export class OpenAiCompatibleAdapter implements AiProviderAdapter {
     this.name = providerType;
     this.apiKey = apiKey;
     this.defaultModel = defaultModel;
-    this.baseUrl =
-      baseUrl ??
-      DEFAULT_BASE_URLS[providerType] ??
-      'https://api.openai.com/v1';
+    const candidateUrl =
+      baseUrl ?? DEFAULT_BASE_URLS[providerType] ?? 'https://api.openai.com/v1';
+    const validation = validateAiBaseUrl(candidateUrl);
+    if (!validation.valid) {
+      throw new Error(`Invalid base URL: ${validation.error}`);
+    }
+    this.baseUrl = validation.sanitized ?? candidateUrl;
     this.orgHeader = orgHeader;
   }
 

@@ -34,9 +34,12 @@ export class GeminiAdapter implements AiProviderAdapter {
         parts: [{ text: m.content }],
       }));
 
+    // Sanitize model name to prevent path traversal in URL
+    const safeModel = model.replace(/[^a-zA-Z0-9._-]/g, '');
+
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${safeModel}:generateContent?key=${this.apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
