@@ -39,7 +39,7 @@ export const metadata: Metadata = {
 async function getEmployee(organizationId: string, employeeId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from('employees')
+    .from('participants')
     .select(
       'id, full_name, email, employee_code, department, job_title, created_at',
     )
@@ -78,7 +78,7 @@ async function getEmployeeAssessmentHistory(
   const { data } = await supabase
     .from('participants')
     .select(
-      'id, status, score, completed_at, created_at, assessment_groups!inner(name, assessments!inner(id, title, type))',
+      'id, status, score_summary, completed_at, created_at, assessment_groups!inner(name, assessments!inner(id, title, type))',
     )
     .eq('organization_id', organizationId)
     .eq('email', employeeEmail)
@@ -89,7 +89,7 @@ async function getEmployeeAssessmentHistory(
     const r = row as unknown as {
       id: string;
       status: string;
-      score: number | null;
+      score_summary: unknown;
       completed_at: string | null;
       created_at: string;
       assessment_groups: {
@@ -104,7 +104,10 @@ async function getEmployeeAssessmentHistory(
       assessmentTitle: r.assessment_groups.assessments.title,
       assessmentType: r.assessment_groups.assessments.type,
       status: r.status,
-      score: r.score,
+      score: (() => {
+        const s = r.score_summary as { percentage?: number; total_score?: number } | null;
+        return s?.percentage ?? s?.total_score ?? null;
+      })(),
       completedAt: r.completed_at,
       createdAt: r.created_at,
     };

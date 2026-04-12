@@ -43,7 +43,7 @@ async function listQuestionBank(
   const { data } = await supabase
     .from('questions')
     .select(
-      'id, text, type, category, difficulty, assessment_id, assessments!inner(id, title, type, organization_id)',
+      'id, text, type, subdomain, assessment_id, assessments!inner(id, title, type, organization_id)',
     )
     .eq('assessments.organization_id', organizationId)
     .order('created_at', { ascending: false })
@@ -54,8 +54,7 @@ async function listQuestionBank(
       id: string;
       text: string;
       type: string;
-      category: string | null;
-      difficulty: string | null;
+      subdomain: string | null;
       assessment_id: string;
       assessments: { id: string; title: string; type: string };
     };
@@ -63,8 +62,8 @@ async function listQuestionBank(
       id: r.id,
       text: r.text,
       type: r.type,
-      category: r.category,
-      difficulty: r.difficulty,
+      category: r.subdomain,
+      difficulty: null,
       assessmentId: r.assessment_id,
       assessmentTitle: r.assessments.title,
       assessmentType: r.assessments.type as AssessmentType,

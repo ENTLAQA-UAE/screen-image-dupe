@@ -72,7 +72,6 @@ export async function createAssessmentAction(
       type: parsed.data.type,
       language: parsed.data.language,
       is_graded: parsed.data.isGraded,
-      category: parsed.data.isGraded ? 'graded_quiz' : 'profile',
       status: 'draft',
       created_by: profile.id,
     })

@@ -34,7 +34,7 @@ export async function listQuestionsForAssessment(
   const { data, error } = await supabase
     .from('questions')
     .select(
-      'id, assessment_id, text, type, options, correct_answer, category, difficulty, order_index, created_at',
+      'id, assessment_id, text, type, options, correct_answer, subdomain, order_index, created_at',
     )
     .eq('assessment_id', assessmentId)
     .order('order_index', { ascending: true });
@@ -49,8 +49,7 @@ export async function listQuestionsForAssessment(
       type: string;
       options: unknown;
       correct_answer: unknown;
-      category: string | null;
-      difficulty: string | null;
+      subdomain: string | null;
       order_index: number | null;
       created_at: string;
     };
@@ -67,8 +66,8 @@ export async function listQuestionsForAssessment(
           }>)
         : [],
       correctAnswer: (r.correct_answer as string | number | null) ?? null,
-      category: r.category,
-      difficulty: r.difficulty,
+      category: r.subdomain,
+      difficulty: null,
       orderIndex: r.order_index ?? 0,
       createdAt: r.created_at,
     };

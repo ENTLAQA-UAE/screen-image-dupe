@@ -93,20 +93,15 @@ export async function getDashboardStats(
 ): Promise<DashboardStats> {
   const supabase = await createClient();
 
-  const [assessmentsRes, participantsRes, responsesRes] = await Promise.all([
+  const [assessmentsRes, participantsRes] = await Promise.all([
     supabase
       .from('assessments')
       .select('id', { count: 'exact', head: true })
       .eq('organization_id', organizationId),
     supabase
       .from('participants')
-      .select('id, status', { count: 'exact' })
+      .select('id, status, score_summary')
       .eq('organization_id', organizationId),
-    supabase
-      .from('assessment_responses')
-      .select('score')
-      .eq('organization_id', organizationId)
-      .not('score', 'is', null),
   ]);
 
   const totalAssessments = assessmentsRes.count ?? 0;
@@ -122,8 +117,13 @@ export async function getDashboardStats(
       ? Math.round((completed / participants.length) * 100)
       : 0;
 
-  const scores = (responsesRes.data ?? [])
-    .map((r: { score: number | null }) => r.score)
+  // Extract scores from score_summary JSONB in participants
+  const scores = participants
+    .filter((p: { status: string }) => p.status === 'completed')
+    .map((p: { score_summary: unknown }) => {
+      const summary = p.score_summary as { percentage?: number; total_score?: number } | null;
+      return summary?.percentage ?? summary?.total_score ?? null;
+    })
     .filter((s): s is number => typeof s === 'number');
   const avgScore =
     scores.length > 0

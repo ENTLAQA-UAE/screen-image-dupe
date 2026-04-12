@@ -12,6 +12,9 @@ import type {
 
 // ==============================================================================
 // Assessments
+// DB columns: id, config, created_at, created_by, description, is_graded,
+//             language, organization_id, status, title, type
+// NO: category, updated_at
 // ==============================================================================
 
 export async function listAssessments(
@@ -29,7 +32,7 @@ export async function listAssessments(
   let query = supabase
     .from('assessments')
     .select(
-      'id, organization_id, title, description, type, status, language, category, is_graded, created_at, updated_at, questions(count)',
+      'id, organization_id, title, description, type, status, language, is_graded, created_at, questions(count)',
       { count: 'exact' },
     )
     .eq('organization_id', organizationId)
@@ -61,10 +64,8 @@ export async function listAssessments(
       type: string;
       status: string | null;
       language: string | null;
-      category: string | null;
       is_graded: boolean | null;
       created_at: string | null;
-      updated_at: string | null;
       questions?: { count: number }[];
     };
     return {
@@ -75,11 +76,11 @@ export async function listAssessments(
       type: (r.type ?? 'custom') as Assessment['type'],
       status: (r.status ?? 'draft') as Assessment['status'],
       language: (r.language ?? 'en') as Assessment['language'],
-      category: (r.category ?? 'graded_quiz') as Assessment['category'],
+      category: r.is_graded ? 'graded_quiz' : 'profile',
       isGraded: r.is_graded ?? false,
       questionCount: r.questions?.[0]?.count ?? 0,
       createdAt: r.created_at ?? '',
-      updatedAt: r.updated_at ?? '',
+      updatedAt: r.created_at ?? '',
     };
   });
 
@@ -95,7 +96,7 @@ export async function getAssessment(
   const { data, error } = await supabase
     .from('assessments')
     .select(
-      'id, organization_id, title, description, type, status, language, category, is_graded, created_at, updated_at, questions(count)',
+      'id, organization_id, title, description, type, status, language, is_graded, created_at, questions(count)',
     )
     .eq('organization_id', organizationId)
     .eq('id', assessmentId)
@@ -111,10 +112,8 @@ export async function getAssessment(
     type: string;
     status: string | null;
     language: string | null;
-    category: string | null;
     is_graded: boolean | null;
     created_at: string | null;
-    updated_at: string | null;
     questions?: { count: number }[];
   };
 
@@ -126,16 +125,19 @@ export async function getAssessment(
     type: (r.type ?? 'custom') as Assessment['type'],
     status: (r.status ?? 'draft') as Assessment['status'],
     language: (r.language ?? 'en') as Assessment['language'],
-    category: (r.category ?? 'graded_quiz') as Assessment['category'],
+    category: r.is_graded ? 'graded_quiz' : 'profile',
     isGraded: r.is_graded ?? false,
     questionCount: r.questions?.[0]?.count ?? 0,
     createdAt: r.created_at ?? '',
-    updatedAt: r.updated_at ?? '',
+    updatedAt: r.created_at ?? '',
   };
 }
 
 // ==============================================================================
 // Groups
+// DB columns: id, assessment_id, created_at, end_date, group_link_token,
+//             is_active, name, organization_id, start_date
+// NO: status, description, token, deadline
 // ==============================================================================
 
 export async function listGroups(
@@ -147,14 +149,13 @@ export async function listGroups(
   let query = supabase
     .from('assessment_groups')
     .select(
-      'id, organization_id, assessment_id, name, description, status, token, deadline, created_at, assessments(title), participants(count)',
+      'id, organization_id, assessment_id, name, is_active, group_link_token, end_date, created_at, assessments(title), participants(count)',
       { count: 'exact' },
     )
     .eq('organization_id', organizationId)
     .order('created_at', { ascending: false });
 
   if (opts.search) query = query.ilike('name', `%${opts.search}%`);
-  if (opts.status && opts.status !== 'all') query = query.eq('status', opts.status);
 
   const limit = opts.limit ?? 50;
   const offset = opts.offset ?? 0;
@@ -169,10 +170,9 @@ export async function listGroups(
       organization_id: string;
       assessment_id: string;
       name: string;
-      description: string | null;
-      status: string;
-      token: string;
-      deadline: string | null;
+      is_active: boolean | null;
+      group_link_token: string | null;
+      end_date: string | null;
       created_at: string;
       assessments?: { title: string } | { title: string }[];
       participants?: { count: number }[];
@@ -186,12 +186,12 @@ export async function listGroups(
       assessmentId: r.assessment_id,
       assessmentTitle,
       name: r.name,
-      description: r.description,
-      status: (r.status ?? 'draft') as AssessmentGroup['status'],
-      token: r.token,
-      deadline: r.deadline,
+      description: null,
+      status: r.is_active ? 'active' : 'draft',
+      token: r.group_link_token ?? '',
+      deadline: r.end_date,
       participantCount: r.participants?.[0]?.count ?? 0,
-      completedCount: 0, // TODO: separate query for completed count
+      completedCount: 0,
       createdAt: r.created_at,
     };
   });
@@ -207,7 +207,7 @@ export async function getGroup(
   const { data, error } = await supabase
     .from('assessment_groups')
     .select(
-      'id, organization_id, assessment_id, name, description, status, token, deadline, created_at, assessments(title), participants(count)',
+      'id, organization_id, assessment_id, name, is_active, group_link_token, end_date, created_at, assessments(title), participants(count)',
     )
     .eq('organization_id', organizationId)
     .eq('id', groupId)
@@ -219,10 +219,9 @@ export async function getGroup(
     organization_id: string;
     assessment_id: string;
     name: string;
-    description: string | null;
-    status: string;
-    token: string;
-    deadline: string | null;
+    is_active: boolean | null;
+    group_link_token: string | null;
+    end_date: string | null;
     created_at: string;
     assessments?: { title: string };
     participants?: { count: number }[];
@@ -233,15 +232,23 @@ export async function getGroup(
     assessmentId: r.assessment_id,
     assessmentTitle: r.assessments?.title ?? '',
     name: r.name,
-    description: r.description,
-    status: (r.status ?? 'draft') as AssessmentGroup['status'],
-    token: r.token,
-    deadline: r.deadline,
+    description: null,
+    status: r.is_active ? 'active' : 'draft',
+    token: r.group_link_token ?? '',
+    deadline: r.end_date,
     participantCount: r.participants?.[0]?.count ?? 0,
     completedCount: 0,
     createdAt: r.created_at,
   };
 }
+
+// ==============================================================================
+// Participants
+// DB columns: id, access_token, ai_report_text, completed_at, department,
+//             email, employee_code, full_name, group_id, job_title,
+//             organization_id, score_summary, started_at, status, submission_type
+// NO: score (it's score_summary JSONB)
+// ==============================================================================
 
 export async function listParticipantsInGroup(
   organizationId: string,
@@ -251,11 +258,11 @@ export async function listParticipantsInGroup(
   const { data, error } = await supabase
     .from('participants')
     .select(
-      'id, organization_id, group_id, full_name, email, employee_code, department, job_title, status, started_at, completed_at, score',
+      'id, organization_id, group_id, full_name, email, employee_code, department, job_title, status, started_at, completed_at, score_summary',
     )
     .eq('organization_id', organizationId)
     .eq('group_id', groupId)
-    .order('created_at', { ascending: false });
+    .order('full_name', { ascending: true });
 
   if (error) return [];
   return (data ?? []).map((row) => {
@@ -271,8 +278,11 @@ export async function listParticipantsInGroup(
       status: string;
       started_at: string | null;
       completed_at: string | null;
-      score: number | null;
+      score_summary: unknown;
     };
+    const scoreSummary = r.score_summary as { percentage?: number; total_score?: number } | null;
+    const score = scoreSummary?.percentage ?? scoreSummary?.total_score ?? null;
+
     return {
       id: r.id,
       organizationId: r.organization_id,
@@ -285,13 +295,13 @@ export async function listParticipantsInGroup(
       status: (r.status ?? 'invited') as Participant['status'],
       startedAt: r.started_at,
       completedAt: r.completed_at,
-      score: r.score,
+      score: typeof score === 'number' ? score : null,
     };
   });
 }
 
 // ==============================================================================
-// Employees
+// Employees — derived from participants (no separate employees table)
 // ==============================================================================
 
 export async function listEmployees(
@@ -301,7 +311,7 @@ export async function listEmployees(
   const supabase = await createClient();
 
   let query = supabase
-    .from('employees')
+    .from('participants')
     .select(
       'id, organization_id, full_name, email, employee_code, department, job_title, created_at',
       { count: 'exact' },
@@ -314,9 +324,6 @@ export async function listEmployees(
       `full_name.ilike.%${opts.search}%,email.ilike.%${opts.search}%`,
     );
   }
-  if (opts.department && opts.department !== 'all') {
-    query = query.eq('department', opts.department);
-  }
 
   const limit = opts.limit ?? 50;
   const offset = opts.offset ?? 0;
@@ -325,7 +332,11 @@ export async function listEmployees(
   const { data, count, error } = await query;
   if (error) throw error;
 
-  const rows: Employee[] = (data ?? []).map((row) => {
+  // Deduplicate by email
+  const seen = new Set<string>();
+  const unique: Employee[] = [];
+
+  for (const row of data ?? []) {
     const r = row as unknown as {
       id: string;
       organization_id: string;
@@ -336,7 +347,10 @@ export async function listEmployees(
       job_title: string | null;
       created_at: string;
     };
-    return {
+    if (r.email && seen.has(r.email)) continue;
+    if (r.email) seen.add(r.email);
+
+    unique.push({
       id: r.id,
       organizationId: r.organization_id,
       fullName: r.full_name,
@@ -344,13 +358,13 @@ export async function listEmployees(
       employeeCode: r.employee_code,
       department: r.department,
       jobTitle: r.job_title,
-      assessmentsCompleted: 0, // TODO: join for actual count
+      assessmentsCompleted: 0,
       lastAssessmentAt: null,
       createdAt: r.created_at,
-    };
-  });
+    });
+  }
 
-  return { rows, total: count ?? 0 };
+  return { rows: unique, total: count ?? 0 };
 }
 
 // ==============================================================================
@@ -369,7 +383,7 @@ export async function listResults(
   const { data, count, error } = await supabase
     .from('participants')
     .select(
-      'id, organization_id, full_name, score, completed_at, assessment_groups!inner(assessment_id, assessments!inner(id, title, type))',
+      'id, organization_id, full_name, score_summary, completed_at, assessment_groups!inner(assessment_id, assessments!inner(id, title, type))',
       { count: 'exact' },
     )
     .eq('organization_id', organizationId)
@@ -385,13 +399,16 @@ export async function listResults(
       id: string;
       organization_id: string;
       full_name: string;
-      score: number | null;
+      score_summary: unknown;
       completed_at: string;
       assessment_groups?: {
         assessment_id: string;
         assessments?: { id: string; title: string; type: string };
       };
     };
+    const scoreSummary = r.score_summary as { percentage?: number; total_score?: number } | null;
+    const score = scoreSummary?.percentage ?? scoreSummary?.total_score ?? null;
+
     return {
       id: r.id,
       organizationId: r.organization_id,
@@ -401,7 +418,7 @@ export async function listResults(
       assessmentTitle: r.assessment_groups?.assessments?.title ?? '',
       assessmentType: (r.assessment_groups?.assessments?.type ??
         'custom') as AssessmentResult['assessmentType'],
-      score: r.score,
+      score: typeof score === 'number' ? score : null,
       completedAt: r.completed_at,
       durationSeconds: null,
     };

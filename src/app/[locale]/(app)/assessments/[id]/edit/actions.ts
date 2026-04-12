@@ -77,14 +77,14 @@ export async function createQuestionAction(
   const { data, error } = await supabase
     .from('questions')
     .insert({
+      organization_id: profile.organizationId,
       assessment_id: parsed.data.assessmentId,
       text: parsed.data.text,
       type: parsed.data.type,
       options: parsed.data.options,
       correct_answer:
         correctAnswer !== null && correctAnswer >= 0 ? correctAnswer : null,
-      category: parsed.data.category,
-      difficulty: parsed.data.difficulty,
+      subdomain: parsed.data.category,
       order_index: nextIndex,
     })
     .select('id')
