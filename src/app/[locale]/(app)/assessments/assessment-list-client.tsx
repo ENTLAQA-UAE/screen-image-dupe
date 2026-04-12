@@ -236,8 +236,8 @@ export function AssessmentListClient({ organizationId }: { organizationId: strin
               CARD_GRADIENTS[assessment.type] ?? CARD_GRADIENTS.custom;
             const status =
               STATUS_CONFIG[assessment.status ?? 'draft'] ??
-              STATUS_CONFIG.draft;
-            const StatusIcon = status.icon;
+              STATUS_CONFIG.draft!;
+            const StatusIcon = status!.icon;
             const isMenuOpen = menuOpen === assessment.id;
 
             return (
