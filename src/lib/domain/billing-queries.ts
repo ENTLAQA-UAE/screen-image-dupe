@@ -151,7 +151,7 @@ export async function getActiveStripeCredentials(): Promise<{
   publishableKey: string;
 } | null> {
   const supabase = createAdminClient();
-  const { data } = await (supabase.rpc as any)('get_stripe_credentials');
+  const { data } = await supabase.rpc('get_stripe_credentials');
   if (!data) return null;
   return data as {
     apiKey: string;

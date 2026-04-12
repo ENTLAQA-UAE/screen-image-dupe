@@ -31,7 +31,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   const supabase = createAdminClient();
-  const { data, error } = await (supabase.rpc as any)('expire_trial_subscriptions');
+  const { data, error } = await supabase.rpc('expire_trial_subscriptions');
 
   if (error) {
     console.error('[cron/expire-trials] failed', error);
