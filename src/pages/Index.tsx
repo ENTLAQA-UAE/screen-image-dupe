@@ -24,16 +24,35 @@ const Index = () => {
       </Helmet>
 
       <main className="min-h-screen bg-background">
+        {/* Dark hero */}
         <Navbar />
         <HeroSection />
+
+        {/* White trust bar */}
         <TrustBar />
+
+        {/* White — alternating feature blocks */}
         <FeaturesSection />
+
+        {/* Light gray — card grid */}
         <AssessmentTypesSection />
+
+        {/* Dark — steps */}
         <HowItWorksSection />
+
+        {/* White — testimonials */}
         <TestimonialsSection />
+
+        {/* Dark — pricing */}
         <PricingSection />
+
+        {/* Light gray — security */}
         <SecuritySection />
+
+        {/* White with gradient banner */}
         <CTASection />
+
+        {/* Dark navy footer */}
         <Footer />
       </main>
     </>

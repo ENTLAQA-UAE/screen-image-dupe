@@ -29,29 +29,29 @@ const footerLinks = {
 
 export const Footer = () => {
   return (
-    <footer className="bg-primary py-16">
+    <footer style={{ background: 'linear-gradient(180deg, #0B1120 0%, #0A0F1C 100%)' }} className="py-16">
       <div className="container mx-auto px-6">
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12">
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 gradient-accent rounded-xl flex items-center justify-center shadow-glow">
-                <span className="text-accent-foreground font-display font-bold text-lg">Q</span>
+              <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                <span className="text-white font-bold text-lg">Q</span>
               </div>
               <div className="flex flex-col">
-                <span className="font-display font-bold text-xl text-primary-foreground">Qudurat</span>
-                <span className="text-xs text-primary-foreground/60 -mt-1 tracking-wider">PLATFORM</span>
+                <span className="font-bold text-xl text-white">Qudurat</span>
+                <span className="text-xs text-white/40 -mt-1 tracking-wider">PLATFORM</span>
               </div>
             </Link>
-            <p className="text-primary-foreground/70 max-w-sm mb-6 leading-relaxed">
-              The AI-powered, bilingual assessment platform for enterprises. 
+            <p className="text-white/50 max-w-sm mb-6 leading-relaxed">
+              The AI-powered, bilingual assessment platform for enterprises.
               Design, launch, and analyze employee assessments at scale.
             </p>
             <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-primary-foreground/10 text-primary-foreground/80 text-xs font-medium">
+              <span className="px-3 py-1 rounded-full bg-white/10 text-white/60 text-xs font-medium">
                 English
               </span>
-              <span className="px-3 py-1 rounded-full bg-primary-foreground/10 text-primary-foreground/80 text-xs font-medium">
+              <span className="px-3 py-1 rounded-full bg-white/10 text-white/60 text-xs font-medium">
                 العربية
               </span>
             </div>
@@ -59,13 +59,13 @@ export const Footer = () => {
 
           {/* Links */}
           <div>
-            <h4 className="font-display font-semibold text-primary-foreground mb-4">Product</h4>
+            <h4 className="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Product</h4>
             <ul className="space-y-3">
               {footerLinks.product.map((link) => (
                 <li key={link.label}>
                   <a
                     href={link.href}
-                    className="text-primary-foreground/60 hover:text-primary-foreground transition-smooth text-sm"
+                    className="text-white/40 hover:text-white/80 transition-colors duration-200 text-sm"
                   >
                     {link.label}
                   </a>
@@ -75,13 +75,13 @@ export const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-display font-semibold text-primary-foreground mb-4">Company</h4>
+            <h4 className="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Company</h4>
             <ul className="space-y-3">
               {footerLinks.company.map((link) => (
                 <li key={link.label}>
                   <a
                     href={link.href}
-                    className="text-primary-foreground/60 hover:text-primary-foreground transition-smooth text-sm"
+                    className="text-white/40 hover:text-white/80 transition-colors duration-200 text-sm"
                   >
                     {link.label}
                   </a>
@@ -91,13 +91,13 @@ export const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-display font-semibold text-primary-foreground mb-4">Resources</h4>
+            <h4 className="font-semibold text-white mb-4 text-sm uppercase tracking-wider">Resources</h4>
             <ul className="space-y-3">
               {footerLinks.resources.map((link) => (
                 <li key={link.label}>
                   <a
                     href={link.href}
-                    className="text-primary-foreground/60 hover:text-primary-foreground transition-smooth text-sm"
+                    className="text-white/40 hover:text-white/80 transition-colors duration-200 text-sm"
                   >
                     {link.label}
                   </a>
@@ -108,8 +108,8 @@ export const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-primary-foreground/10 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-primary-foreground/50 text-sm">
+        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-white/30 text-sm">
             © 2026 Qudurat. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
@@ -117,7 +117,7 @@ export const Footer = () => {
               <a
                 key={link.label}
                 href={link.href}
-                className="text-primary-foreground/50 hover:text-primary-foreground/80 transition-smooth text-sm"
+                className="text-white/30 hover:text-white/60 transition-colors duration-200 text-sm"
               >
                 {link.label}
               </a>

@@ -19,7 +19,6 @@ const tiers = [
       "CSV data export",
     ],
     cta: "Start Free Trial",
-    variant: "outline" as const,
     highlighted: false,
   },
   {
@@ -37,7 +36,6 @@ const tiers = [
       "Priority support",
     ],
     cta: "Start Free Trial",
-    variant: "cta" as const,
     highlighted: true,
     badge: "Most Popular",
   },
@@ -56,7 +54,6 @@ const tiers = [
       "On-premise deployment option",
     ],
     cta: "Contact Sales",
-    variant: "default" as const,
     highlighted: false,
   },
 ];
@@ -65,11 +62,11 @@ export const PricingSection = () => {
   const [isAnnual, setIsAnnual] = useState(false);
 
   return (
-    <section id="pricing" className="py-24 bg-background relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-30 pointer-events-none">
-        <div className="absolute top-1/4 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-cta/5 rounded-full blur-3xl" />
+    <section id="pricing" className="py-24 relative overflow-hidden" style={{ background: 'linear-gradient(180deg, #0B1120 0%, #111827 100%)' }}>
+      {/* Background accents */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
       </div>
 
       <div className="container mx-auto px-6 relative z-10">
@@ -81,13 +78,13 @@ export const PricingSection = () => {
           transition={{ duration: 0.6 }}
           className="text-center max-w-3xl mx-auto mb-12"
         >
-          <span className="inline-block px-4 py-1.5 rounded-full bg-cta/10 text-cta text-sm font-semibold mb-4">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-amber-500/10 text-amber-400 text-sm font-semibold mb-4 border border-amber-500/20">
             Pricing
           </span>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-display text-foreground mb-6">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-display text-white mb-6">
             Simple, Transparent Pricing
           </h2>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-lg text-white/50">
             Choose the plan that fits your organization. All plans include a
             14-day free trial with no credit card required.
           </p>
@@ -101,17 +98,15 @@ export const PricingSection = () => {
           transition={{ duration: 0.5, delay: 0.1 }}
           className="flex items-center justify-center gap-4 mb-16"
         >
-          <span
-            className={`text-sm font-medium transition-smooth ${
-              !isAnnual ? "text-foreground" : "text-muted-foreground"
-            }`}
-          >
+          <span className={`text-sm font-medium transition-colors duration-200 ${
+            !isAnnual ? "text-white" : "text-white/40"
+          }`}>
             Monthly
           </span>
           <button
             onClick={() => setIsAnnual(!isAnnual)}
             className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
-              isAnnual ? "bg-primary" : "bg-muted"
+              isAnnual ? "bg-indigo-500" : "bg-white/20"
             }`}
             aria-label="Toggle annual billing"
           >
@@ -121,18 +116,16 @@ export const PricingSection = () => {
               }`}
             />
           </button>
-          <span
-            className={`text-sm font-medium transition-smooth ${
-              isAnnual ? "text-foreground" : "text-muted-foreground"
-            }`}
-          >
+          <span className={`text-sm font-medium transition-colors duration-200 ${
+            isAnnual ? "text-white" : "text-white/40"
+          }`}>
             Annual
-            <span className="ml-1.5 text-xs text-success font-semibold">Save 17%</span>
+            <span className="ml-1.5 text-xs text-emerald-400 font-semibold">Save 17%</span>
           </span>
         </motion.div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {tiers.map((tier, index) => (
             <motion.div
               key={tier.name}
@@ -140,22 +133,24 @@ export const PricingSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className={`relative rounded-2xl border ${
+              className={`relative rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 ${
                 tier.highlighted
-                  ? "border-primary shadow-glow"
-                  : "border-border/50 shadow-card"
-              } bg-card overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
+                  ? "bg-white shadow-2xl shadow-indigo-500/10 scale-[1.02]"
+                  : "bg-white/[0.06] backdrop-blur-md border border-white/10 hover:bg-white/[0.1]"
+              }`}
             >
               {/* Popular Badge */}
               {tier.badge && (
-                <div className="absolute top-0 left-0 right-0 bg-primary text-primary-foreground text-center text-xs font-semibold py-1.5">
+                <div className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-center text-xs font-semibold py-2">
                   {tier.badge}
                 </div>
               )}
 
-              <div className={`p-8 ${tier.badge ? "pt-12" : ""}`}>
+              <div className={`p-8 ${tier.badge ? "" : "pt-8"}`}>
                 {/* Tier Name */}
-                <h3 className="font-display text-xl text-foreground mb-2">
+                <h3 className={`font-display text-xl mb-2 ${
+                  tier.highlighted ? "text-foreground" : "text-white"
+                }`}>
                   {tier.name}
                 </h3>
 
@@ -163,27 +158,39 @@ export const PricingSection = () => {
                 <div className="flex items-baseline gap-1 mb-4">
                   {tier.monthlyPrice !== null ? (
                     <>
-                      <span className="text-4xl font-display text-foreground">
+                      <span className={`text-4xl font-display ${
+                        tier.highlighted ? "text-foreground" : "text-white"
+                      }`}>
                         ${isAnnual ? tier.annualPrice : tier.monthlyPrice}
                       </span>
-                      <span className="text-muted-foreground text-sm">/month</span>
+                      <span className={`text-sm ${
+                        tier.highlighted ? "text-muted-foreground" : "text-white/40"
+                      }`}>/month</span>
                     </>
                   ) : (
-                    <span className="text-4xl font-display text-foreground">Custom</span>
+                    <span className={`text-4xl font-display ${
+                      tier.highlighted ? "text-foreground" : "text-white"
+                    }`}>Custom</span>
                   )}
                 </div>
 
                 {/* Description */}
-                <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
+                <p className={`text-sm mb-8 leading-relaxed ${
+                  tier.highlighted ? "text-muted-foreground" : "text-white/50"
+                }`}>
                   {tier.description}
                 </p>
 
                 {/* CTA Button */}
-                <Link to={tier.name === "Enterprise" ? "#" : "/dashboard"}>
+                <Link to={tier.name === "Enterprise" ? "#" : "/auth"}>
                   <Button
-                    variant={tier.variant}
+                    variant={tier.highlighted ? "cta" : "outline"}
                     size="lg"
-                    className="w-full"
+                    className={`w-full ${
+                      !tier.highlighted
+                        ? "border-white/20 text-white hover:bg-white/10 hover:text-white"
+                        : ""
+                    }`}
                   >
                     {tier.cta}
                   </Button>
@@ -193,8 +200,12 @@ export const PricingSection = () => {
                 <ul className="mt-8 space-y-3">
                   {tier.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-3 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0 mt-0.5" />
-                      <span className="text-foreground">{feature}</span>
+                      <CheckCircle2 className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
+                        tier.highlighted ? "text-success" : "text-emerald-400"
+                      }`} />
+                      <span className={tier.highlighted ? "text-foreground" : "text-white/70"}>
+                        {feature}
+                      </span>
                     </li>
                   ))}
                 </ul>
