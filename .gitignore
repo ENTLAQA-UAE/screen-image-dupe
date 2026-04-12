@@ -1,4 +1,29 @@
-# Logs
+# dependencies
+node_modules
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# testing
+coverage
+.nyc_output
+playwright-report
+test-results
+
+# next.js
+.next
+out
+build
+dist
+dist-ssr
+
+# misc
+.DS_Store
+Thumbs.db
+*.pem
+*.local
+
+# debug
 logs
 *.log
 npm-debug.log*
@@ -6,11 +31,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
-node_modules
-dist
-dist-ssr
-*.local
 
 # Environment variables (CRITICAL: never commit secrets)
 .env
@@ -24,27 +44,22 @@ dist-ssr
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-# Testing & coverage
-coverage
-.nyc_output
-playwright-report
-test-results
+# vercel
+.vercel
 
-# Build artifacts
-.next
-out
-build
-
-# OS
-Thumbs.db
+# typescript
+*.tsbuildinfo
+next-env.d.ts
 
 # Supabase local
 supabase/.temp
 supabase/.branches
+
+# Sentry
+.sentryclirc

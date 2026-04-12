@@ -1,73 +1,123 @@
-# Welcome to your Lovable project
+# Qudurat — Next.js 15 App
 
-## Project info
+Bilingual (English + Arabic) enterprise HR assessment platform for the MENA region.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+This is the Next.js 15 migration target — built alongside the existing Vite app.
+The Vite app at `../src/` continues to serve the live customer while this
+scaffold is iterated on.
 
-## How can I edit this code?
+## Stack
 
-There are several ways of editing your application.
+- **Framework**: Next.js 15 (App Router, Server Components, Server Actions)
+- **Language**: TypeScript (strict mode)
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Auth & DB**: Supabase (via `@supabase/ssr`)
+- **i18n**: next-intl (EN + AR, RTL-aware)
+- **State**: TanStack Query
+- **Theming**: next-themes (light + dark)
+- **Motion**: Framer Motion 12
+- **Charts**: Tremor
+- **Command palette**: cmdk
+- **Drawers**: Vaul
+- **Toasts**: Sonner
+- **Tests**: Vitest + React Testing Library + Playwright
 
-**Use Lovable**
+## Project Layout
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+```
+qudurat-next/
+├── messages/              # Locale message files (en.json, ar.json)
+├── public/                # Static assets
+├── src/
+│   ├── app/               # App Router
+│   │   ├── [locale]/      # i18n-prefixed routes
+│   │   │   ├── (marketing)/  # Public marketing pages (SSG)
+│   │   │   ├── (auth)/       # Login, register, forgot password
+│   │   │   ├── (app)/        # Authenticated app
+│   │   │   ├── (admin)/      # Super admin
+│   │   │   └── layout.tsx    # Locale layout (html lang, dir, fonts)
+│   │   ├── assess/[token]/   # Public assessment taker (no locale prefix)
+│   │   ├── api/              # API routes (webhooks, cron)
+│   │   ├── layout.tsx        # Root layout (minimal)
+│   │   ├── providers.tsx     # Client-side providers tree
+│   │   └── globals.css       # Tailwind + design tokens
+│   ├── components/
+│   │   ├── ui/               # shadcn primitives
+│   │   ├── layout/           # Headers, footers, sidebars
+│   │   └── shared/           # Reusable business components
+│   ├── lib/
+│   │   ├── supabase/         # Client / server / middleware splits
+│   │   ├── tenant/           # Hostname resolver and context
+│   │   ├── i18n/             # next-intl config and routing
+│   │   ├── email/            # Provider adapters (Resend, Mailgun, SMTP...)
+│   │   ├── ai/               # Provider adapters (OpenAI, Anthropic, Gemini...)
+│   │   ├── secrets/          # Vault wrapper
+│   │   ├── branding/         # OKLCH color scale generator
+│   │   └── utils.ts          # cn(), helpers
+│   └── middleware.ts         # Three concerns: tenant → auth → locale
+├── next.config.mjs          # Security headers, next-intl plugin
+├── tailwind.config.ts       # Design tokens
+├── tsconfig.json            # TypeScript strict mode
+└── package.json
+```
 
-Changes made via Lovable will be committed automatically to this repo.
+## Getting Started
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+cd qudurat-next
+npm install
+cp .env.example .env.local
+# Fill in .env.local with real values
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Then visit:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- `http://localhost:3000/en` — English landing page
+- `http://localhost:3000/ar` — Arabic landing page (RTL)
+- `http://localhost:3000/en/login` — Login page
+- `http://localhost:3000/en/dashboard` — Dashboard (requires auth)
 
-**Use GitHub Codespaces**
+## Middleware Behavior
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+The root `middleware.ts` handles three concerns in order:
 
-## What technologies are used for this project?
+1. **Tenant resolution**: Reads `Host` header, looks up tenant via:
+   - Custom domain match (`assess.acme.com` → org)
+   - Subdomain match (`acme.qudurat.com` → org)
+   - Platform host (`qudurat.com` → no tenant, renders marketing site)
+   - Injects `x-tenant-id`, `x-tenant-subdomain`, `x-tenant-plan` headers
 
-This project is built with:
+2. **Supabase session refresh**: Uses `@supabase/ssr` to refresh the auth
+   cookie on every request. Without this, SSR shows logged-out content to
+   logged-in users.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+3. **Locale detection**: Uses `next-intl` to prefix routes with `/en` or `/ar`
+   and redirect root requests to the default or preferred locale.
 
-## How can I deploy this project?
+## Migration Status
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+- [x] **Week 2**: Scaffold (this PR)
+- [ ] **Week 3**: Marketing + auth + dashboard migration
+- [ ] **Week 4**: Assessment CRUD + groups + employees + results
+- [ ] **Week 5**: Testing + CI/CD
+- [ ] **Week 6**: Billing integration
 
-## Can I connect a custom domain to my Lovable project?
+## Commands
 
-Yes, you can!
+| Command | Action |
+|---|---|
+| `npm run dev` | Start dev server on port 3000 |
+| `npm run build` | Production build |
+| `npm run start` | Start production server |
+| `npm run lint` | ESLint |
+| `npm run type-check` | TypeScript type check |
+| `npm run test` | Vitest unit tests |
+| `npm run test:e2e` | Playwright E2E tests |
+| `npm run format` | Prettier format |
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Notes
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- This scaffold does NOT replace the live Vite app yet. Both run in parallel.
+- Final cutover to Next.js happens in Week 6 of Phase 1 after full migration.
+- Database types should be regenerated before merge: `npx supabase gen types typescript --project-id YOUR_PROJECT_ID > src/lib/supabase/types.ts`
