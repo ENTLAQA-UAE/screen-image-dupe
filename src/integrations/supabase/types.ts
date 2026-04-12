@@ -115,6 +115,101 @@ export type Database = {
           },
         ]
       }
+      bank_transfer_requests: {
+        Row: {
+          activated_subscription_id: string | null
+          amount_usd: number
+          billing_address: string | null
+          billing_cycle: string
+          billing_email: string
+          company_name: string
+          company_vat_number: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          organization_id: string
+          plan_id: string
+          proforma_invoice_id: string | null
+          rejection_reason: string | null
+          requested_by: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          activated_subscription_id?: string | null
+          amount_usd: number
+          billing_address?: string | null
+          billing_cycle?: string
+          billing_email: string
+          company_name: string
+          company_vat_number?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          organization_id: string
+          plan_id: string
+          proforma_invoice_id?: string | null
+          rejection_reason?: string | null
+          requested_by: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          activated_subscription_id?: string | null
+          amount_usd?: number
+          billing_address?: string | null
+          billing_cycle?: string
+          billing_email?: string
+          company_name?: string
+          company_vat_number?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          plan_id?: string
+          proforma_invoice_id?: string | null
+          rejection_reason?: string | null
+          requested_by?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_transfer_requests_activated_subscription_id_fkey"
+            columns: ["activated_subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transfer_requests_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transfer_requests_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transfer_requests_proforma_invoice_id_fkey"
+            columns: ["proforma_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       competencies: {
         Row: {
           created_at: string
@@ -247,6 +342,99 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          amount_usd: number
+          bank_transfer_confirmed_at: string | null
+          bank_transfer_confirmed_by: string | null
+          bank_transfer_reference: string | null
+          created_at: string | null
+          currency: string | null
+          due_date: string | null
+          id: string
+          invoice_number: string
+          metadata: Json | null
+          notes: string | null
+          organization_id: string
+          paid_at: string | null
+          payment_method: string
+          pdf_url: string | null
+          period_end: string | null
+          period_start: string | null
+          status: string
+          stripe_hosted_url: string | null
+          stripe_invoice_id: string | null
+          subscription_id: string | null
+          tax_amount: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount_usd: number
+          bank_transfer_confirmed_at?: string | null
+          bank_transfer_confirmed_by?: string | null
+          bank_transfer_reference?: string | null
+          created_at?: string | null
+          currency?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_number: string
+          metadata?: Json | null
+          notes?: string | null
+          organization_id: string
+          paid_at?: string | null
+          payment_method: string
+          pdf_url?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          status?: string
+          stripe_hosted_url?: string | null
+          stripe_invoice_id?: string | null
+          subscription_id?: string | null
+          tax_amount?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount_usd?: number
+          bank_transfer_confirmed_at?: string | null
+          bank_transfer_confirmed_by?: string | null
+          bank_transfer_reference?: string | null
+          created_at?: string | null
+          currency?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_number?: string
+          metadata?: Json | null
+          notes?: string | null
+          organization_id?: string
+          paid_at?: string | null
+          payment_method?: string
+          pdf_url?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          status?: string
+          stripe_hosted_url?: string | null
+          stripe_invoice_id?: string | null
+          subscription_id?: string | null
+          tax_amount?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -287,6 +475,7 @@ export type Database = {
         Row: {
           created_at: string
           email_language: string | null
+          encrypted_resend_api_key: string | null
           from_email: string | null
           from_name: string | null
           id: string
@@ -298,6 +487,7 @@ export type Database = {
         Insert: {
           created_at?: string
           email_language?: string | null
+          encrypted_resend_api_key?: string | null
           from_email?: string | null
           from_name?: string | null
           id?: string
@@ -309,6 +499,7 @@ export type Database = {
         Update: {
           created_at?: string
           email_language?: string | null
+          encrypted_resend_api_key?: string | null
           from_email?: string | null
           from_name?: string | null
           id?: string
@@ -440,6 +631,156 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_providers: {
+        Row: {
+          account_id: string | null
+          activated_at: string | null
+          activated_by: string | null
+          api_key_encrypted: string | null
+          bank_account_name: string | null
+          bank_account_number: string | null
+          bank_currency: string | null
+          bank_iban: string | null
+          bank_instructions: string | null
+          bank_instructions_ar: string | null
+          bank_name: string | null
+          bank_swift: string | null
+          created_at: string | null
+          display_name: string | null
+          id: string
+          is_active: boolean | null
+          is_test_mode: boolean | null
+          provider_type: string
+          publishable_key: string | null
+          updated_at: string | null
+          webhook_secret_encrypted: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          activated_at?: string | null
+          activated_by?: string | null
+          api_key_encrypted?: string | null
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_currency?: string | null
+          bank_iban?: string | null
+          bank_instructions?: string | null
+          bank_instructions_ar?: string | null
+          bank_name?: string | null
+          bank_swift?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_test_mode?: boolean | null
+          provider_type: string
+          publishable_key?: string | null
+          updated_at?: string | null
+          webhook_secret_encrypted?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          activated_at?: string | null
+          activated_by?: string | null
+          api_key_encrypted?: string | null
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_currency?: string | null
+          bank_iban?: string | null
+          bank_instructions?: string | null
+          bank_instructions_ar?: string | null
+          bank_name?: string | null
+          bank_swift?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_test_mode?: boolean | null
+          provider_type?: string
+          publishable_key?: string | null
+          updated_at?: string | null
+          webhook_secret_encrypted?: string | null
+        }
+        Relationships: []
+      }
+      plans: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          description_ar: string | null
+          features: Json | null
+          id: string
+          is_active: boolean | null
+          is_public: boolean | null
+          max_ai_questions_monthly: number | null
+          max_assessments: number | null
+          max_groups: number | null
+          max_organizations: number | null
+          max_users: number | null
+          name: string
+          name_ar: string | null
+          price_annual_usd: number | null
+          price_monthly_usd: number | null
+          slug: string
+          sort_order: number | null
+          stripe_price_annual_id: string | null
+          stripe_price_monthly_id: string | null
+          stripe_product_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          description_ar?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_public?: boolean | null
+          max_ai_questions_monthly?: number | null
+          max_assessments?: number | null
+          max_groups?: number | null
+          max_organizations?: number | null
+          max_users?: number | null
+          name: string
+          name_ar?: string | null
+          price_annual_usd?: number | null
+          price_monthly_usd?: number | null
+          slug: string
+          sort_order?: number | null
+          stripe_price_annual_id?: string | null
+          stripe_price_monthly_id?: string | null
+          stripe_product_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          description_ar?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_public?: boolean | null
+          max_ai_questions_monthly?: number | null
+          max_assessments?: number | null
+          max_groups?: number | null
+          max_organizations?: number | null
+          max_users?: number | null
+          name?: string
+          name_ar?: string | null
+          price_annual_usd?: number | null
+          price_monthly_usd?: number | null
+          slug?: string
+          sort_order?: number | null
+          stripe_price_annual_id?: string | null
+          stripe_price_monthly_id?: string | null
+          stripe_product_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -635,6 +976,479 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          bank_transfer_reference: string | null
+          billing_cycle: string
+          cancel_at_period_end: boolean | null
+          canceled_at: string | null
+          created_at: string | null
+          current_period_end: string
+          current_period_start: string
+          id: string
+          manual_activation_notes: string | null
+          manually_activated_at: string | null
+          manually_activated_by: string | null
+          organization_id: string
+          payment_method: string
+          plan_id: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          trial_end: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          bank_transfer_reference?: string | null
+          billing_cycle?: string
+          cancel_at_period_end?: boolean | null
+          canceled_at?: string | null
+          created_at?: string | null
+          current_period_end?: string
+          current_period_start?: string
+          id?: string
+          manual_activation_notes?: string | null
+          manually_activated_at?: string | null
+          manually_activated_by?: string | null
+          organization_id: string
+          payment_method?: string
+          plan_id: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_end?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          bank_transfer_reference?: string | null
+          billing_cycle?: string
+          cancel_at_period_end?: boolean | null
+          canceled_at?: string | null
+          created_at?: string | null
+          current_period_end?: string
+          current_period_start?: string
+          id?: string
+          manual_activation_notes?: string | null
+          manually_activated_at?: string | null
+          manually_activated_by?: string | null
+          organization_id?: string
+          payment_method?: string
+          plan_id?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_end?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_ai_providers: {
+        Row: {
+          base_url: string | null
+          created_at: string | null
+          default_model: string
+          display_name: string | null
+          encrypted_api_key: string | null
+          id: string
+          is_active: boolean | null
+          is_primary: boolean | null
+          last_test_error: string | null
+          last_test_latency_ms: number | null
+          last_test_status: string | null
+          last_tested_at: string | null
+          max_tokens: number | null
+          monthly_cost_cap_usd: number | null
+          monthly_token_cap: number | null
+          narrative_model: string | null
+          organization_header: string | null
+          organization_id: string
+          provider_type: string
+          question_gen_model: string | null
+          snapshot_model: string | null
+          temperature: number | null
+          top_p: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          base_url?: string | null
+          created_at?: string | null
+          default_model?: string
+          display_name?: string | null
+          encrypted_api_key?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          last_test_error?: string | null
+          last_test_latency_ms?: number | null
+          last_test_status?: string | null
+          last_tested_at?: string | null
+          max_tokens?: number | null
+          monthly_cost_cap_usd?: number | null
+          monthly_token_cap?: number | null
+          narrative_model?: string | null
+          organization_header?: string | null
+          organization_id: string
+          provider_type: string
+          question_gen_model?: string | null
+          snapshot_model?: string | null
+          temperature?: number | null
+          top_p?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          base_url?: string | null
+          created_at?: string | null
+          default_model?: string
+          display_name?: string | null
+          encrypted_api_key?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          last_test_error?: string | null
+          last_test_latency_ms?: number | null
+          last_test_status?: string | null
+          last_tested_at?: string | null
+          max_tokens?: number | null
+          monthly_cost_cap_usd?: number | null
+          monthly_token_cap?: number | null
+          narrative_model?: string | null
+          organization_header?: string | null
+          organization_id?: string
+          provider_type?: string
+          question_gen_model?: string | null
+          snapshot_model?: string | null
+          temperature?: number | null
+          top_p?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_ai_providers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_ai_usage: {
+        Row: {
+          completion_tokens: number
+          cost_estimate_usd: number | null
+          created_at: string | null
+          id: string
+          latency_ms: number | null
+          metadata: Json | null
+          model: string
+          organization_id: string
+          prompt_tokens: number
+          provider_id: string | null
+          total_tokens: number | null
+          use_case: string
+        }
+        Insert: {
+          completion_tokens?: number
+          cost_estimate_usd?: number | null
+          created_at?: string | null
+          id?: string
+          latency_ms?: number | null
+          metadata?: Json | null
+          model: string
+          organization_id: string
+          prompt_tokens?: number
+          provider_id?: string | null
+          total_tokens?: number | null
+          use_case: string
+        }
+        Update: {
+          completion_tokens?: number
+          cost_estimate_usd?: number | null
+          created_at?: string | null
+          id?: string
+          latency_ms?: number | null
+          metadata?: Json | null
+          model?: string
+          organization_id?: string
+          prompt_tokens?: number
+          provider_id?: string | null
+          total_tokens?: number | null
+          use_case?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_ai_usage_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenant_ai_usage_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_ai_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_email_logs: {
+        Row: {
+          created_at: string | null
+          delivered_at: string | null
+          error_message: string | null
+          from_email: string
+          id: string
+          metadata: Json | null
+          organization_id: string
+          provider_id: string | null
+          provider_message_id: string | null
+          sent_at: string | null
+          status: string
+          subject: string
+          template_key: string | null
+          to_email: string
+          to_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          from_email: string
+          id?: string
+          metadata?: Json | null
+          organization_id: string
+          provider_id?: string | null
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          subject: string
+          template_key?: string | null
+          to_email: string
+          to_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          from_email?: string
+          id?: string
+          metadata?: Json | null
+          organization_id?: string
+          provider_id?: string | null
+          provider_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          template_key?: string | null
+          to_email?: string
+          to_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_email_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenant_email_logs_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_email_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_email_providers: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          encrypted_api_key: string | null
+          encrypted_smtp_password: string | null
+          from_email: string
+          from_name: string | null
+          id: string
+          is_active: boolean | null
+          is_primary: boolean | null
+          last_test_error: string | null
+          last_test_status: string | null
+          last_tested_at: string | null
+          organization_id: string
+          provider_domain: string | null
+          provider_region: string | null
+          provider_type: string
+          reply_to: string | null
+          smtp_host: string | null
+          smtp_port: number | null
+          smtp_secure: boolean | null
+          smtp_username: string | null
+          updated_at: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_name?: string | null
+          encrypted_api_key?: string | null
+          encrypted_smtp_password?: string | null
+          from_email: string
+          from_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          last_test_error?: string | null
+          last_test_status?: string | null
+          last_tested_at?: string | null
+          organization_id: string
+          provider_domain?: string | null
+          provider_region?: string | null
+          provider_type: string
+          reply_to?: string | null
+          smtp_host?: string | null
+          smtp_port?: number | null
+          smtp_secure?: boolean | null
+          smtp_username?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string | null
+          encrypted_api_key?: string | null
+          encrypted_smtp_password?: string | null
+          from_email?: string
+          from_name?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          last_test_error?: string | null
+          last_test_status?: string | null
+          last_tested_at?: string | null
+          organization_id?: string
+          provider_domain?: string | null
+          provider_region?: string | null
+          provider_type?: string
+          reply_to?: string | null
+          smtp_host?: string | null
+          smtp_port?: number | null
+          smtp_secure?: boolean | null
+          smtp_username?: string | null
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_email_providers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_prompt_templates: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          language: string
+          organization_id: string | null
+          template_text: string
+          updated_at: string | null
+          use_case: string
+          variables: Json | null
+          version: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          language?: string
+          organization_id?: string | null
+          template_text: string
+          updated_at?: string | null
+          use_case: string
+          variables?: Json | null
+          version?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          language?: string
+          organization_id?: string | null
+          template_text?: string
+          updated_at?: string | null
+          use_case?: string
+          variables?: Json | null
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_prompt_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usage_records: {
+        Row: {
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          metric: string
+          organization_id: string
+          period_month: string
+          quantity: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          metric: string
+          organization_id: string
+          period_month?: string
+          quantity?: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          metric?: string
+          organization_id?: string
+          period_month?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_records_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -661,6 +1475,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_ai_usage_cap: { Args: { p_org_id: string }; Returns: boolean }
+      check_subscription_limit: {
+        Args: { p_org_id: string; p_resource: string }
+        Returns: boolean
+      }
+      encrypt_email_secret: { Args: { plain_text: string }; Returns: string }
+      expire_trial_subscriptions: { Args: never; Returns: number }
+      get_decrypted_resend_api_key: {
+        Args: { p_org_id: string }
+        Returns: string
+      }
       get_participant_by_token: {
         Args: { p_access_token: string }
         Returns: string
