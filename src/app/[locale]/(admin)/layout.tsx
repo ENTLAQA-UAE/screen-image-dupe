@@ -2,13 +2,12 @@ import { redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
 import type { ReactNode } from 'react';
 
+import { AppHeader } from '@/components/layout/app-header';
+import { AppSidebar } from '@/components/layout/sidebar';
 import { getCurrentUserProfile } from '@/lib/supabase/queries';
 
 /**
- * Super admin layout.
- *
- * Gates all admin routes on the super_admin role. Non-super-admins
- * are redirected to the regular dashboard.
+ * Super admin layout with sidebar.
  */
 export default async function AdminLayout({
   children,
@@ -29,19 +28,26 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <header className="border-b border-border bg-card/50 backdrop-blur">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="font-display text-xl font-bold">Qudurat</span>
-            <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">
-              SUPER ADMIN
-            </span>
-          </div>
-          <div className="text-sm text-muted-foreground">{profile.email}</div>
-        </div>
-      </header>
-      <main className="flex-1">{children}</main>
+    <div className="flex min-h-screen bg-background">
+      <AppSidebar
+        userName={profile.fullName}
+        userEmail={profile.email}
+        userRole="Super Admin"
+        organizationName="Qudurat Platform"
+        organizationLogo={null}
+        role="super_admin"
+      />
+
+      <div className="flex flex-1 flex-col transition-all duration-300 ms-[var(--sidebar-width)]">
+        <AppHeader
+          userName={profile.fullName}
+          userEmail={profile.email}
+          organizationName={null}
+        />
+        <main className="flex-1 overflow-auto">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
