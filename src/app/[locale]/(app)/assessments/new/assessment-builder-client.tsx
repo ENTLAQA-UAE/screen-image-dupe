@@ -571,9 +571,9 @@ export function AssessmentBuilderClient({ organizationId, userId, locale }: Prop
                         <span className="rounded bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
                           {q.type}
                         </span>
-                        {q.metadata?.subdomain && (
+                        {typeof q.metadata?.subdomain === 'string' && (
                           <span className="text-[10px] text-muted-foreground">
-                            {String(q.metadata.subdomain)}
+                            {q.metadata.subdomain}
                           </span>
                         )}
                       </div>
