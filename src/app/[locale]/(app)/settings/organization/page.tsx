@@ -1,4 +1,4 @@
-import { Building2, Globe, Mail, Palette, Shield, Users } from 'lucide-react';
+import { Brain, Building2, Globe, Mail, Palette, Shield, Users } from 'lucide-react';
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { setRequestLocale } from 'next-intl/server';
@@ -105,6 +105,13 @@ export default async function OrganizationSettingsPage({
           description="Configure Resend, Mailgun, SMTP, or bring your own"
           status="Available"
           href="/settings/email"
+        />
+        <ModuleTile
+          icon={Brain}
+          title="AI provider"
+          description="Configure OpenAI, Claude, Gemini, or bring your own"
+          status="Available"
+          href="/settings/ai"
         />
         <ModuleTile
           icon={Globe}
