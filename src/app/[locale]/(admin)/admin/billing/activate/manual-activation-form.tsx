@@ -1,6 +1,7 @@
 'use client';
 
 import { Check, Loader2 } from 'lucide-react';
+import Link from 'next/link';
 import { useActionState } from 'react';
 import { toast } from 'sonner';
 
@@ -55,7 +56,7 @@ export function ManualActivationForm({
         </p>
         <div className="mt-4 flex justify-center gap-2">
           <Button asChild variant="outline">
-            <a href="/admin/billing/subscriptions">Back to list</a>
+            <Link href="/admin/billing/subscriptions">Back to list</Link>
           </Button>
           <Button
             onClick={() => {

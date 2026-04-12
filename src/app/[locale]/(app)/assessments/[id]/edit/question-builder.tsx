@@ -3,7 +3,6 @@
 import {
   ChevronDown,
   ChevronUp,
-  GripVertical,
   Loader2,
   Plus,
   Rocket,

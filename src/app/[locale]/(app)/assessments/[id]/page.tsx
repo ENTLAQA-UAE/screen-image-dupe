@@ -16,7 +16,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ locale: string; id: string }>;
 }): Promise<Metadata> {
-  const { locale, id } = await params;
+  const { id } = await params;
   const profile = await getCurrentUserProfile();
   if (!profile?.organizationId) return { title: 'Assessment' };
   const assessment = await getAssessment(profile.organizationId, id);

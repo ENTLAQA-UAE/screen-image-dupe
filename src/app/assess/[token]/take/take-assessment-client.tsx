@@ -7,7 +7,7 @@ import {
   Clock,
   Loader2,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -362,6 +362,7 @@ export function TakeAssessmentClient({ token, participantId, bundle }: Props) {
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-3">
             {bundle.organization?.logoUrl && (
+              /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={bundle.organization.logoUrl}
                 alt={bundle.organization.name}

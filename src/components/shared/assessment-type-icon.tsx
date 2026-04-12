@@ -1,4 +1,4 @@
-import { Brain, FileText, Globe, Heart, Languages, MessageSquare } from 'lucide-react';
+import { Brain, FileText, Heart, Languages, MessageSquare } from 'lucide-react';
 
 import type { AssessmentType } from '@/lib/domain/types';
 import { cn } from '@/lib/utils';

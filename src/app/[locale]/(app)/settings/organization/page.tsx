@@ -5,7 +5,6 @@ import { setRequestLocale } from 'next-intl/server';
 
 import { PageHeader } from '@/components/shared/page-header';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
