@@ -35,7 +35,7 @@ async function listMembers(organizationId: string): Promise<Member[]> {
 
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, email, full_name, created_at')
+    .select('id, full_name, created_at')
     .eq('organization_id', organizationId);
 
   if (!profiles || profiles.length === 0) return [];
@@ -55,12 +55,11 @@ async function listMembers(organizationId: string): Promise<Member[]> {
 
   return (profiles as Array<{
     id: string;
-    email: string;
     full_name: string | null;
     created_at: string;
   }>).map((p) => ({
     id: p.id,
-    email: p.email,
+    email: '', // email is in auth.users, not profiles — will be populated when types are generated
     fullName: p.full_name,
     roles: rolesByUser.get(p.id) ?? [],
     createdAt: p.created_at,

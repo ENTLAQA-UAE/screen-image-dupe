@@ -164,7 +164,7 @@ export async function dispatchToOrg(
   // Get all users in this org
   const query = supabase
     .from('profiles')
-    .select('id, email')
+    .select('id')
     .eq('organization_id', organizationId);
 
   const { data: profiles } = await query;
@@ -238,18 +238,22 @@ async function sendNotificationEmail(
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = createAdminClient();
 
-  // Get user email
+  // Get user email from auth.users (not in profiles table)
+  const { data: authUser } = await supabase.auth.admin.getUserById(userId);
   const { data: profile } = await supabase
     .from('profiles')
-    .select('email, full_name')
+    .select('full_name')
     .eq('id', userId)
     .maybeSingle();
 
-  if (!profile) {
+  if (!authUser?.user) {
     return { success: false, error: 'User not found' };
   }
 
-  const p = profile as { email: string; full_name: string | null };
+  const p = {
+    email: authUser.user.email ?? '',
+    full_name: (profile as { full_name: string | null } | null)?.full_name,
+  };
 
   // If we have a template key and vars, render a proper template
   if (emailVars?.templateKey) {

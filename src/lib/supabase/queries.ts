@@ -37,7 +37,7 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   // Fetch profile
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, organization_id, full_name, email')
+    .select('id, organization_id, full_name')
     .eq('id', user.id)
     .maybeSingle();
 
