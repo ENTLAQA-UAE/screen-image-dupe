@@ -36,7 +36,7 @@ export const Footer = () => {
           <div className="lg:col-span-2">
             <Link to="/" className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 gradient-accent rounded-xl flex items-center justify-center shadow-glow">
-                <span className="text-accent-foreground font-display font-bold text-lg">J</span>
+                <span className="text-accent-foreground font-display font-bold text-lg">Q</span>
               </div>
               <div className="flex flex-col">
                 <span className="font-display font-bold text-xl text-primary-foreground">Qudurat</span>
