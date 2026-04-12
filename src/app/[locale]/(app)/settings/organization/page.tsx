@@ -26,13 +26,13 @@ async function getOrganization(organizationId: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from('organizations')
-    .select('id, name, language, logo_url, created_at')
+    .select('id, name, primary_language, logo_url, created_at')
     .eq('id', organizationId)
     .maybeSingle();
   return data as {
     id: string;
     name: string;
-    language: string;
+    primary_language: string;
     logo_url: string | null;
     created_at: string;
   } | null;
@@ -78,7 +78,7 @@ export default async function OrganizationSettingsPage({
             <Label htmlFor="orgLang">Default language</Label>
             <Input
               id="orgLang"
-              defaultValue={org.language.toUpperCase()}
+              defaultValue={(org.primary_language ?? 'en').toUpperCase()}
               disabled
             />
           </div>

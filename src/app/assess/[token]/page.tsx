@@ -35,13 +35,13 @@ async function getAssessmentPreview(
       `
       id,
       name,
-      deadline,
-      status,
+      end_date,
+      is_active,
       organizations!inner(name),
       assessments!inner(id, title, description, type, language, questions(count))
     `,
     )
-    .eq('token', token)
+    .eq('group_link_token', token)
     .maybeSingle();
 
   if (!group) return null;
@@ -49,8 +49,8 @@ async function getAssessmentPreview(
   const g = group as unknown as {
     id: string;
     name: string;
-    deadline: string | null;
-    status: string;
+    end_date: string | null;
+    is_active: boolean | null;
     organizations: { name: string };
     assessments: {
       id: string;
@@ -62,7 +62,7 @@ async function getAssessmentPreview(
     };
   };
 
-  if (g.status !== 'active' && g.status !== 'draft') {
+  if (!g.is_active) {
     return null;
   }
 
@@ -75,7 +75,7 @@ async function getAssessmentPreview(
     assessmentType: g.assessments.type,
     language: (g.assessments.language ?? 'en') as 'en' | 'ar',
     questionCount: g.assessments.questions?.[0]?.count ?? 0,
-    deadline: g.deadline,
+    deadline: g.end_date,
   };
 }
 

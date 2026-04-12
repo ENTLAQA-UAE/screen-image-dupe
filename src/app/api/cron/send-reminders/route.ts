@@ -31,11 +31,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const { data: groups } = await supabase
     .from('assessment_groups')
     .select(
-      'id, organization_id, name, deadline, token, assessments!inner(id, title, language)',
+      'id, organization_id, name, end_date, group_link_token, assessments!inner(id, title, language)',
     )
-    .eq('status', 'active')
-    .not('deadline', 'is', null)
-    .gte('deadline', now.toISOString())
+    .eq('is_active', true)
+    .not('end_date', 'is', null)
+    .gte('end_date', now.toISOString())
     .lte(
       'deadline',
       new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString(),
@@ -55,12 +55,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       id: string;
       organization_id: string;
       name: string;
-      deadline: string;
-      token: string;
+      end_date: string;
+      group_link_token: string;
       assessments: { id: string; title: string; language: string | null };
     };
 
-    const deadline = new Date(g.deadline);
+    const deadline = new Date(g.end_date);
     const hoursLeft = Math.round(
       (deadline.getTime() - now.getTime()) / (1000 * 60 * 60),
     );
@@ -93,7 +93,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const orgName = (org as { name: string } | null)?.name ?? 'Your organization';
     const language = (g.assessments.language as 'en' | 'ar') ?? 'en';
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://qudurat.com';
-    const assessmentUrl = `${appUrl}/assess/${g.token}`;
+    const assessmentUrl = `${appUrl}/assess/${g.group_link_token}`;
 
     for (const participant of participants) {
       const p = participant as unknown as {

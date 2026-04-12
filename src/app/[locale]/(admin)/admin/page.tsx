@@ -36,17 +36,25 @@ async function getPlatformStats() {
     supabase
       .from('assessments')
       .select('id', { count: 'exact', head: true }),
-    supabase
+  ]);
+
+  // tenant_custom_domains may not exist if Week 9 migration wasn't run
+  let customDomainCount = 0;
+  try {
+    const domainsRes = await supabase
       .from('tenant_custom_domains')
       .select('id', { count: 'exact', head: true })
-      .eq('verification_status', 'verified'),
-  ]);
+      .eq('verification_status', 'verified');
+    customDomainCount = domainsRes.count ?? 0;
+  } catch {
+    // Table doesn't exist yet — that's fine
+  }
 
   return {
     organizations: orgsRes.count ?? 0,
     users: usersRes.count ?? 0,
     assessments: assessmentsRes.count ?? 0,
-    customDomains: domainsRes.count ?? 0,
+    customDomains: customDomainCount,
   };
 }
 

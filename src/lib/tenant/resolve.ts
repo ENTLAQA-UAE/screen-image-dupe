@@ -62,16 +62,20 @@ export async function resolveTenant(hostname: string): Promise<Tenant | null> {
 
   const supabase = createAdminClient();
 
-  // 1. Check custom domain
-  const { data: customDomain } = await supabase
-    .from('tenant_custom_domains')
-    .select('organization_id, organizations!inner(id, subdomain, name, plan)')
-    .eq('domain', host)
-    .eq('verification_status', 'verified')
-    .maybeSingle();
+  // 1. Check custom domain (table may not exist if Week 9 migration wasn't run)
+  try {
+    const { data: customDomain } = await supabase
+      .from('tenant_custom_domains')
+      .select('organization_id, organizations!inner(id, subdomain, name, plan)')
+      .eq('domain', host)
+      .eq('verification_status', 'verified')
+      .maybeSingle();
 
-  if (customDomain && (customDomain as unknown as { organizations: Tenant }).organizations) {
-    return (customDomain as unknown as { organizations: Tenant }).organizations;
+    if (customDomain && (customDomain as unknown as { organizations: Tenant }).organizations) {
+      return (customDomain as unknown as { organizations: Tenant }).organizations;
+    }
+  } catch {
+    // Table doesn't exist yet — skip custom domain lookup
   }
 
   // 2. Check subdomain pattern: {slug}.qudurat.com
@@ -81,13 +85,27 @@ export async function resolveTenant(hostname: string): Promise<Tenant | null> {
       return null;
     }
 
-    const { data: org } = await supabase
-      .from('organizations')
-      .select('id, subdomain, name, plan')
-      .eq('subdomain', slug)
-      .maybeSingle();
+    try {
+      const { data: org } = await supabase
+        .from('organizations')
+        .select('id, slug, name, plan')
+        .eq('slug', slug)
+        .maybeSingle();
 
-    return (org as Tenant | null) ?? null;
+      if (org) {
+        const o = org as { id: string; slug: string | null; name: string; plan: string | null };
+        return {
+          id: o.id,
+          subdomain: o.slug,
+          name: o.name,
+          plan: (o.plan ?? 'starter') as Tenant['plan'],
+        };
+      }
+    } catch {
+      // Column might not exist
+    }
+
+    return null;
   }
 
   // Unknown host — not a tenant
