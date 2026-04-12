@@ -6,6 +6,7 @@ import { useTransition } from 'react';
 
 import { logoutAction } from '@/app/[locale]/(auth)/actions';
 import { Button } from '@/components/ui/button';
+import { NotificationBell } from '@/components/layout/notification-bell';
 import { Link } from '@/lib/i18n/routing';
 
 interface AppHeaderProps {
@@ -95,6 +96,7 @@ export function AppHeader({
         </nav>
 
         <div className="flex items-center gap-3">
+          <NotificationBell />
           <Link
             href="/profile"
             className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-secondary"
