@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
 import { createAdminClient } from '@/lib/supabase/server';
+import { rpc } from '@/lib/supabase/types';
 
 /**
  * Cron endpoint: transition expired trials to past_due.
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   const supabase = createAdminClient();
-  const { data, error } = await supabase.rpc('expire_trial_subscriptions');
+  const { data, error } = await rpc(supabase, 'expire_trial_subscriptions');
 
   if (error) {
     console.error('[cron/expire-trials] failed', error);

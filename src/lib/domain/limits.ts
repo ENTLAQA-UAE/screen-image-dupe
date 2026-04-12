@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { createAdminClient } from '@/lib/supabase/server';
+import { rpc } from '@/lib/supabase/types';
 
 /**
  * Server-side subscription limit checks.
@@ -24,7 +25,7 @@ export async function canCreate(
   resource: Resource,
 ): Promise<boolean> {
   const supabase = createAdminClient();
-  const { data, error } = await supabase.rpc('check_subscription_limit', {
+  const { data, error } = await rpc(supabase, 'check_subscription_limit', {
     p_org_id: organizationId,
     p_resource: resource,
   });

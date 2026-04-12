@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { rpc } from '@/lib/supabase/types';
 
 import type {
   BankTransferRequest,
@@ -151,7 +152,7 @@ export async function getActiveStripeCredentials(): Promise<{
   publishableKey: string;
 } | null> {
   const supabase = createAdminClient();
-  const { data } = await supabase.rpc('get_stripe_credentials');
+  const { data } = await rpc(supabase, 'get_stripe_credentials');
   if (!data) return null;
   return data as {
     apiKey: string;

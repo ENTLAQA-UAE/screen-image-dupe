@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 import { createAdminClient } from '@/lib/supabase/server';
 import { getCurrentUserProfile } from '@/lib/supabase/queries';
+import { rpc } from '@/lib/supabase/types';
 
 /**
  * Super admin billing Server Actions.
@@ -59,15 +60,12 @@ export async function configureStripeAction(
   const supabase = createAdminClient();
 
   // Encrypt secrets via the vault helper (defined in earlier migration).
-  // Cast to `any` because the auto-generated Supabase types don't include
-  // custom RPC functions until you regenerate them with `supabase gen types`.
-  const { data: encryptedKey, error: encErr1 } = await supabase.rpc(
-    'encrypt_email_secret',
-    { plain_text: parsed.data.apiKey },
+  // Uses rpc() helper because auto-generated types don't include custom functions.
+  const { data: encryptedKey, error: encErr1 } = await rpc(
+    supabase, 'encrypt_email_secret', { plain_text: parsed.data.apiKey },
   );
-  const { data: encryptedWebhook, error: encErr2 } = await supabase.rpc(
-    'encrypt_email_secret',
-    { plain_text: parsed.data.webhookSecret },
+  const { data: encryptedWebhook, error: encErr2 } = await rpc(
+    supabase, 'encrypt_email_secret', { plain_text: parsed.data.webhookSecret },
   );
 
   if (encErr1 || encErr2) {
