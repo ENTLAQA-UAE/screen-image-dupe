@@ -12,6 +12,14 @@ dist
 dist-ssr
 *.local
 
+# Environment variables (CRITICAL: never commit secrets)
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+.env.staging
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,3 +30,21 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Testing & coverage
+coverage
+.nyc_output
+playwright-report
+test-results
+
+# Build artifacts
+.next
+out
+build
+
+# OS
+Thumbs.db
+
+# Supabase local
+supabase/.temp
+supabase/.branches

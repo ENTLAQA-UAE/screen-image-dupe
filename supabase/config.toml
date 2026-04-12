@@ -1,19 +1,32 @@
 project_id = "ephwmhikhiiyrnikvrwp"
 
-[functions.generate-questions]
-verify_jwt = false
+# ==============================================================================
+# Edge Function JWT Verification Policy
+# ==============================================================================
+# - Public endpoints (unauthenticated participant flow): verify_jwt = false
+#   These validate their own access via participant tokens in the request body.
+# - Private endpoints (authenticated HR admin flow): verify_jwt = true
+#   Supabase automatically validates the JWT before invoking these.
+# ==============================================================================
 
+# --- PUBLIC: called from TakeAssessment.tsx without auth ---
+# Participant takes assessment via a unique token URL
 [functions.get-assessment]
 verify_jwt = false
 
 [functions.submit-assessment]
 verify_jwt = false
 
-[functions.generate-group-narrative]
-verify_jwt = false
-
-[functions.generate-talent-snapshot]
-verify_jwt = false
-
 [functions.register-participant]
 verify_jwt = false
+
+# --- PRIVATE: called from authenticated HR admin UI ---
+# JWT is automatically passed by supabase.functions.invoke() in authed contexts
+[functions.generate-questions]
+verify_jwt = true
+
+[functions.generate-group-narrative]
+verify_jwt = true
+
+[functions.generate-talent-snapshot]
+verify_jwt = true
