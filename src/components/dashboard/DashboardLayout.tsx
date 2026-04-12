@@ -307,7 +307,7 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
             ) : (
               <>
                 <PanelLeftClose className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
-                <span>Collapse</span>
+                <span>{t.nav?.collapse || 'Collapse'}</span>
               </>
             )}
           </button>
@@ -318,7 +318,7 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
       <div
         className="transition-all duration-200"
         style={{
-          [isRTL ? 'marginRight' : 'marginLeft']: undefined,
+          [isRTL ? 'marginRight' : 'marginLeft']: contentOffset,
         }}
       >
         {/* Desktop Top Bar */}
@@ -352,7 +352,7 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
             [isRTL ? 'marginRight' : 'marginLeft']: contentOffset,
           }}
         >
-          <div className="p-4 sm:p-6 lg:p-8 max-w-[1400px]">
+          <div className="p-4 sm:p-6 lg:p-8">
             {children}
           </div>
         </main>

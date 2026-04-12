@@ -648,7 +648,7 @@ const Participants = () => {
             )}
           </div>
         ) : (
-          <div className="rounded-2xl bg-white dark:bg-slate-900 border border-border shadow-sm overflow-hidden">
+          <div className="rounded-2xl bg-white dark:bg-card border border-border shadow-sm overflow-hidden">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
@@ -710,7 +710,7 @@ const Participants = () => {
                           <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium ${
                             status === 'completed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
                             status === 'started' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-                            'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                            'bg-muted text-muted-foreground'
                           }`}>
                             <StatusIcon className="w-3 h-3 mr-1.5" />
                             {t.participants[status as keyof typeof t.participants] || status}
@@ -992,7 +992,7 @@ const Participants = () => {
               </span>
             </DialogDescription>
           </DialogHeader>
-          <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
+          <div className="p-4 bg-muted/50 rounded-lg">
             <p className="text-sm text-muted-foreground">
               <strong>{t.participants.name}:</strong> {selectedParticipant?.full_name || '-'}
             </p>

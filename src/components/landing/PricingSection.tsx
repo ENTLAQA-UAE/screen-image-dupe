@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Crown, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const tiers = [
@@ -19,7 +19,7 @@ const tiers = [
       "CSV data export",
     ],
     cta: "Start Free Trial",
-    highlighted: false,
+    tier: "starter" as const,
   },
   {
     name: "Professional",
@@ -36,7 +36,7 @@ const tiers = [
       "Priority support",
     ],
     cta: "Start Free Trial",
-    highlighted: true,
+    tier: "professional" as const,
     badge: "Most Popular",
   },
   {
@@ -54,7 +54,7 @@ const tiers = [
       "On-premise deployment option",
     ],
     cta: "Contact Sales",
-    highlighted: false,
+    tier: "enterprise" as const,
   },
 ];
 
@@ -62,7 +62,7 @@ export const PricingSection = () => {
   const [isAnnual, setIsAnnual] = useState(false);
 
   return (
-    <section id="pricing" className="py-24 relative overflow-hidden" style={{ background: 'linear-gradient(180deg, #0B1120 0%, #111827 100%)' }}>
+    <section id="pricing" className="py-24 relative overflow-hidden bg-section-pricing">
       {/* Background accents */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
@@ -125,93 +125,112 @@ export const PricingSection = () => {
         </motion.div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {tiers.map((tier, index) => (
-            <motion.div
-              key={tier.name}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className={`relative rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 ${
-                tier.highlighted
-                  ? "bg-white shadow-2xl shadow-indigo-500/10 scale-[1.02]"
-                  : "bg-white/[0.06] backdrop-blur-md border border-white/10 hover:bg-white/[0.1]"
-              }`}
-            >
-              {/* Popular Badge */}
-              {tier.badge && (
-                <div className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-center text-xs font-semibold py-2">
-                  {tier.badge}
-                </div>
-              )}
+        <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto items-start">
+          {tiers.map((tier, index) => {
+            const isProfessional = tier.tier === "professional";
+            const isEnterprise = tier.tier === "enterprise";
 
-              <div className={`p-8 ${tier.badge ? "" : "pt-8"}`}>
-                {/* Tier Name */}
-                <h3 className={`font-display text-xl mb-2 ${
-                  tier.highlighted ? "text-foreground" : "text-white"
-                }`}>
-                  {tier.name}
-                </h3>
+            return (
+              <motion.div
+                key={tier.name}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className={`relative rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 ${
+                  isProfessional
+                    ? "bg-white shadow-2xl shadow-indigo-500/10 scale-[1.02]"
+                    : isEnterprise
+                      ? "bg-gradient-to-br from-amber-500/[0.12] to-amber-600/[0.06] backdrop-blur-md border border-amber-500/20 hover:border-amber-400/40"
+                      : "bg-white/[0.06] backdrop-blur-md border border-white/10 hover:bg-white/[0.1]"
+                }`}
+              >
+                {/* Popular Badge */}
+                {tier.badge && (
+                  <div className="bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-center text-xs font-semibold py-2">
+                    <Sparkles className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
+                    {tier.badge}
+                  </div>
+                )}
 
-                {/* Price */}
-                <div className="flex items-baseline gap-1 mb-4">
-                  {tier.monthlyPrice !== null ? (
-                    <>
+                {/* Enterprise Crown Badge */}
+                {isEnterprise && (
+                  <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-white text-center text-xs font-semibold py-2">
+                    <Crown className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
+                    Premium
+                  </div>
+                )}
+
+                <div className={`p-8 ${tier.badge || isEnterprise ? "" : "pt-8"}`}>
+                  {/* Tier Name */}
+                  <h3 className={`font-display text-xl mb-2 ${
+                    isProfessional ? "text-foreground" : isEnterprise ? "text-amber-300" : "text-white"
+                  }`}>
+                    {tier.name}
+                  </h3>
+
+                  {/* Price */}
+                  <div className="flex items-baseline gap-1 mb-4">
+                    {tier.monthlyPrice !== null ? (
+                      <>
+                        <span className={`text-4xl font-display ${
+                          isProfessional ? "text-foreground" : "text-white"
+                        }`}>
+                          ${isAnnual ? tier.annualPrice : tier.monthlyPrice}
+                        </span>
+                        <span className={`text-sm ${
+                          isProfessional ? "text-muted-foreground" : "text-white/40"
+                        }`}>/month</span>
+                      </>
+                    ) : (
                       <span className={`text-4xl font-display ${
-                        tier.highlighted ? "text-foreground" : "text-white"
-                      }`}>
-                        ${isAnnual ? tier.annualPrice : tier.monthlyPrice}
-                      </span>
-                      <span className={`text-sm ${
-                        tier.highlighted ? "text-muted-foreground" : "text-white/40"
-                      }`}>/month</span>
-                    </>
-                  ) : (
-                    <span className={`text-4xl font-display ${
-                      tier.highlighted ? "text-foreground" : "text-white"
-                    }`}>Custom</span>
-                  )}
+                        isEnterprise ? "text-white" : "text-white"
+                      }`}>Custom</span>
+                    )}
+                  </div>
+
+                  {/* Description */}
+                  <p className={`text-sm mb-8 leading-relaxed ${
+                    isProfessional ? "text-muted-foreground" : isEnterprise ? "text-white/60" : "text-white/50"
+                  }`}>
+                    {tier.description}
+                  </p>
+
+                  {/* CTA Button */}
+                  <Link to={isEnterprise ? "#" : "/auth"}>
+                    <Button
+                      variant={isProfessional ? "cta" : "outline"}
+                      size="lg"
+                      className={`w-full ${
+                        isEnterprise
+                          ? "border-amber-500/40 text-amber-300 hover:bg-amber-500/20 hover:text-amber-200 hover:border-amber-400/60"
+                          : !isProfessional
+                            ? "border-white/20 text-white hover:bg-white/10 hover:text-white"
+                            : ""
+                      }`}
+                    >
+                      {isEnterprise && <Crown className="w-4 h-4 mr-2" />}
+                      {tier.cta}
+                    </Button>
+                  </Link>
+
+                  {/* Features */}
+                  <ul className="mt-8 space-y-3">
+                    {tier.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-3 text-sm">
+                        <CheckCircle2 className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
+                          isProfessional ? "text-success" : isEnterprise ? "text-amber-400" : "text-emerald-400"
+                        }`} />
+                        <span className={isProfessional ? "text-foreground" : "text-white/70"}>
+                          {feature}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-
-                {/* Description */}
-                <p className={`text-sm mb-8 leading-relaxed ${
-                  tier.highlighted ? "text-muted-foreground" : "text-white/50"
-                }`}>
-                  {tier.description}
-                </p>
-
-                {/* CTA Button */}
-                <Link to={tier.name === "Enterprise" ? "#" : "/auth"}>
-                  <Button
-                    variant={tier.highlighted ? "cta" : "outline"}
-                    size="lg"
-                    className={`w-full ${
-                      !tier.highlighted
-                        ? "border-white/20 text-white hover:bg-white/10 hover:text-white"
-                        : ""
-                    }`}
-                  >
-                    {tier.cta}
-                  </Button>
-                </Link>
-
-                {/* Features */}
-                <ul className="mt-8 space-y-3">
-                  {tier.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3 text-sm">
-                      <CheckCircle2 className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
-                        tier.highlighted ? "text-success" : "text-emerald-400"
-                      }`} />
-                      <span className={tier.highlighted ? "text-foreground" : "text-white/70"}>
-                        {feature}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>

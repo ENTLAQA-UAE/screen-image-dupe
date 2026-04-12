@@ -29,7 +29,7 @@ const footerLinks = {
 
 export const Footer = () => {
   return (
-    <footer style={{ background: 'linear-gradient(180deg, #0B1120 0%, #0A0F1C 100%)' }} className="py-16">
+    <footer className="py-16 bg-section-footer">
       <div className="container mx-auto px-6">
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12">
           {/* Brand */}

@@ -94,7 +94,8 @@ interface EmployeeSummary {
   lastCompleted: string | null;
 }
 
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"];
+// Chart colors aligned with design system --chart-* variables
+const COLORS = ["hsl(243 75% 59%)", "hsl(160 84% 39%)", "hsl(38 92% 50%)", "hsl(263 70% 58%)", "hsl(330 81% 60%)"];
 
 const getTypeIcon = (type: string) => {
   switch (type?.toLowerCase()) {
@@ -500,7 +501,7 @@ const Reports = () => {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {/* Total Assessments */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <Card className="h-full bg-white dark:bg-slate-900 border border-border border-l-4 border-l-primary shadow-sm overflow-hidden">
+              <Card className="h-full bg-white dark:bg-card border border-border border-l-4 border-l-primary shadow-sm overflow-hidden">
                 <CardContent className="pt-6 pb-5">
                   <div className="flex items-center justify-between">
                     <div>
@@ -517,7 +518,7 @@ const Reports = () => {
 
             {/* Completion Rate with Circular Progress */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-              <Card className="h-full bg-white dark:bg-slate-900 border border-border border-l-4 border-l-success shadow-sm overflow-hidden">
+              <Card className="h-full bg-white dark:bg-card border border-border border-l-4 border-l-success shadow-sm overflow-hidden">
                 <CardContent className="pt-5 pb-5">
                   <div className="flex items-center justify-between">
                     <div>
@@ -547,7 +548,7 @@ const Reports = () => {
 
             {/* Active Groups */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-              <Card className="h-full bg-white dark:bg-slate-900 border border-border border-l-4 border-l-violet-500 shadow-sm overflow-hidden">
+              <Card className="h-full bg-white dark:bg-card border border-border border-l-4 border-l-violet-500 shadow-sm overflow-hidden">
                 <CardContent className="pt-6 pb-5">
                   <div className="flex items-center justify-between">
                     <div>
@@ -564,7 +565,7 @@ const Reports = () => {
 
             {/* Average Score with Circular Progress */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-              <Card className="h-full bg-white dark:bg-slate-900 border border-border border-l-4 border-l-cta shadow-sm overflow-hidden">
+              <Card className="h-full bg-white dark:bg-card border border-border border-l-4 border-l-cta shadow-sm overflow-hidden">
                 <CardContent className="pt-5 pb-5">
                   <div className="flex items-center justify-between">
                     <div>
@@ -613,7 +614,7 @@ const Reports = () => {
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Completion Trend */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-                <Card className="h-full bg-white dark:bg-slate-900 border border-border shadow-sm">
+                <Card className="h-full bg-white dark:bg-card border border-border shadow-sm">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
@@ -662,7 +663,7 @@ const Reports = () => {
 
               {/* Assessment Types Distribution */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-                <Card className="h-full bg-white dark:bg-slate-900 border border-border shadow-sm">
+                <Card className="h-full bg-white dark:bg-card border border-border shadow-sm">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <div className="w-10 h-10 rounded-xl bg-cta/10 flex items-center justify-center">
@@ -715,7 +716,7 @@ const Reports = () => {
 
           {/* Group Analytics Tab */}
           <TabsContent value="groups" className="space-y-6">
-            <Card className="bg-white dark:bg-slate-900 border border-border shadow-sm">
+            <Card className="bg-white dark:bg-card border border-border shadow-sm">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -752,7 +753,7 @@ const Reports = () => {
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.05 }}
-                            className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800/50 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                            className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-secondary/50 shadow-sm hover:shadow-md transition-all cursor-pointer"
                             onClick={() => navigate(`/assessment-groups/${group.id}/report`)}
                           >
                             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -808,7 +809,7 @@ const Reports = () => {
 
           {/* Employee Reports Tab */}
           <TabsContent value="employees" className="space-y-6">
-            <Card className="bg-white dark:bg-slate-900 border border-border shadow-sm">
+            <Card className="bg-white dark:bg-card border border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <div className="w-10 h-10 rounded-xl bg-cta/10 flex items-center justify-center">
@@ -832,7 +833,7 @@ const Reports = () => {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.05 }}
-                        className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800/50 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                        className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-secondary/50 shadow-sm hover:shadow-md transition-all cursor-pointer"
                         onClick={() => navigate(`/employees/${encodeURIComponent(employee.email)}`)}
                       >
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-white shadow-md ${

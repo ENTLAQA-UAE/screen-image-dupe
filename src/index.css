@@ -263,6 +263,24 @@
     background: var(--gradient-mesh);
   }
 
+  /* Dark section backgrounds */
+  .bg-section-dark {
+    background: linear-gradient(135deg, #0B1120 0%, #1E1B4B 50%, #0F172A 100%);
+  }
+
+  .bg-section-pricing {
+    background: linear-gradient(180deg, #0B1120 0%, #111827 100%);
+  }
+
+  .bg-section-footer {
+    background: linear-gradient(180deg, #0B1120 0%, #0A0F1C 100%);
+  }
+
+  /* CTA gradient */
+  .bg-section-cta {
+    background: linear-gradient(135deg, #4F46E5 0%, #6366F1 40%, #7C3AED 100%);
+  }
+
   /* Shadows */
   .shadow-elegant {
     box-shadow: var(--shadow-lg);

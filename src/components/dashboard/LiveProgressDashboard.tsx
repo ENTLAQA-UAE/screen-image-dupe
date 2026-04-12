@@ -63,11 +63,11 @@ const getAssessmentIcon = (type: string) => {
 
 const getTypeColor = (type: string) => {
   switch (type?.toLowerCase()) {
-    case 'cognitive': return { bg: "bg-primary/10 text-primary", icon: "text-primary", border: "border-l-primary", light: "bg-white dark:bg-slate-900" };
-    case 'personality': return { bg: "bg-pink-500/10 text-pink-500", icon: "text-pink-500", border: "border-l-pink-500", light: "bg-white dark:bg-slate-900" };
-    case 'situational': return { bg: "bg-cta/10 text-cta", icon: "text-cta", border: "border-l-cta", light: "bg-white dark:bg-slate-900" };
-    case 'language': return { bg: "bg-violet-500/10 text-violet-500", icon: "text-violet-500", border: "border-l-violet-500", light: "bg-white dark:bg-slate-900" };
-    default: return { bg: "bg-muted text-muted-foreground", icon: "text-muted-foreground", border: "border-l-border", light: "bg-white dark:bg-slate-900" };
+    case 'cognitive': return { bg: "bg-primary/10 text-primary", icon: "text-primary", border: "border-l-primary", light: "bg-white dark:bg-card" };
+    case 'personality': return { bg: "bg-pink-500/10 text-pink-500", icon: "text-pink-500", border: "border-l-pink-500", light: "bg-white dark:bg-card" };
+    case 'situational': return { bg: "bg-cta/10 text-cta", icon: "text-cta", border: "border-l-cta", light: "bg-white dark:bg-card" };
+    case 'language': return { bg: "bg-violet-500/10 text-violet-500", icon: "text-violet-500", border: "border-l-violet-500", light: "bg-white dark:bg-card" };
+    default: return { bg: "bg-muted text-muted-foreground", icon: "text-muted-foreground", border: "border-l-border", light: "bg-white dark:bg-card" };
   }
 };
 
@@ -239,7 +239,7 @@ export function LiveProgressDashboard({ organizationId }: LiveProgressDashboardP
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-slate-900 rounded-xl p-3 sm:p-4 border border-border shadow-sm border-l-4 border-l-success"
+          className="bg-white dark:bg-card rounded-xl p-3 sm:p-4 border border-border shadow-sm border-l-4 border-l-success"
         >
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-success/10 flex items-center justify-center shrink-0">
@@ -256,7 +256,7 @@ export function LiveProgressDashboard({ organizationId }: LiveProgressDashboardP
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="bg-white dark:bg-slate-900 rounded-xl p-3 sm:p-4 border border-border shadow-sm border-l-4 border-l-primary"
+          className="bg-white dark:bg-card rounded-xl p-3 sm:p-4 border border-border shadow-sm border-l-4 border-l-primary"
         >
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
@@ -273,7 +273,7 @@ export function LiveProgressDashboard({ organizationId }: LiveProgressDashboardP
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white dark:bg-slate-900 rounded-xl p-3 sm:p-4 border border-border shadow-sm border-l-4 border-l-cta"
+          className="bg-white dark:bg-card rounded-xl p-3 sm:p-4 border border-border shadow-sm border-l-4 border-l-cta"
         >
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-cta/10 flex items-center justify-center shrink-0">
@@ -290,7 +290,7 @@ export function LiveProgressDashboard({ organizationId }: LiveProgressDashboardP
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="bg-white dark:bg-slate-900 rounded-xl p-3 sm:p-4 border border-border shadow-sm border-l-4 border-l-violet-500"
+          className="bg-white dark:bg-card rounded-xl p-3 sm:p-4 border border-border shadow-sm border-l-4 border-l-violet-500"
         >
           <div className="flex items-center justify-between">
             <div className="min-w-0">

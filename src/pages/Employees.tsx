@@ -325,7 +325,7 @@ const Employees = () => {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <Card className="bg-white dark:bg-slate-900 border border-border border-l-4 border-l-primary shadow-sm px-4 py-3">
+            <Card className="bg-white dark:bg-card border border-border border-l-4 border-l-primary shadow-sm px-4 py-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                   <Users className="w-5 h-5 text-primary" />
@@ -399,7 +399,7 @@ const Employees = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <Card className="bg-white dark:bg-slate-900 border border-border shadow-sm">
+            <Card className="bg-white dark:bg-card border border-border shadow-sm">
               <Table>
                 <TableHeader>
                   <TableRow>

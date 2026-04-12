@@ -103,11 +103,11 @@ const getIconColor = (type: string) => {
 
 const getCardGradient = (type: string) => {
   switch (type?.toLowerCase()) {
-    case 'cognitive': return "bg-white dark:bg-slate-900 border border-border border-l-4 border-l-primary";
-    case 'personality': return "bg-white dark:bg-slate-900 border border-border border-l-4 border-l-pink-500";
-    case 'situational': return "bg-white dark:bg-slate-900 border border-border border-l-4 border-l-cta";
-    case 'language': return "bg-white dark:bg-slate-900 border border-border border-l-4 border-l-violet-500";
-    default: return "bg-white dark:bg-slate-900 border border-border border-l-4 border-l-muted-foreground";
+    case 'cognitive': return "bg-white dark:bg-card border border-border border-l-4 border-l-primary";
+    case 'personality': return "bg-white dark:bg-card border border-border border-l-4 border-l-pink-500";
+    case 'situational': return "bg-white dark:bg-card border border-border border-l-4 border-l-cta";
+    case 'language': return "bg-white dark:bg-card border border-border border-l-4 border-l-violet-500";
+    default: return "bg-white dark:bg-card border border-border border-l-4 border-l-muted-foreground";
   }
 };
 

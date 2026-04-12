@@ -530,7 +530,7 @@ const AssessmentGroups = () => {
             )}
           </div>
         ) : (
-          <div className="rounded-2xl bg-white dark:bg-slate-900 border border-border shadow-sm overflow-hidden">
+          <div className="rounded-2xl bg-white dark:bg-card border border-border shadow-sm overflow-hidden">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
@@ -571,7 +571,7 @@ const AssessmentGroups = () => {
                         <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium ${
                           status === 'active' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
                           status === 'completed' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-                          'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                          'bg-muted text-muted-foreground'
                         }`}>
                           {status === "active" && <Play className="w-3 h-3 mr-1.5" />}
                           {status === "completed" && <CheckCircle2 className="w-3 h-3 mr-1.5" />}

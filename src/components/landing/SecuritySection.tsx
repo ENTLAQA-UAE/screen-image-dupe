@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Lock, ShieldCheck, KeyRound, Globe2 } from "lucide-react";
+import { Lock, ShieldCheck, KeyRound, Globe2, BadgeCheck } from "lucide-react";
 
 const securityItems = [
   {
@@ -7,24 +7,28 @@ const securityItems = [
     title: "Data Encryption",
     description:
       "All data is encrypted at rest with AES-256 and in transit with TLS 1.3. Your assessment data is protected at every layer.",
+    badge: "AES-256",
   },
   {
     icon: ShieldCheck,
     title: "SOC 2 Compliance",
     description:
       "Our infrastructure and processes meet SOC 2 Type II standards, ensuring rigorous controls for security, availability, and confidentiality.",
+    badge: "SOC 2",
   },
   {
     icon: KeyRound,
     title: "Role-Based Access",
     description:
       "Granular permission controls let you define exactly who can create, manage, and view assessments and results across your organization.",
+    badge: "RBAC",
   },
   {
     icon: Globe2,
     title: "GDPR Ready",
     description:
       "Built-in data processing agreements, consent management, and the right to erasure. Fully compliant with EU and regional privacy regulations.",
+    badge: "GDPR",
   },
 ];
 
@@ -32,9 +36,7 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.12,
-    },
+    transition: { staggerChildren: 0.12 },
   },
 };
 
@@ -45,12 +47,7 @@ const itemVariants = {
 
 export const SecuritySection = () => {
   return (
-    <section className="py-24 gradient-subtle relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-30 pointer-events-none">
-        <div className="absolute top-0 left-1/3 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-      </div>
-
+    <section className="py-24 bg-muted/30 relative overflow-hidden">
       <div className="container mx-auto px-6 relative z-10">
         {/* Section Header */}
         <motion.div
@@ -70,6 +67,19 @@ export const SecuritySection = () => {
             Your data security is our top priority. Qudurat is built with
             enterprise-level protections from the ground up.
           </p>
+
+          {/* Certification Badges */}
+          <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
+            {["SOC 2 Type II", "GDPR", "ISO 27001", "TLS 1.3"].map((cert) => (
+              <div
+                key={cert}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white border border-border/60 shadow-sm"
+              >
+                <BadgeCheck className="w-4 h-4 text-emerald-500" />
+                <span className="text-xs font-semibold text-foreground">{cert}</span>
+              </div>
+            ))}
+          </div>
         </motion.div>
 
         {/* Security Grid */}
@@ -78,7 +88,7 @@ export const SecuritySection = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto"
+          className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto"
         >
           {securityItems.map((item) => (
             <motion.div
@@ -86,19 +96,28 @@ export const SecuritySection = () => {
               variants={itemVariants}
               className="group"
             >
-              <div className="h-full p-8 rounded-2xl bg-card border border-border/50 shadow-card hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                {/* Icon */}
-                <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6 bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-110">
-                  <item.icon className="w-7 h-7" />
-                </div>
+              <div className="h-full p-7 rounded-2xl bg-white border border-border/40 shadow-sm hover:shadow-lg hover:border-primary/20 transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-start gap-4">
+                  {/* Icon */}
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-primary/10 text-primary flex-shrink-0 transition-transform duration-300 group-hover:scale-110">
+                    <item.icon className="w-6 h-6" />
+                  </div>
 
-                {/* Content */}
-                <h3 className="text-xl font-display font-semibold text-foreground mb-3">
-                  {item.title}
-                </h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  {item.description}
-                </p>
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-lg font-display font-semibold text-foreground">
+                        {item.title}
+                      </h3>
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 text-[10px] font-bold uppercase tracking-wider">
+                        {item.badge}
+                      </span>
+                    </div>
+                    <p className="text-muted-foreground leading-relaxed text-sm">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
               </div>
             </motion.div>
           ))}

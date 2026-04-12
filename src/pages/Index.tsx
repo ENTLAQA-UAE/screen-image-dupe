@@ -40,16 +40,16 @@ const Index = () => {
         {/* Dark — steps */}
         <HowItWorksSection />
 
-        {/* White — testimonials */}
+        {/* White — social proof */}
         <TestimonialsSection />
 
-        {/* Dark — pricing */}
-        <PricingSection />
-
-        {/* Light gray — security */}
+        {/* Light gray — trust & compliance */}
         <SecuritySection />
 
-        {/* White with gradient banner */}
+        {/* Dark — pricing (after trust signals) */}
+        <PricingSection />
+
+        {/* White with gradient banner — final CTA */}
         <CTASection />
 
         {/* Dark navy footer */}

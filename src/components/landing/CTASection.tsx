@@ -15,10 +15,7 @@ export const CTASection = () => {
           className="max-w-5xl mx-auto"
         >
           <div
-            className="relative rounded-3xl overflow-hidden px-8 py-16 md:px-16 md:py-20 text-center"
-            style={{
-              background: "linear-gradient(135deg, #4F46E5 0%, #6366F1 40%, #7C3AED 100%)",
-            }}
+            className="relative rounded-3xl overflow-hidden px-8 py-16 md:px-16 md:py-20 text-center bg-section-cta"
           >
             {/* Background decorations */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
