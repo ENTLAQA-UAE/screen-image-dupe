@@ -18,7 +18,7 @@ export async function getStripeClient(): Promise<Stripe> {
     );
   }
   return new Stripe(credentials.apiKey, {
-    apiVersion: '2024-12-18.acacia',
+    apiVersion: '2025-02-24.acacia',
     typescript: true,
     appInfo: {
       name: 'Qudurat',
@@ -41,7 +41,7 @@ export async function constructStripeEvent(
   }
 
   const stripe = new Stripe(credentials.apiKey, {
-    apiVersion: '2024-12-18.acacia',
+    apiVersion: '2025-02-24.acacia',
   });
 
   return stripe.webhooks.constructEvent(
