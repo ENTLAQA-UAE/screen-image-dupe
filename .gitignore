@@ -1,29 +1,4 @@
-# dependencies
-node_modules
-.pnp
-.pnp.js
-.yarn/install-state.gz
-
-# testing
-coverage
-.nyc_output
-playwright-report
-test-results
-
-# next.js
-.next
-out
-build
-dist
-dist-ssr
-
-# misc
-.DS_Store
-Thumbs.db
-*.pem
-*.local
-
-# debug
+# Logs
 logs
 *.log
 npm-debug.log*
@@ -32,34 +7,18 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Environment variables (CRITICAL: never commit secrets)
-.env
-.env.local
-.env.*.local
-.env.production
-.env.development
-.env.staging
+node_modules
+dist
+dist-ssr
+*.local
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
+.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# Supabase local
-supabase/.temp
-supabase/.branches
-
-# Sentry
-.sentryclirc

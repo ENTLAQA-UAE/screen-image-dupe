@@ -1,6 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
-import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 interface RecalculateRequest {
   groupId?: string;
@@ -35,10 +39,9 @@ function getGrade(percentage: number): string {
 }
 
 serve(async (req) => {
-  const preflight = handleCorsPreflightRequest(req);
-  if (preflight) return preflight;
-
-  const corsHeaders = getCorsHeaders(req);
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
 
   try {
     const { groupId, participantId, organizationId }: RecalculateRequest = await req.json();
