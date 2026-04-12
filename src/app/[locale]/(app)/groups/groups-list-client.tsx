@@ -2,10 +2,10 @@
 
 import {
   Brain,
-  CheckCircle2,
+
   Clock,
-  Copy,
-  Edit,
+
+
   FileText,
   Heart,
   Languages,

@@ -11,8 +11,8 @@ import {
   Languages,
   Loader2,
   MessageSquare,
-  Pencil,
-  Plus,
+
+
   Save,
   Sparkles,
   Trash2,
@@ -95,7 +95,7 @@ export function AssessmentBuilderClient({ organizationId, userId, locale }: Prop
 
   // Step 5: Generated Questions
   const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedQuestion[]>([]);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  // Question editing deferred to future iteration
 
   // Step labels
   const steps = [

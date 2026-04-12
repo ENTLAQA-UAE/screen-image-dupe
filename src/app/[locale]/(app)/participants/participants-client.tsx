@@ -230,8 +230,6 @@ export function ParticipantsClient({ organizationId }: { organizationId: string 
     return s?.percentage ?? s?.total_score ?? null;
   };
 
-  const formatDate = (d: string | null) =>
-    d ? new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric' }).format(new Date(d)) : '—';
 
   if (loading) {
     return (

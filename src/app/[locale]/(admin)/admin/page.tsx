@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 async function getPlatformStats() {
   const supabase = createAdminClient();
 
-  const [orgsRes, usersRes, assessmentsRes, domainsRes] = await Promise.all([
+  const [orgsRes, usersRes, assessmentsRes] = await Promise.all([
     supabase
       .from('organizations')
       .select('id', { count: 'exact', head: true }),
