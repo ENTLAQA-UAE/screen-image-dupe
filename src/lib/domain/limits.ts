@@ -24,7 +24,7 @@ export async function canCreate(
   resource: Resource,
 ): Promise<boolean> {
   const supabase = createAdminClient();
-  const { data, error } = await supabase.rpc('check_subscription_limit', {
+  const { data, error } = await (supabase.rpc as any)('check_subscription_limit', {
     p_org_id: organizationId,
     p_resource: resource,
   });

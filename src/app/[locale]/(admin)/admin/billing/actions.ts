@@ -58,12 +58,14 @@ export async function configureStripeAction(
 
   const supabase = createAdminClient();
 
-  // Encrypt secrets via the vault helper (defined in earlier migration)
-  const { data: encryptedKey, error: encErr1 } = await supabase.rpc(
+  // Encrypt secrets via the vault helper (defined in earlier migration).
+  // Cast to `any` because the auto-generated Supabase types don't include
+  // custom RPC functions until you regenerate them with `supabase gen types`.
+  const { data: encryptedKey, error: encErr1 } = await (supabase.rpc as any)(
     'encrypt_email_secret',
     { plain_text: parsed.data.apiKey },
   );
-  const { data: encryptedWebhook, error: encErr2 } = await supabase.rpc(
+  const { data: encryptedWebhook, error: encErr2 } = await (supabase.rpc as any)(
     'encrypt_email_secret',
     { plain_text: parsed.data.webhookSecret },
   );
