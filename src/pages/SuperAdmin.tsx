@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Search, Bell, Globe } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { useLanguage } from '@/i18n/LanguageContext';
 import {
   SuperAdminSidebar,
   DashboardSection,
@@ -20,6 +21,7 @@ import {
 export default function SuperAdmin() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { isRTL, dir } = useLanguage();
 
   const [activeSection, setActiveSection] = useState<ActiveSection>('dashboard');
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -133,7 +135,7 @@ export default function SuperAdmin() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" dir={dir}>
       <SuperAdminSidebar
         activeSection={activeSection}
         setActiveSection={setActiveSection}
@@ -146,7 +148,7 @@ export default function SuperAdmin() {
       {/* Top Bar */}
       <header
         className="h-16 bg-card border-b border-border/60 flex items-center justify-between px-6 sticky top-0 z-40 transition-all duration-200"
-        style={{ marginLeft: sidebarWidth }}
+        style={{ [isRTL ? 'marginRight' : 'marginLeft']: sidebarWidth }}
       >
         <div className="flex items-center gap-4">
           <h1 className="text-lg font-bold text-foreground">{getSectionTitle()}</h1>
@@ -179,7 +181,7 @@ export default function SuperAdmin() {
       {/* Main Content */}
       <main
         className="transition-all duration-200"
-        style={{ marginLeft: sidebarWidth }}
+        style={{ [isRTL ? 'marginRight' : 'marginLeft']: sidebarWidth }}
       >
         <div className="p-4 sm:p-6 lg:p-8">
           {activeSection === 'dashboard' && (

@@ -39,7 +39,7 @@ const features = [
 export default function Auth() {
   const navigate = useNavigate();
   const { user, loading, signIn, signUp, isSuperAdmin } = useAuth();
-  const { t, isRTL, dir } = useLanguage();
+  const { t, dir } = useLanguage();
   const { toast } = useToast();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -271,7 +271,7 @@ export default function Auth() {
               <div className="w-12 h-12 rounded-2xl gradient-accent flex items-center justify-center shadow-glow">
                 <Building2 className="w-6 h-6 text-accent-foreground" />
               </div>
-              <div className={`text-${isRTL ? 'right' : 'left'}`}>
+              <div className="text-start">
                 <h1 className="text-2xl font-display font-bold text-foreground">
                   Qudurat
                 </h1>
@@ -319,12 +319,12 @@ export default function Auth() {
                         {t.auth.email}
                       </Label>
                       <div className="relative group">
-                        <Mail className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors ${isRTL ? 'right-3' : 'left-3'}`} />
+                        <Mail className="absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors start-3" />
                         <Input
                           id="login-email"
                           type="email"
                           placeholder="you@example.com"
-                          className={`h-12 rounded-xl border-2 border-border/50 focus:border-accent transition-all ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
+                          className="h-12 rounded-xl border-2 border-border/50 focus:border-accent transition-all ps-10 pe-4"
                           value={loginEmail}
                           onChange={(e) => setLoginEmail(e.target.value)}
                         />
@@ -346,19 +346,19 @@ export default function Auth() {
                         {t.auth.password}
                       </Label>
                       <div className="relative group">
-                        <Lock className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors ${isRTL ? 'right-3' : 'left-3'}`} />
+                        <Lock className="absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors start-3" />
                         <Input
                           id="login-password"
                           type={showPassword ? "text" : "password"}
                           placeholder="••••••••"
-                          className={`h-12 rounded-xl border-2 border-border/50 focus:border-accent transition-all ${isRTL ? 'pr-10 pl-12' : 'pl-10 pr-12'}`}
+                          className="h-12 rounded-xl border-2 border-border/50 focus:border-accent transition-all ps-10 pe-12"
                           value={loginPassword}
                           onChange={(e) => setLoginPassword(e.target.value)}
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 ${isRTL ? 'left-2' : 'right-2'}`}
+                          className="absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 end-2"
                         >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
@@ -408,12 +408,12 @@ export default function Auth() {
                         {t.auth.fullName}
                       </Label>
                       <div className="relative group">
-                        <User className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors ${isRTL ? 'right-3' : 'left-3'}`} />
+                        <User className="absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors start-3" />
                         <Input
                           id="signup-name"
                           type="text"
                           placeholder="John Doe"
-                          className={`h-12 rounded-xl border-2 border-border/50 focus:border-accent transition-all ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
+                          className="h-12 rounded-xl border-2 border-border/50 focus:border-accent transition-all ps-10 pe-4"
                           value={signupName}
                           onChange={(e) => setSignupName(e.target.value)}
                         />
@@ -434,12 +434,12 @@ export default function Auth() {
                         {t.auth.email}
                       </Label>
                       <div className="relative group">
-                        <Mail className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors ${isRTL ? 'right-3' : 'left-3'}`} />
+                        <Mail className="absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors start-3" />
                         <Input
                           id="signup-email"
                           type="email"
                           placeholder="you@example.com"
-                          className={`h-12 rounded-xl border-2 border-border/50 focus:border-accent transition-all ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
+                          className="h-12 rounded-xl border-2 border-border/50 focus:border-accent transition-all ps-10 pe-4"
                           value={signupEmail}
                           onChange={(e) => setSignupEmail(e.target.value)}
                         />
@@ -460,19 +460,19 @@ export default function Auth() {
                         {t.auth.password}
                       </Label>
                       <div className="relative group">
-                        <Lock className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors ${isRTL ? 'right-3' : 'left-3'}`} />
+                        <Lock className="absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors start-3" />
                         <Input
                           id="signup-password"
                           type={showPassword ? "text" : "password"}
                           placeholder="••••••••"
-                          className={`h-12 rounded-xl border-2 border-border/50 focus:border-accent transition-all ${isRTL ? 'pr-10 pl-12' : 'pl-10 pr-12'}`}
+                          className="h-12 rounded-xl border-2 border-border/50 focus:border-accent transition-all ps-10 pe-12"
                           value={signupPassword}
                           onChange={(e) => setSignupPassword(e.target.value)}
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 ${isRTL ? 'left-2' : 'right-2'}`}
+                          className="absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 end-2"
                         >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
@@ -493,19 +493,19 @@ export default function Auth() {
                         {t.auth.confirmPassword}
                       </Label>
                       <div className="relative group">
-                        <Lock className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors ${isRTL ? 'right-3' : 'left-3'}`} />
+                        <Lock className="absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors start-3" />
                         <Input
                           id="signup-confirm"
                           type={showConfirmPassword ? "text" : "password"}
                           placeholder="••••••••"
-                          className={`h-12 rounded-xl border-2 border-border/50 focus:border-accent transition-all ${isRTL ? 'pr-10 pl-12' : 'pl-10 pr-12'}`}
+                          className="h-12 rounded-xl border-2 border-border/50 focus:border-accent transition-all ps-10 pe-12"
                           value={signupConfirmPassword}
                           onChange={(e) => setSignupConfirmPassword(e.target.value)}
                         />
                         <button
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 ${isRTL ? 'left-2' : 'right-2'}`}
+                          className="absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 end-2"
                         >
                           {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>

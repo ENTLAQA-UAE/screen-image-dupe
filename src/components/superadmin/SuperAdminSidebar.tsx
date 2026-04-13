@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Shield, LogOut, BarChart3, Building2, UserCog, CreditCard, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { ActiveSection } from './types';
 
 interface SuperAdminSidebarProps {
@@ -12,16 +13,19 @@ interface SuperAdminSidebarProps {
 }
 
 const navItems = [
-  { id: 'dashboard' as ActiveSection, icon: BarChart3, label: 'Dashboard' },
-  { id: 'organizations' as ActiveSection, icon: Building2, label: 'Organizations' },
-  { id: 'users' as ActiveSection, icon: UserCog, label: 'Users & Roles' },
-  { id: 'subscriptions' as ActiveSection, icon: CreditCard, label: 'Subscriptions' },
-  { id: 'settings' as ActiveSection, icon: Settings, label: 'Platform Settings' },
+  { id: 'dashboard' as ActiveSection, icon: BarChart3, labelEn: 'Dashboard', labelAr: 'لوحة التحكم' },
+  { id: 'organizations' as ActiveSection, icon: Building2, labelEn: 'Organizations', labelAr: 'المنظمات' },
+  { id: 'users' as ActiveSection, icon: UserCog, labelEn: 'Users & Roles', labelAr: 'المستخدمون والأدوار' },
+  { id: 'subscriptions' as ActiveSection, icon: CreditCard, labelEn: 'Subscriptions', labelAr: 'الاشتراكات' },
+  { id: 'settings' as ActiveSection, icon: Settings, labelEn: 'Platform Settings', labelAr: 'إعدادات المنصة' },
 ];
 
 export function SuperAdminSidebar({ activeSection, setActiveSection, userName, onSignOut, collapsed = false, onToggleCollapse }: SuperAdminSidebarProps) {
+  const { language } = useLanguage();
+  const isArabic = language === 'ar';
+
   return (
-    <aside className={`${collapsed ? 'w-[68px]' : 'w-64'} h-screen bg-white fixed left-0 top-0 border-r border-border/60 flex flex-col transition-all duration-200 z-50`}>
+    <aside className={`${collapsed ? 'w-[68px]' : 'w-64'} h-screen bg-white fixed top-0 border-border/60 flex flex-col transition-all duration-200 z-50 ltr:left-0 ltr:border-r rtl:right-0 rtl:border-l`}>
       {/* Logo + Collapse Toggle */}
       <div className="p-4 border-b border-border/60 flex items-center justify-between">
         <Link to="/" className={`flex items-center group ${collapsed ? 'justify-center w-full' : 'gap-3'}`}>
@@ -31,7 +35,7 @@ export function SuperAdminSidebar({ activeSection, setActiveSection, userName, o
           {!collapsed && (
             <div className="flex flex-col min-w-0">
               <span className="font-bold text-foreground text-sm">Qudurat</span>
-              <span className="text-[10px] text-muted-foreground -mt-0.5 tracking-wider uppercase">Platform</span>
+              <span className="text-[10px] text-muted-foreground -mt-0.5 tracking-wider uppercase">{isArabic ? 'المنصة' : 'Platform'}</span>
             </div>
           )}
         </Link>
@@ -62,7 +66,7 @@ export function SuperAdminSidebar({ activeSection, setActiveSection, userName, o
         <div className="px-4 py-3 mx-3 mt-3 rounded-xl bg-primary/5 border border-primary/10">
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 text-primary" />
-            <span className="text-xs font-semibold text-primary uppercase tracking-wider">Super Admin</span>
+            <span className="text-xs font-semibold text-primary uppercase tracking-wider">{isArabic ? 'المشرف العام' : 'Super Admin'}</span>
           </div>
         </div>
       )}
@@ -71,7 +75,7 @@ export function SuperAdminSidebar({ activeSection, setActiveSection, userName, o
       <nav className="flex-1 px-3 py-4 space-y-1">
         {!collapsed && (
           <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/50">
-            Menu
+            {isArabic ? 'القائمة' : 'Menu'}
           </p>
         )}
         {navItems.map((item) => {
@@ -80,7 +84,7 @@ export function SuperAdminSidebar({ activeSection, setActiveSection, userName, o
             <button
               key={item.id}
               onClick={() => setActiveSection(item.id)}
-              title={collapsed ? item.label : undefined}
+              title={collapsed ? (isArabic ? item.labelAr : item.labelEn) : undefined}
               className={`w-full flex items-center gap-3 rounded-xl text-[13px] font-medium transition-all duration-200 ${
                 collapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'
               } ${
@@ -90,7 +94,7 @@ export function SuperAdminSidebar({ activeSection, setActiveSection, userName, o
               }`}
             >
               <item.icon className={`flex-shrink-0 ${collapsed ? 'w-5 h-5' : 'w-[18px] h-[18px]'}`} />
-              {!collapsed && <span className="flex-1 text-left truncate">{item.label}</span>}
+              {!collapsed && <span className="flex-1 text-left truncate">{isArabic ? item.labelAr : item.labelEn}</span>}
               {isActive && !collapsed && (
                 <div className="w-1.5 h-1.5 rounded-full bg-white" />
               )}
@@ -108,19 +112,19 @@ export function SuperAdminSidebar({ activeSection, setActiveSection, userName, o
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">{userName}</p>
-              <p className="text-[11px] text-muted-foreground truncate">Super Admin</p>
+              <p className="text-[11px] text-muted-foreground truncate">{isArabic ? 'المشرف العام' : 'Super Admin'}</p>
             </div>
           </div>
         )}
         <button
           onClick={onSignOut}
-          title={collapsed ? 'Sign Out' : undefined}
+          title={collapsed ? (isArabic ? 'تسجيل الخروج' : 'Sign Out') : undefined}
           className={`w-full flex items-center gap-3 rounded-xl text-[13px] font-medium transition-all duration-150 text-muted-foreground hover:bg-destructive/10 hover:text-destructive ${
             collapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'
           }`}
         >
           <LogOut className="w-4 h-4 flex-shrink-0" />
-          {!collapsed && 'Sign Out'}
+          {!collapsed && (isArabic ? 'تسجيل الخروج' : 'Sign Out')}
         </button>
       </div>
 
@@ -128,7 +132,7 @@ export function SuperAdminSidebar({ activeSection, setActiveSection, userName, o
       {!collapsed && (
         <div className="px-4 pb-3 pt-1">
           <p className="text-[10px] text-muted-foreground/40 text-center">
-            Powered by Qudurat
+            {isArabic ? 'بدعم من قدرات' : 'Powered by Qudurat'}
           </p>
         </div>
       )}

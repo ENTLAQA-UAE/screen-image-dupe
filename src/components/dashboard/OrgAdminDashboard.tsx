@@ -211,57 +211,41 @@ export function OrgAdminDashboard({ organizationId, organizationName, userName }
         transition={{ delay: 0.1 }}
         className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
       >
-        <Card className="bg-card border border-border shadow-card p-4 sm:p-5 border-l-4 border-l-primary">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0">
-              <p className="text-xs text-muted-foreground truncate">{t.orgDashboard.totalAssessments}</p>
-              <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">{stats.totalAssessments}</p>
-              <p className="text-[10px] text-muted-foreground/70 mt-1">
-                {stats.assessmentLimit === -1 ? t.orgDashboard.unlimited : `${t.orgDashboard.ofLimit} ${stats.assessmentLimit}`}
-              </p>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <FileText className="w-5 h-5 text-primary" />
-            </div>
+        <Card className="bg-card border border-border/60 shadow-card p-4 sm:p-5">
+          <div className="flex items-start justify-between mb-3">
+            <p className="text-sm font-medium text-muted-foreground">{t.orgDashboard.totalAssessments}</p>
+            <FileText className="w-5 h-5 text-muted-foreground/40" />
           </div>
+          <p className="text-3xl font-bold text-foreground mb-1">{stats.totalAssessments}</p>
+          <p className="text-xs text-muted-foreground">
+            {stats.assessmentLimit === -1 ? t.orgDashboard.unlimited : `${t.orgDashboard.ofLimit} ${stats.assessmentLimit}`}
+          </p>
         </Card>
-        <Card className="bg-card border border-border shadow-card p-4 sm:p-5 border-l-4 border-l-accent">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0">
-              <p className="text-xs text-muted-foreground truncate">{t.orgDashboard.hrAdmins}</p>
-              <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">{stats.totalHRAdmins}</p>
-              <p className="text-[10px] text-muted-foreground/70 mt-1">
-                {stats.maxHRAdmins === -1 ? t.orgDashboard.unlimited : `${t.orgDashboard.ofLimit} ${stats.maxHRAdmins}`}
-              </p>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-              <Shield className="w-5 h-5 text-accent" />
-            </div>
+        <Card className="bg-card border border-border/60 shadow-card p-4 sm:p-5">
+          <div className="flex items-start justify-between mb-3">
+            <p className="text-sm font-medium text-muted-foreground">{t.orgDashboard.hrAdmins}</p>
+            <Shield className="w-5 h-5 text-muted-foreground/40" />
           </div>
+          <p className="text-3xl font-bold text-foreground mb-1">{stats.totalHRAdmins}</p>
+          <p className="text-xs text-muted-foreground">
+            {stats.maxHRAdmins === -1 ? t.orgDashboard.unlimited : `${t.orgDashboard.ofLimit} ${stats.maxHRAdmins}`}
+          </p>
         </Card>
-        <Card className="bg-card border border-border shadow-card p-4 sm:p-5 border-l-4 border-l-success">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0">
-              <p className="text-xs text-muted-foreground truncate">{t.orgDashboard.totalParticipants}</p>
-              <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">{stats.totalParticipants}</p>
-              <p className="text-[10px] text-muted-foreground/70 mt-1">{t.orgDashboard.allTime}</p>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
-              <Users className="w-5 h-5 text-success" />
-            </div>
+        <Card className="bg-card border border-border/60 shadow-card p-4 sm:p-5">
+          <div className="flex items-start justify-between mb-3">
+            <p className="text-sm font-medium text-muted-foreground">{t.orgDashboard.totalParticipants}</p>
+            <Users className="w-5 h-5 text-muted-foreground/40" />
           </div>
+          <p className="text-3xl font-bold text-foreground mb-1">{stats.totalParticipants}</p>
+          <p className="text-xs text-muted-foreground">{t.orgDashboard.allTime}</p>
         </Card>
-        <Card className="bg-card border border-border shadow-card p-4 sm:p-5 border-l-4 border-l-cta">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0">
-              <p className="text-xs text-muted-foreground truncate">{t.orgDashboard.completionRate}</p>
-              <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">{stats.completionRate}%</p>
-              <p className="text-[10px] text-muted-foreground/70 mt-1">{t.orgDashboard.assessmentCompletion}</p>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-cta/10 flex items-center justify-center shrink-0">
-              <TrendingUp className="w-5 h-5 text-cta" />
-            </div>
+        <Card className="bg-card border border-border/60 shadow-card p-4 sm:p-5">
+          <div className="flex items-start justify-between mb-3">
+            <p className="text-sm font-medium text-muted-foreground">{t.orgDashboard.completionRate}</p>
+            <TrendingUp className="w-5 h-5 text-muted-foreground/40" />
           </div>
+          <p className="text-3xl font-bold text-foreground mb-1">{stats.completionRate}%</p>
+          <p className="text-xs text-muted-foreground">{t.orgDashboard.assessmentCompletion}</p>
         </Card>
       </motion.div>
 

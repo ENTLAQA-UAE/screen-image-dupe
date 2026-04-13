@@ -345,52 +345,36 @@ export function HRAdminDashboard({ organizationId, userName }: HRAdminDashboardP
         transition={{ delay: 0.2 }}
         className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
       >
-        <Card className="bg-card border border-border shadow-card p-4 sm:p-5 border-l-4 border-l-primary">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0">
-              <p className="text-xs text-muted-foreground truncate">{t.hrDashboard.activeGroups}</p>
-              <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">{stats.activeGroups}</p>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <FolderKanban className="w-5 h-5 text-primary" />
-            </div>
+        <Card className="bg-card border border-border/60 shadow-card p-4 sm:p-5">
+          <div className="flex items-start justify-between mb-3">
+            <p className="text-sm font-medium text-muted-foreground">{t.hrDashboard.activeGroups}</p>
+            <FolderKanban className="w-5 h-5 text-muted-foreground/40" />
           </div>
+          <p className="text-3xl font-bold text-foreground mb-1">{stats.activeGroups}</p>
         </Card>
-        <Card className="bg-card border border-border shadow-card p-4 sm:p-5 border-l-4 border-l-cta">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0">
-              <p className="text-xs text-muted-foreground truncate">{t.hrDashboard.pending}</p>
-              <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">{stats.pendingAssessments}</p>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-cta/10 flex items-center justify-center shrink-0">
-              <Clock className="w-5 h-5 text-cta" />
-            </div>
+        <Card className="bg-card border border-border/60 shadow-card p-4 sm:p-5">
+          <div className="flex items-start justify-between mb-3">
+            <p className="text-sm font-medium text-muted-foreground">{t.hrDashboard.pending}</p>
+            <Clock className="w-5 h-5 text-muted-foreground/40" />
           </div>
+          <p className="text-3xl font-bold text-foreground mb-1">{stats.pendingAssessments}</p>
         </Card>
-        <Card className="bg-card border border-border shadow-card p-4 sm:p-5 border-l-4 border-l-success">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0">
-              <p className="text-xs text-muted-foreground truncate">{t.hrDashboard.completedToday}</p>
-              <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">{stats.completedToday}</p>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
-              <CheckCircle2 className="w-5 h-5 text-success" />
-            </div>
+        <Card className="bg-card border border-border/60 shadow-card p-4 sm:p-5">
+          <div className="flex items-start justify-between mb-3">
+            <p className="text-sm font-medium text-muted-foreground">{t.hrDashboard.completedToday}</p>
+            <CheckCircle2 className="w-5 h-5 text-muted-foreground/40" />
           </div>
+          <p className="text-3xl font-bold text-foreground mb-1">{stats.completedToday}</p>
         </Card>
-        <Card className="bg-card border border-border shadow-card p-4 sm:p-5 border-l-4 border-l-accent">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0">
-              <p className="text-xs text-muted-foreground truncate">{t.hrDashboard.totalParticipants}</p>
-              <p className="text-2xl sm:text-3xl font-bold text-foreground mt-1">{stats.totalParticipants}</p>
-              <div className="flex items-center gap-1 mt-1">
-                <TrendingUp className="w-3 h-3 text-success" />
-                <span className="text-[10px] text-success font-medium">{stats.completionRate}% {t.hrDashboard.completionRate}</span>
-              </div>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-              <Users className="w-5 h-5 text-accent" />
-            </div>
+        <Card className="bg-card border border-border/60 shadow-card p-4 sm:p-5">
+          <div className="flex items-start justify-between mb-3">
+            <p className="text-sm font-medium text-muted-foreground">{t.hrDashboard.totalParticipants}</p>
+            <Users className="w-5 h-5 text-muted-foreground/40" />
+          </div>
+          <p className="text-3xl font-bold text-foreground mb-1">{stats.totalParticipants}</p>
+          <div className="flex items-center gap-1">
+            <TrendingUp className="w-3 h-3 text-success" />
+            <span className="text-xs text-success font-medium">{stats.completionRate}% {t.hrDashboard.completionRate}</span>
           </div>
         </Card>
       </motion.div>
