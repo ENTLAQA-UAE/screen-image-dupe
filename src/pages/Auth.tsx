@@ -21,6 +21,7 @@ const loginSchema = z.object({
 const signupSchema = z
   .object({
     fullName: z.string().trim().min(2, { message: "Name must be at least 2 characters" }).max(100),
+    organizationName: z.string().trim().min(2, { message: "Organization name must be at least 2 characters" }).max(200),
     email: z.string().trim().email({ message: "Invalid email address" }).max(255),
     password: z.string().min(6, { message: "Password must be at least 6 characters" }).max(72),
     confirmPassword: z.string(),
@@ -53,6 +54,7 @@ export default function Auth() {
   
   // Signup form state
   const [signupName, setSignupName] = useState('');
+  const [signupOrgName, setSignupOrgName] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
@@ -104,6 +106,7 @@ export default function Auth() {
     
     const result = signupSchema.safeParse({
       fullName: signupName,
+      organizationName: signupOrgName,
       email: signupEmail,
       password: signupPassword,
       confirmPassword: signupConfirmPassword,
@@ -119,7 +122,7 @@ export default function Auth() {
     }
     
     setIsSubmitting(true);
-    const { error } = await signUp(signupEmail, signupPassword, signupName);
+    const { error } = await signUp(signupEmail, signupPassword, signupName, signupOrgName);
     setIsSubmitting(false);
     
     if (error) {
@@ -419,12 +422,38 @@ export default function Auth() {
                         />
                       </div>
                       {signupErrors.fullName && (
-                        <motion.p 
+                        <motion.p
                           initial={{ opacity: 0, y: -5 }}
                           animate={{ opacity: 1, y: 0 }}
                           className="text-sm text-destructive"
                         >
                           {signupErrors.fullName}
+                        </motion.p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-org" className="text-sm font-medium">
+                        {t.auth.organizationName}
+                      </Label>
+                      <div className="relative group">
+                        <Building2 className="absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors start-3" />
+                        <Input
+                          id="signup-org"
+                          type="text"
+                          placeholder={t.auth.organizationPlaceholder || "Acme Corporation"}
+                          className="h-12 rounded-xl border-2 border-border/50 focus:border-accent transition-all ps-10 pe-4"
+                          value={signupOrgName}
+                          onChange={(e) => setSignupOrgName(e.target.value)}
+                        />
+                      </div>
+                      {signupErrors.organizationName && (
+                        <motion.p
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="text-sm text-destructive"
+                        >
+                          {signupErrors.organizationName}
                         </motion.p>
                       )}
                     </div>

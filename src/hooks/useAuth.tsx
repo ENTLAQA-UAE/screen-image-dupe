@@ -10,7 +10,7 @@ interface AuthContextType {
   loading: boolean;
   roles: AppRole[];
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string, organizationId?: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, organizationName?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   hasRole: (role: AppRole) => boolean;
   isSuperAdmin: () => boolean;
@@ -80,9 +80,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName: string, organizationId?: string) => {
+  const signUp = async (email: string, password: string, fullName: string, organizationName?: string) => {
     const redirectUrl = `${window.location.origin}/`;
-    
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -90,11 +90,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName,
-          organization_id: organizationId || null,
+          organization_name: organizationName || null,
         }
       }
     });
-    
+
     return { error };
   };
 

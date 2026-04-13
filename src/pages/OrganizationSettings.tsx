@@ -17,6 +17,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Building2, Users, BarChart3, Upload, Trash2, UserPlus, Mail, Loader2, Target } from "lucide-react";
 import { CompetencyManagement } from "@/components/settings/CompetencyManagement";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 
 interface Organization {
   id: string;
@@ -38,11 +39,6 @@ interface UsageStats {
   assessments: number;
   assessmentGroups: number;
   participants: number;
-  planLimits: {
-    assessments: number;
-    assessmentGroups: number;
-    participants: number;
-  };
 }
 
 const LANGUAGES = [
@@ -52,18 +48,12 @@ const LANGUAGES = [
   { value: "es", label: "Español (Spanish)" },
 ];
 
-const PLAN_LIMITS: Record<string, { assessments: number; assessmentGroups: number; participants: number }> = {
-  free: { assessments: 5, assessmentGroups: 3, participants: 50 },
-  starter: { assessments: 20, assessmentGroups: 10, participants: 200 },
-  professional: { assessments: 100, assessmentGroups: 50, participants: 1000 },
-  enterprise: { assessments: -1, assessmentGroups: -1, participants: -1 }, // unlimited
-};
-
 export default function OrganizationSettings() {
   const navigate = useNavigate();
   const { user, isOrgAdmin, isSuperAdmin } = useAuth();
   const { t, language } = useLanguage();
-  
+  const { limits: subLimits, usage: subUsage } = useSubscriptionLimits();
+
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [orgUsers, setOrgUsers] = useState<OrgUser[]>([]);
   const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
@@ -170,21 +160,16 @@ export default function OrganizationSettings() {
     
     if (!profile?.organization_id) return;
     
-    const [assessmentsRes, groupsRes, participantsRes, orgRes] = await Promise.all([
+    const [assessmentsRes, groupsRes, participantsRes] = await Promise.all([
       supabase.from("assessments").select("id", { count: "exact" }).eq("organization_id", profile.organization_id),
       supabase.from("assessment_groups").select("id", { count: "exact" }).eq("organization_id", profile.organization_id),
       supabase.from("participants").select("id", { count: "exact" }).eq("organization_id", profile.organization_id),
-      supabase.from("organizations").select("plan").eq("id", profile.organization_id).single(),
     ]);
-    
-    const plan = orgRes.data?.plan || "free";
-    const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
-    
+
     setUsageStats({
       assessments: assessmentsRes.count || 0,
       assessmentGroups: groupsRes.count || 0,
       participants: participantsRes.count || 0,
-      planLimits: limits,
     });
   };
 
@@ -612,48 +597,46 @@ export default function OrganizationSettings() {
                   </span>
                 </div>
 
-                {usageStats && (
-                  <div className="space-y-6">
-                    {/* Assessments */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="font-medium">{t.assessments.title}</span>
-                        <span className={getUsageColor(getUsagePercentage(usageStats.assessments, usageStats.planLimits.assessments))}>
-                          {usageStats.assessments} / {usageStats.planLimits.assessments === -1 ? (language === 'ar' ? 'غير محدود' : 'Unlimited') : usageStats.planLimits.assessments}
-                        </span>
-                      </div>
-                      {usageStats.planLimits.assessments !== -1 && (
-                        <Progress value={getUsagePercentage(usageStats.assessments, usageStats.planLimits.assessments)} />
-                      )}
+                <div className="space-y-6">
+                  {/* Assessments */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="font-medium">{t.assessments.title}</span>
+                      <span className={getUsageColor(getUsagePercentage(subUsage.assessments, subLimits.assessments))}>
+                        {subUsage.assessments} / {subLimits.assessments === -1 ? (language === 'ar' ? 'غير محدود' : 'Unlimited') : subLimits.assessments}
+                      </span>
                     </div>
-
-                    {/* Assessment Groups */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="font-medium">{t.groups.title}</span>
-                        <span className={getUsageColor(getUsagePercentage(usageStats.assessmentGroups, usageStats.planLimits.assessmentGroups))}>
-                          {usageStats.assessmentGroups} / {usageStats.planLimits.assessmentGroups === -1 ? (language === 'ar' ? 'غير محدود' : 'Unlimited') : usageStats.planLimits.assessmentGroups}
-                        </span>
-                      </div>
-                      {usageStats.planLimits.assessmentGroups !== -1 && (
-                        <Progress value={getUsagePercentage(usageStats.assessmentGroups, usageStats.planLimits.assessmentGroups)} />
-                      )}
-                    </div>
-
-                    {/* Participants */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="font-medium">{t.hrDashboard.totalParticipants}</span>
-                        <span className={getUsageColor(getUsagePercentage(usageStats.participants, usageStats.planLimits.participants))}>
-                          {usageStats.participants} / {usageStats.planLimits.participants === -1 ? (language === 'ar' ? 'غير محدود' : 'Unlimited') : usageStats.planLimits.participants}
-                        </span>
-                      </div>
-                      {usageStats.planLimits.participants !== -1 && (
-                        <Progress value={getUsagePercentage(usageStats.participants, usageStats.planLimits.participants)} />
-                      )}
-                    </div>
+                    {subLimits.assessments !== -1 && (
+                      <Progress value={getUsagePercentage(subUsage.assessments, subLimits.assessments)} />
+                    )}
                   </div>
-                )}
+
+                  {/* Assessment Groups */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="font-medium">{t.groups.title}</span>
+                      <span className={getUsageColor(getUsagePercentage(subUsage.groups, subLimits.groups))}>
+                        {subUsage.groups} / {subLimits.groups === -1 ? (language === 'ar' ? 'غير محدود' : 'Unlimited') : subLimits.groups}
+                      </span>
+                    </div>
+                    {subLimits.groups !== -1 && (
+                      <Progress value={getUsagePercentage(subUsage.groups, subLimits.groups)} />
+                    )}
+                  </div>
+
+                  {/* Participants */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="font-medium">{t.hrDashboard.totalParticipants}</span>
+                      <span className={getUsageColor(getUsagePercentage(subUsage.participants, subLimits.participants))}>
+                        {subUsage.participants} / {subLimits.participants === -1 ? (language === 'ar' ? 'غير محدود' : 'Unlimited') : subLimits.participants}
+                      </span>
+                    </div>
+                    {subLimits.participants !== -1 && (
+                      <Progress value={getUsagePercentage(subUsage.participants, subLimits.participants)} />
+                    )}
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

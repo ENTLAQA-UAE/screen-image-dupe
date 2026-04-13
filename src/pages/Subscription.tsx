@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { getStripe } from "@/lib/stripe";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
@@ -33,13 +34,6 @@ interface Plan {
   sort_order: number | null;
 }
 
-interface UsageStats {
-  assessments: number;
-  hrAdmins: number;
-  assessmentGroups: number;
-  participants: number;
-}
-
 const PLAN_COLORS: Record<string, string> = {
   free: "border-border",
   starter: "border-blue-500",
@@ -54,12 +48,6 @@ const PLAN_BADGE_COLORS: Record<string, string> = {
   enterprise: "bg-accent/10 text-accent",
 };
 
-const PLAN_LIMITS: Record<string, { assessments: number; hrAdmins: number; participants: number }> = {
-  free: { assessments: 5, hrAdmins: 3, participants: 50 },
-  starter: { assessments: 20, hrAdmins: 5, participants: 200 },
-  professional: { assessments: 100, hrAdmins: 15, participants: 1000 },
-  enterprise: { assessments: -1, hrAdmins: -1, participants: -1 },
-};
 
 export default function Subscription() {
   const navigate = useNavigate();
@@ -71,10 +59,12 @@ export default function Subscription() {
     subscription, isTrial, isTrialExpired, isActive, isPaid,
     daysRemaining, planSlug, organizationId, loading: subLoading, refresh,
   } = useSubscription();
+  const {
+    limits: currentLimits, usage: currentUsage, loading: limitsLoading,
+  } = useSubscriptionLimits();
 
   const [organization, setOrganization] = useState<{ id: string; name: string; plan: string; is_active: boolean } | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [usage, setUsage] = useState<UsageStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
   const [checkingOut, setCheckingOut] = useState<string | null>(null);
@@ -118,29 +108,14 @@ export default function Subscription() {
     setLoading(true);
 
     try {
-      // Fetch org, plans, and usage in parallel
-      const [orgRes, plansRes, assessmentsRes, groupsRes, participantsRes, profilesRes, rolesRes] = await Promise.all([
+      // Fetch org and plans — usage is handled by useSubscriptionLimits hook
+      const [orgRes, plansRes] = await Promise.all([
         supabase.from("organizations").select("id, name, plan, is_active").eq("id", organizationId).maybeSingle(),
         supabase.from("plans").select("id, name, slug, description, price_monthly_usd, price_annual_usd, max_assessments, max_users, max_groups, features, stripe_price_monthly_id, stripe_price_annual_id, sort_order").eq("is_active", true).eq("is_public", true).order("sort_order", { ascending: true }),
-        supabase.from("assessments").select("id", { count: "exact" }).eq("organization_id", organizationId),
-        supabase.from("assessment_groups").select("id", { count: "exact" }).eq("organization_id", organizationId),
-        supabase.from("participants").select("id", { count: "exact" }).eq("organization_id", organizationId),
-        supabase.from("profiles").select("id").eq("organization_id", organizationId),
-        supabase.from("user_roles").select("user_id").eq("role", "hr_admin"),
       ]);
 
       if (orgRes.data) setOrganization(orgRes.data);
       if (plansRes.data) setPlans(plansRes.data);
-
-      const profileIds = new Set(profilesRes.data?.map(p => p.id) || []);
-      const hrAdminCount = rolesRes.data?.filter(r => profileIds.has(r.user_id)).length || 0;
-
-      setUsage({
-        assessments: assessmentsRes.count || 0,
-        hrAdmins: hrAdminCount,
-        assessmentGroups: groupsRes.count || 0,
-        participants: participantsRes.count || 0,
-      });
     } catch (error) {
       console.error("Error fetching subscription data:", error);
     } finally {
@@ -152,6 +127,26 @@ export default function Subscription() {
     setCheckingOut(plan.id);
 
     try {
+      // If user already has a Stripe subscription, use update-subscription (proration)
+      if (subscription?.stripe_subscription_id) {
+        const response = await supabase.functions.invoke("update-subscription", {
+          body: { planId: plan.id, billingCycle },
+        });
+
+        if (response.error) {
+          throw new Error(response.error.message || "Failed to update subscription");
+        }
+
+        const { message, isUpgrade } = response.data;
+        toast({
+          title: isUpgrade ? "Plan upgraded!" : "Plan changed",
+          description: message,
+        });
+        refresh();
+        return;
+      }
+
+      // New subscriber — go through Stripe Checkout
       const stripe = await getStripe();
       if (!stripe) {
         toast({
@@ -162,8 +157,6 @@ export default function Subscription() {
         setCheckingOut(null);
         return;
       }
-
-      const { data: { session } } = await supabase.auth.getSession();
 
       const response = await supabase.functions.invoke("create-checkout-session", {
         body: {
@@ -236,7 +229,7 @@ export default function Subscription() {
     return "text-muted-foreground";
   };
 
-  if (authLoading || subLoading || loading) {
+  if (authLoading || subLoading || loading || limitsLoading) {
     return (
       <DashboardLayout activeItem="Subscription">
         <div className="flex items-center justify-center h-64">
@@ -247,12 +240,11 @@ export default function Subscription() {
   }
 
   const currentPlanSlug = planSlug || organization?.plan || "free";
-  const limits = PLAN_LIMITS[currentPlanSlug] || PLAN_LIMITS.free;
 
   const usageItems = [
-    { label: t.orgDashboard.assessments, icon: FileText, current: usage?.assessments || 0, limit: limits.assessments },
-    { label: t.orgDashboard.hrAdmins, icon: Users, current: usage?.hrAdmins || 0, limit: limits.hrAdmins },
-    { label: t.hrDashboard.totalParticipants, icon: FolderOpen, current: usage?.participants || 0, limit: limits.participants },
+    { label: t.orgDashboard.assessments, icon: FileText, current: currentUsage.assessments, limit: currentLimits.assessments },
+    { label: t.orgDashboard.hrAdmins, icon: Users, current: currentUsage.hrAdmins, limit: currentLimits.hrAdmins },
+    { label: t.hrDashboard.totalParticipants, icon: FolderOpen, current: currentUsage.participants, limit: currentLimits.participants },
   ];
 
   const getPrice = (plan: Plan) => {
@@ -263,11 +255,20 @@ export default function Subscription() {
   };
 
   const canCheckout = (plan: Plan) => {
+    if (plan.slug === currentPlanSlug) return false;
+    // Existing Stripe subscribers can always switch plans
+    if (subscription?.stripe_subscription_id) return true;
+    // New subscribers need a Stripe price configured
     const priceId = billingCycle === "annual" ? plan.stripe_price_annual_id : plan.stripe_price_monthly_id;
-    return !!priceId && plan.slug !== currentPlanSlug;
+    return !!priceId;
   };
 
   const isCurrentPlan = (plan: Plan) => plan.slug === currentPlanSlug;
+
+  const isUpgrade = (plan: Plan) => {
+    const currentPlanObj = plans.find(p => p.slug === currentPlanSlug);
+    return (plan.sort_order ?? 0) > (currentPlanObj?.sort_order ?? 0);
+  };
 
   return (
     <DashboardLayout activeItem="Subscription">
@@ -412,7 +413,9 @@ export default function Subscription() {
               const canBuy = canCheckout(plan);
               const isCheckingOut = checkingOut === plan.id;
               const features = Array.isArray(plan.features) ? plan.features : [];
-              const planLimits = PLAN_LIMITS[plan.slug] || { assessments: 0, hrAdmins: 0, participants: 0 };
+              const planMaxAssessments = plan.max_assessments ?? 0;
+              const planMaxUsers = plan.max_users ?? 0;
+              const planMaxGroups = plan.max_groups ?? 0;
 
               return (
                 <Card
@@ -452,22 +455,22 @@ export default function Subscription() {
                       <p className="text-sm text-muted-foreground">{plan.description}</p>
                     )}
 
-                    {/* Limits */}
+                    {/* Limits from DB */}
                     <div className="space-y-1.5 text-sm">
                       <p>
                         <span className="font-medium">
-                          {planLimits.assessments === -1 ? "Unlimited" : planLimits.assessments}
+                          {planMaxAssessments === -1 ? "Unlimited" : (planMaxAssessments || "—")}
                         </span> assessments
                       </p>
                       <p>
                         <span className="font-medium">
-                          {planLimits.hrAdmins === -1 ? "Unlimited" : planLimits.hrAdmins}
+                          {planMaxUsers === -1 ? "Unlimited" : (planMaxUsers || "—")}
                         </span> HR admins
                       </p>
                       <p>
                         <span className="font-medium">
-                          {planLimits.participants === -1 ? "Unlimited" : planLimits.participants}
-                        </span> participants/mo
+                          {planMaxGroups === -1 ? "Unlimited" : (planMaxGroups || "—")}
+                        </span> groups
                       </p>
                     </div>
 
@@ -501,7 +504,7 @@ export default function Subscription() {
                           ) : (
                             <Zap className="w-4 h-4 me-2" />
                           )}
-                          {isCheckingOut ? "Redirecting..." : "Upgrade"}
+                          {isCheckingOut ? "Processing..." : isUpgrade(plan) ? "Upgrade" : "Switch Plan"}
                         </Button>
                       ) : (
                         <Button variant="outline" className="w-full" disabled>

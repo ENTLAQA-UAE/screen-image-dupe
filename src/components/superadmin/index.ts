@@ -7,3 +7,4 @@ export { SubscriptionsSection } from './SubscriptionsSection';
 export { SettingsSection } from './SettingsSection';
 export { StripeSettingsSection } from './StripeSettingsSection';
 export { ManageSubscriptionDialog } from './ManageSubscriptionDialog';
+export { PlanManagementSection } from './PlanManagementSection';
