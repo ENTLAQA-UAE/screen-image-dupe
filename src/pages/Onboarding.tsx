@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Building2, ArrowRight, Loader2, Sparkles } from 'lucide-react';
@@ -16,22 +16,79 @@ export default function Onboarding() {
   const { t, dir } = useLanguage();
   const { toast } = useToast();
 
-  const [orgName, setOrgName] = useState('');
+  // Pre-fill from signup metadata if available
+  const metaOrgName = user?.user_metadata?.organization_name || '';
+  const [orgName, setOrgName] = useState(metaOrgName);
   const [slug, setSlug] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const autoSubmittedRef = useRef(false);
+
+  const generateSlug = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .slice(0, 50);
 
   // Auto-generate slug from org name
   const handleNameChange = (value: string) => {
     setOrgName(value);
-    setSlug(
-      value
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .slice(0, 50)
-    );
+    setSlug(generateSlug(value));
   };
+
+  // If org name came from signup metadata, auto-submit once
+  useEffect(() => {
+    if (metaOrgName && user && !authLoading && !autoSubmittedRef.current) {
+      autoSubmittedRef.current = true;
+      setOrgName(metaOrgName);
+      setSlug(generateSlug(metaOrgName));
+      // Auto-submit via a synthetic event
+      const doAutoCreate = async () => {
+        setIsSubmitting(true);
+        try {
+          const autoSlug = generateSlug(metaOrgName);
+          const { data: org, error: orgError } = await supabase
+            .from('organizations')
+            .insert({
+              name: metaOrgName.trim(),
+              slug: autoSlug || null,
+              plan: 'free',
+              is_active: true,
+            })
+            .select('id')
+            .single();
+
+          if (orgError) throw orgError;
+
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({ organization_id: org.id })
+            .eq('id', user.id);
+
+          if (profileError) throw profileError;
+
+          const { error: roleError } = await supabase
+            .from('user_roles')
+            .insert({ user_id: user.id, role: 'org_admin' });
+
+          if (roleError && !roleError.message.includes('duplicate')) throw roleError;
+
+          toast({
+            title: 'Organization created!',
+            description: 'Your 14-day free trial has started. Explore the platform!',
+          });
+
+          navigate('/dashboard', { replace: true });
+        } catch (err: any) {
+          console.error('Auto-onboarding error:', err);
+          // Fall through to manual form — user can fix and retry
+          setIsSubmitting(false);
+        }
+      };
+      doAutoCreate();
+    }
+  }, [metaOrgName, user, authLoading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

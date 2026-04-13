@@ -1,9 +1,8 @@
 import { motion } from 'framer-motion';
-import { Settings, Shield, CreditCard } from 'lucide-react';
+import { Settings, Shield } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
-import { Input } from '@/components/ui/input';
+import { PlanManagementSection } from './PlanManagementSection';
 
 export function SettingsSection() {
   return (
@@ -109,93 +108,9 @@ export function SettingsSection() {
         </Card>
       </div>
 
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Default Plan Limits
-          </CardTitle>
-          <CardDescription>Configure default limits for subscription plans</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Plan</TableHead>
-                <TableHead className="text-center">Assessments</TableHead>
-                <TableHead className="text-center">Participants/Month</TableHead>
-                <TableHead className="text-center">HR Admins</TableHead>
-                <TableHead className="text-center">AI Credits</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell className="font-medium">Free</TableCell>
-                <TableCell className="text-center">
-                  <Input type="number" defaultValue={5} className="w-20 mx-auto text-center" />
-                </TableCell>
-                <TableCell className="text-center">
-                  <Input type="number" defaultValue={50} className="w-20 mx-auto text-center" />
-                </TableCell>
-                <TableCell className="text-center">
-                  <Input type="number" defaultValue={1} className="w-20 mx-auto text-center" />
-                </TableCell>
-                <TableCell className="text-center">
-                  <Input type="number" defaultValue={10} className="w-20 mx-auto text-center" />
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">Starter</TableCell>
-                <TableCell className="text-center">
-                  <Input type="number" defaultValue={25} className="w-20 mx-auto text-center" />
-                </TableCell>
-                <TableCell className="text-center">
-                  <Input type="number" defaultValue={250} className="w-20 mx-auto text-center" />
-                </TableCell>
-                <TableCell className="text-center">
-                  <Input type="number" defaultValue={3} className="w-20 mx-auto text-center" />
-                </TableCell>
-                <TableCell className="text-center">
-                  <Input type="number" defaultValue={50} className="w-20 mx-auto text-center" />
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">Professional</TableCell>
-                <TableCell className="text-center">
-                  <Input type="number" defaultValue={-1} className="w-20 mx-auto text-center" />
-                </TableCell>
-                <TableCell className="text-center">
-                  <Input type="number" defaultValue={1000} className="w-20 mx-auto text-center" />
-                </TableCell>
-                <TableCell className="text-center">
-                  <Input type="number" defaultValue={10} className="w-20 mx-auto text-center" />
-                </TableCell>
-                <TableCell className="text-center">
-                  <Input type="number" defaultValue={200} className="w-20 mx-auto text-center" />
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">Enterprise</TableCell>
-                <TableCell className="text-center">
-                  <Input type="number" defaultValue={-1} className="w-20 mx-auto text-center" />
-                </TableCell>
-                <TableCell className="text-center">
-                  <Input type="number" defaultValue={-1} className="w-20 mx-auto text-center" />
-                </TableCell>
-                <TableCell className="text-center">
-                  <Input type="number" defaultValue={-1} className="w-20 mx-auto text-center" />
-                </TableCell>
-                <TableCell className="text-center">
-                  <Input type="number" defaultValue={-1} className="w-20 mx-auto text-center" />
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-          <p className="text-xs text-muted-foreground mt-4">
-            Use -1 for unlimited. Changes will apply to new organizations only.
-          </p>
-        </CardContent>
-      </Card>
+      <div className="mt-6">
+        <PlanManagementSection />
+      </div>
     </motion.div>
   );
 }
