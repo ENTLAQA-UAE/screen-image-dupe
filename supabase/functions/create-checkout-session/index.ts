@@ -75,14 +75,17 @@ serve(async (req) => {
       );
     }
 
-    // Determine the correct Stripe price ID
+    // Determine the correct Stripe price ID (optional — can use inline price_data)
     const stripePriceId = billingCycle === "annual"
       ? plan.stripe_price_annual_id
       : plan.stripe_price_monthly_id;
 
-    if (!stripePriceId) {
+    // Calculate price in cents for inline pricing
+    const priceUsd = billingCycle === "annual" ? plan.price_annual_usd : plan.price_monthly_usd;
+
+    if (!stripePriceId && (!priceUsd || priceUsd <= 0)) {
       return new Response(
-        JSON.stringify({ error: "Stripe price not configured for this plan and billing cycle" }),
+        JSON.stringify({ error: "No price configured for this plan and billing cycle" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -140,11 +143,29 @@ serve(async (req) => {
         .eq("organization_id", profile.organization_id);
     }
 
+    // Build line item — use existing Stripe Price ID if available, otherwise inline price_data
+    const lineItem = stripePriceId
+      ? { price: stripePriceId, quantity: 1 }
+      : {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `${plan.name} Plan`,
+              description: plan.slug,
+            },
+            unit_amount: Math.round(priceUsd! * 100),
+            recurring: {
+              interval: billingCycle === "annual" ? "year" as const : "month" as const,
+            },
+          },
+          quantity: 1,
+        };
+
     // Create Checkout Session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: "subscription",
-      line_items: [{ price: stripePriceId, quantity: 1 }],
+      line_items: [lineItem],
       success_url: successUrl || `${req.headers.get("origin")}/subscription?checkout=success`,
       cancel_url: cancelUrl || `${req.headers.get("origin")}/subscription?checkout=cancel`,
       subscription_data: {
