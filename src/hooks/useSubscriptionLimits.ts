@@ -2,13 +2,25 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
-// Plan limits configuration
-export const PLAN_LIMITS: Record<string, { assessments: number; groups: number; participants: number; hrAdmins: number }> = {
+/**
+ * Fallback limits used when a plan isn't found in the DB.
+ * The real source of truth is the `plans` table columns:
+ * max_assessments, max_groups, max_users (HR admins).
+ * -1 = unlimited.
+ */
+const FALLBACK_LIMITS: Record<string, PlanLimits> = {
   free: { assessments: 5, groups: 3, participants: 50, hrAdmins: 2 },
   starter: { assessments: 20, groups: 10, participants: 200, hrAdmins: 5 },
   professional: { assessments: 100, groups: 50, participants: 1000, hrAdmins: 15 },
-  enterprise: { assessments: -1, groups: -1, participants: -1, hrAdmins: -1 }, // -1 = unlimited
+  enterprise: { assessments: -1, groups: -1, participants: -1, hrAdmins: -1 },
 };
+
+export interface PlanLimits {
+  assessments: number;
+  groups: number;
+  participants: number;
+  hrAdmins: number;
+}
 
 export interface UsageStats {
   assessments: number;
@@ -19,22 +31,44 @@ export interface UsageStats {
 
 export interface SubscriptionLimits {
   plan: string;
-  limits: typeof PLAN_LIMITS[string];
+  limits: PlanLimits;
   usage: UsageStats;
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
-  canCreate: (resource: "assessments" | "groups" | "participants" | "hrAdmins") => boolean;
-  getRemainingCount: (resource: "assessments" | "groups" | "participants" | "hrAdmins") => number;
-  getUsagePercentage: (resource: "assessments" | "groups" | "participants" | "hrAdmins") => number;
-  isNearLimit: (resource: "assessments" | "groups" | "participants" | "hrAdmins") => boolean;
+  canCreate: (resource: keyof PlanLimits) => boolean;
+  getRemainingCount: (resource: keyof PlanLimits) => number;
+  getUsagePercentage: (resource: keyof PlanLimits) => number;
+  isNearLimit: (resource: keyof PlanLimits) => boolean;
   organizationId: string | null;
+}
+
+/**
+ * Resolve plan limits from DB plan columns, falling back to hardcoded defaults.
+ */
+function resolveLimits(
+  planSlug: string,
+  dbPlan: { max_assessments: number | null; max_groups: number | null; max_users: number | null } | null
+): PlanLimits {
+  const fallback = FALLBACK_LIMITS[planSlug] || FALLBACK_LIMITS.free;
+
+  if (!dbPlan) return fallback;
+
+  return {
+    assessments: dbPlan.max_assessments ?? fallback.assessments,
+    groups: dbPlan.max_groups ?? fallback.groups,
+    // max_users in the plans table maps to HR admins
+    hrAdmins: dbPlan.max_users ?? fallback.hrAdmins,
+    // participants still use fallback until plans table gets a max_participants column
+    participants: fallback.participants,
+  };
 }
 
 export function useSubscriptionLimits(): SubscriptionLimits {
   const { user } = useAuth();
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [plan, setPlan] = useState("free");
+  const [limits, setLimits] = useState<PlanLimits>(FALLBACK_LIMITS.free);
   const [usage, setUsage] = useState<UsageStats>({
     assessments: 0,
     groups: 0,
@@ -43,8 +77,6 @@ export function useSubscriptionLimits(): SubscriptionLimits {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
 
   const fetchUsage = useCallback(async () => {
     if (!user) {
@@ -70,18 +102,14 @@ export function useSubscriptionLimits(): SubscriptionLimits {
 
       setOrganizationId(profile.organization_id);
 
-      // Get organization plan
-      const { data: org, error: orgError } = await supabase
-        .from("organizations")
-        .select("plan")
-        .eq("id", profile.organization_id)
-        .single();
-
-      if (orgError) throw orgError;
-      setPlan(org?.plan || "free");
-
-      // Fetch all counts in parallel
-      const [assessmentsRes, groupsRes, participantsRes, profilesRes] = await Promise.all([
+      // Get org plan slug, then fetch plan limits from DB via subscription → plans join
+      const [orgRes, subRes, assessmentsRes, groupsRes, participantsRes, profilesRes] = await Promise.all([
+        supabase.from("organizations").select("plan").eq("id", profile.organization_id).single(),
+        supabase
+          .from("subscriptions")
+          .select("plans (slug, max_assessments, max_groups, max_users)")
+          .eq("organization_id", profile.organization_id)
+          .maybeSingle(),
         supabase
           .from("assessments")
           .select("id", { count: "exact", head: true })
@@ -99,6 +127,12 @@ export function useSubscriptionLimits(): SubscriptionLimits {
           .select("id", { count: "exact", head: true })
           .eq("organization_id", profile.organization_id),
       ]);
+
+      const planSlug = (subRes.data?.plans as any)?.slug || orgRes.data?.plan || "free";
+      setPlan(planSlug);
+
+      const dbPlan = subRes.data?.plans as { max_assessments: number | null; max_groups: number | null; max_users: number | null } | null;
+      setLimits(resolveLimits(planSlug, dbPlan));
 
       setUsage({
         assessments: assessmentsRes.count || 0,
@@ -119,16 +153,16 @@ export function useSubscriptionLimits(): SubscriptionLimits {
   }, [fetchUsage]);
 
   const canCreate = useCallback(
-    (resource: "assessments" | "groups" | "participants" | "hrAdmins"): boolean => {
+    (resource: keyof PlanLimits): boolean => {
       const limit = limits[resource];
-      if (limit === -1) return true; // Unlimited
+      if (limit === -1) return true;
       return usage[resource] < limit;
     },
     [limits, usage]
   );
 
   const getRemainingCount = useCallback(
-    (resource: "assessments" | "groups" | "participants" | "hrAdmins"): number => {
+    (resource: keyof PlanLimits): number => {
       const limit = limits[resource];
       if (limit === -1) return Infinity;
       return Math.max(0, limit - usage[resource]);
@@ -137,7 +171,7 @@ export function useSubscriptionLimits(): SubscriptionLimits {
   );
 
   const getUsagePercentage = useCallback(
-    (resource: "assessments" | "groups" | "participants" | "hrAdmins"): number => {
+    (resource: keyof PlanLimits): number => {
       const limit = limits[resource];
       if (limit === -1) return 0;
       return Math.min(100, (usage[resource] / limit) * 100);
@@ -146,9 +180,8 @@ export function useSubscriptionLimits(): SubscriptionLimits {
   );
 
   const isNearLimit = useCallback(
-    (resource: "assessments" | "groups" | "participants" | "hrAdmins"): boolean => {
-      const percentage = getUsagePercentage(resource);
-      return percentage >= 80;
+    (resource: keyof PlanLimits): boolean => {
+      return getUsagePercentage(resource) >= 80;
     },
     [getUsagePercentage]
   );
