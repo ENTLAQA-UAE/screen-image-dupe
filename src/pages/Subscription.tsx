@@ -6,7 +6,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { getStripe } from "@/lib/stripe";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -127,7 +126,7 @@ export default function Subscription() {
     setCheckingOut(plan.id);
 
     try {
-      // If user already has a Stripe subscription, use update-subscription (proration)
+      // Existing Stripe subscriber → update with proration
       if (subscription?.stripe_subscription_id) {
         const response = await supabase.functions.invoke("update-subscription", {
           body: { planId: plan.id, billingCycle },
@@ -137,27 +136,16 @@ export default function Subscription() {
           throw new Error(response.error.message || "Failed to update subscription");
         }
 
-        const { message, isUpgrade } = response.data;
+        const { message, isUpgrade: isUp } = response.data;
         toast({
-          title: isUpgrade ? "Plan upgraded!" : "Plan changed",
+          title: isUp ? "Plan upgraded!" : "Plan changed",
           description: message,
         });
         refresh();
         return;
       }
 
-      // New subscriber — go through Stripe Checkout
-      const stripe = await getStripe();
-      if (!stripe) {
-        toast({
-          variant: "destructive",
-          title: "Stripe not configured",
-          description: "Payment processing is not set up. Please contact your administrator.",
-        });
-        setCheckingOut(null);
-        return;
-      }
-
+      // New subscriber → Stripe Checkout (works with or without pre-configured Price IDs)
       const response = await supabase.functions.invoke("create-checkout-session", {
         body: {
           planId: plan.id,
@@ -256,11 +244,7 @@ export default function Subscription() {
 
   const canCheckout = (plan: Plan) => {
     if (plan.slug === currentPlanSlug) return false;
-    // Existing Stripe subscribers can always switch plans
-    if (subscription?.stripe_subscription_id) return true;
-    // New subscribers need a Stripe price configured
-    const priceId = billingCycle === "annual" ? plan.stripe_price_annual_id : plan.stripe_price_monthly_id;
-    return !!priceId;
+    return true;
   };
 
   const isCurrentPlan = (plan: Plan) => plan.slug === currentPlanSlug;
@@ -501,17 +485,14 @@ export default function Subscription() {
                         >
                           {isCheckingOut ? (
                             <Loader2 className="w-4 h-4 me-2 animate-spin" />
-                          ) : (
+                          ) : isUpgrade(plan) ? (
                             <Zap className="w-4 h-4 me-2" />
+                          ) : (
+                            <ArrowUpRight className="w-4 h-4 me-2" />
                           )}
                           {isCheckingOut ? "Processing..." : isUpgrade(plan) ? "Upgrade" : "Switch Plan"}
                         </Button>
-                      ) : (
-                        <Button variant="outline" className="w-full" disabled>
-                          <ArrowUpRight className="w-4 h-4 me-2" />
-                          Contact Sales
-                        </Button>
-                      )}
+                      ) : null}
                     </div>
                   </CardContent>
                 </Card>
