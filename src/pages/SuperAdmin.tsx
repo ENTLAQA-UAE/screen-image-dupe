@@ -12,6 +12,7 @@ import {
   UsersSection,
   SubscriptionsSection,
   SettingsSection,
+  StripeSettingsSection,
   Organization,
   OrganizationStats,
   UserWithRole,
@@ -130,6 +131,7 @@ export default function SuperAdmin() {
       users: 'Users & Roles',
       subscriptions: 'Subscriptions',
       settings: 'Platform Settings',
+      stripe: 'Stripe Settings',
     };
     return titles[activeSection];
   };
@@ -227,6 +229,10 @@ export default function SuperAdmin() {
 
           {activeSection === 'settings' && (
             <SettingsSection />
+          )}
+
+          {activeSection === 'stripe' && (
+            <StripeSettingsSection onBack={() => setActiveSection('settings')} />
           )}
         </div>
       </main>

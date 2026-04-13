@@ -5,3 +5,4 @@ export { OrganizationsSection } from './OrganizationsSection';
 export { UsersSection } from './UsersSection';
 export { SubscriptionsSection } from './SubscriptionsSection';
 export { SettingsSection } from './SettingsSection';
+export { StripeSettingsSection } from './StripeSettingsSection';

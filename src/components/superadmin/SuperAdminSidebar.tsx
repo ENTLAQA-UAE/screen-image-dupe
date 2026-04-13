@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Shield, LogOut, BarChart3, Building2, UserCog, CreditCard, Settings, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Shield, LogOut, BarChart3, Building2, UserCog, CreditCard, Settings, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { ActiveSection } from './types';
 
@@ -18,6 +18,7 @@ const navItems = [
   { id: 'users' as ActiveSection, icon: UserCog, labelEn: 'Users & Roles', labelAr: 'المستخدمون والأدوار' },
   { id: 'subscriptions' as ActiveSection, icon: CreditCard, labelEn: 'Subscriptions', labelAr: 'الاشتراكات' },
   { id: 'settings' as ActiveSection, icon: Settings, labelEn: 'Platform Settings', labelAr: 'إعدادات المنصة' },
+  { id: 'stripe' as ActiveSection, icon: Zap, labelEn: 'Stripe Settings', labelAr: 'إعدادات الدفع' },
 ];
 
 export function SuperAdminSidebar({ activeSection, setActiveSection, userName, onSignOut, collapsed = false, onToggleCollapse }: SuperAdminSidebarProps) {
