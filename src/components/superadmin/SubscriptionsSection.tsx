@@ -1,10 +1,22 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Crown } from 'lucide-react';
+import { Crown, Clock, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 import { Organization, OrganizationStats, planColors, planFeatures } from './types';
+
+interface OrgSubscription {
+  organization_id: string;
+  status: string;
+  trial_end: string | null;
+  current_period_end: string;
+  payment_method: string;
+  plan_id: string;
+  plans: { name: string; slug: string } | null;
+}
 
 interface SubscriptionsSectionProps {
   organizations: Organization[];
@@ -13,11 +25,83 @@ interface SubscriptionsSectionProps {
 }
 
 export function SubscriptionsSection({ organizations, orgStats, onEditOrg }: SubscriptionsSectionProps) {
+  const [subscriptions, setSubscriptions] = useState<Record<string, OrgSubscription>>({});
+
+  useEffect(() => {
+    fetchSubscriptions();
+  }, [organizations]);
+
+  const fetchSubscriptions = async () => {
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('organization_id, status, trial_end, current_period_end, payment_method, plan_id, plans (name, slug)');
+
+    if (!error && data) {
+      const map: Record<string, OrgSubscription> = {};
+      data.forEach((s) => {
+        map[s.organization_id] = {
+          ...s,
+          plans: s.plans as OrgSubscription['plans'],
+        };
+      });
+      setSubscriptions(map);
+    }
+  };
+
   const planBreakdown = organizations.reduce((acc, org) => {
     const plan = org.plan || 'free';
     acc[plan] = (acc[plan] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
+
+  const trialCount = Object.values(subscriptions).filter(s => s.status === 'trial').length;
+  const activeCount = Object.values(subscriptions).filter(s => s.status === 'active').length;
+  const expiredCount = Object.values(subscriptions).filter(s => {
+    if (s.status !== 'trial' || !s.trial_end) return false;
+    return new Date(s.trial_end) < new Date();
+  }).length;
+
+  const getStatusBadge = (orgId: string) => {
+    const sub = subscriptions[orgId];
+    if (!sub) return <Badge variant="outline" className="text-muted-foreground">No subscription</Badge>;
+
+    const now = new Date();
+    const trialEnd = sub.trial_end ? new Date(sub.trial_end) : null;
+
+    if (sub.status === 'trial' && trialEnd) {
+      if (trialEnd < now) {
+        return (
+          <Badge variant="destructive" className="flex items-center gap-1 w-fit">
+            <XCircle className="w-3 h-3" /> Trial expired
+          </Badge>
+        );
+      }
+      const daysLeft = Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      return (
+        <Badge className="bg-amber-500/10 text-amber-700 border-amber-500/20 flex items-center gap-1 w-fit">
+          <Clock className="w-3 h-3" /> Trial · {daysLeft}d left
+        </Badge>
+      );
+    }
+
+    if (sub.status === 'active') {
+      return (
+        <Badge className="bg-green-500/10 text-green-700 border-green-500/20 flex items-center gap-1 w-fit">
+          <CheckCircle2 className="w-3 h-3" /> Active
+        </Badge>
+      );
+    }
+
+    if (sub.status === 'canceled') {
+      return (
+        <Badge variant="outline" className="text-muted-foreground flex items-center gap-1 w-fit">
+          <AlertTriangle className="w-3 h-3" /> Canceled
+        </Badge>
+      );
+    }
+
+    return <Badge variant="outline">{sub.status}</Badge>;
+  };
 
   return (
     <motion.div
@@ -31,6 +115,31 @@ export function SubscriptionsSection({ organizations, orgStats, onEditOrg }: Sub
         <p className="text-muted-foreground">
           Manage subscription plans and view plan distribution
         </p>
+      </div>
+
+      {/* Status Overview */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="bg-card rounded-xl border border-border/60 p-4">
+          <div className="flex items-start justify-between mb-2">
+            <p className="text-sm font-medium text-muted-foreground">Active</p>
+            <CheckCircle2 className="w-4 h-4 text-green-500" />
+          </div>
+          <p className="text-2xl font-bold text-foreground">{activeCount}</p>
+        </div>
+        <div className="bg-card rounded-xl border border-border/60 p-4">
+          <div className="flex items-start justify-between mb-2">
+            <p className="text-sm font-medium text-muted-foreground">On Trial</p>
+            <Clock className="w-4 h-4 text-amber-500" />
+          </div>
+          <p className="text-2xl font-bold text-foreground">{trialCount - expiredCount}</p>
+        </div>
+        <div className="bg-card rounded-xl border border-border/60 p-4">
+          <div className="flex items-start justify-between mb-2">
+            <p className="text-sm font-medium text-muted-foreground">Expired</p>
+            <XCircle className="w-4 h-4 text-destructive" />
+          </div>
+          <p className="text-2xl font-bold text-foreground">{expiredCount}</p>
+        </div>
       </div>
 
       {/* Plan Cards */}
@@ -74,7 +183,8 @@ export function SubscriptionsSection({ organizations, orgStats, onEditOrg }: Sub
             <TableHeader>
               <TableRow>
                 <TableHead>Organization</TableHead>
-                <TableHead>Current Plan</TableHead>
+                <TableHead>Plan</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-center">Usage</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -84,9 +194,9 @@ export function SubscriptionsSection({ organizations, orgStats, onEditOrg }: Sub
                 <TableRow key={org.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div 
+                      <div
                         className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs"
-                        style={{ backgroundColor: org.primary_color || '#0f172a' }}
+                        style={{ backgroundColor: org.primary_color || '#4F46E5' }}
                       >
                         {org.name.charAt(0).toUpperCase()}
                       </div>
@@ -97,6 +207,9 @@ export function SubscriptionsSection({ organizations, orgStats, onEditOrg }: Sub
                     <Badge className={planColors[org.plan || 'free']}>
                       {org.plan || 'free'}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {getStatusBadge(org.id)}
                   </TableCell>
                   <TableCell className="text-center">
                     <span className="text-sm text-muted-foreground">
@@ -109,7 +222,7 @@ export function SubscriptionsSection({ organizations, orgStats, onEditOrg }: Sub
                       size="sm"
                       onClick={() => onEditOrg(org)}
                     >
-                      Change Plan
+                      Manage
                     </Button>
                   </TableCell>
                 </TableRow>

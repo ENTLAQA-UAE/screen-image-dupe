@@ -26,6 +26,7 @@ import Auth from "./pages/Auth";
 import SuperAdmin from "./pages/SuperAdmin";
 import UserManagement from "./pages/UserManagement";
 import Subscription from "./pages/Subscription";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import PrintPreview from "./pages/PrintPreview";
 
@@ -44,7 +45,15 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route 
+              <Route
+                path="/onboarding"
+                element={
+                  <ProtectedRoute skipSubscriptionCheck>
+                    <Onboarding />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/dashboard" 
                 element={
                   <ProtectedRoute>

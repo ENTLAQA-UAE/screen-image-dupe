@@ -5,6 +5,8 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useOrganizationBranding } from "@/contexts/OrganizationBrandingContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { NotificationCenter } from "@/components/dashboard/NotificationCenter";
+import { TrialBanner } from "@/components/TrialBanner";
+import { TrialExpiredGate } from "@/components/TrialExpiredGate";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
@@ -345,6 +347,11 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
           </div>
         </header>
 
+        {/* Trial Banner */}
+        <div style={{ [isRTL ? 'marginRight' : 'marginLeft']: contentOffset }}>
+          <TrialBanner />
+        </div>
+
         {/* Page Content */}
         <main
           className="min-h-[calc(100vh-4rem)]"
@@ -352,9 +359,11 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
             [isRTL ? 'marginRight' : 'marginLeft']: contentOffset,
           }}
         >
-          <div className="p-4 sm:p-6 lg:p-8">
-            {children}
-          </div>
+          <TrialExpiredGate>
+            <div className="p-4 sm:p-6 lg:p-8">
+              {children}
+            </div>
+          </TrialExpiredGate>
         </main>
       </div>
     </div>
