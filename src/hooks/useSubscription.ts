@@ -127,7 +127,7 @@ export function useSubscription(): SubscriptionState {
   const isTrial = subscription?.status === 'trial';
   const isTrialExpired = isTrial && trialEnd ? trialEnd < now : false;
   const isActive = subscription?.status === 'active' || (isTrial && !isTrialExpired);
-  const isPaid = subscription?.status === 'active' && subscription.payment_method !== 'none';
+  const isPaid = subscription?.status === 'active' && subscription.payment_method === 'stripe';
 
   const daysRemaining = (() => {
     if (isTrial && trialEnd) {
