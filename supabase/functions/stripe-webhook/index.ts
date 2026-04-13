@@ -21,7 +21,7 @@ serve(async (req) => {
     const { data: provider } = await supabase
       .from("payment_providers")
       .select("api_key_encrypted, webhook_secret_encrypted")
-      .eq("provider", "stripe")
+      .eq("provider_type", "stripe")
       .eq("is_active", true)
       .single();
 
