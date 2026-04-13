@@ -48,22 +48,22 @@ export default function Onboarding() {
         setIsSubmitting(true);
         try {
           const autoSlug = generateSlug(metaOrgName);
-          const { data: org, error: orgError } = await supabase
+          const orgId = crypto.randomUUID();
+          const { error: orgError } = await supabase
             .from('organizations')
             .insert({
+              id: orgId,
               name: metaOrgName.trim(),
               slug: autoSlug || null,
               plan: 'free',
               is_active: true,
-            })
-            .select('id')
-            .single();
+            });
 
           if (orgError) throw orgError;
 
           const { error: profileError } = await supabase
             .from('profiles')
-            .update({ organization_id: org.id })
+            .update({ organization_id: orgId })
             .eq('id', user.id);
 
           if (profileError) throw profileError;
@@ -96,24 +96,24 @@ export default function Onboarding() {
 
     setIsSubmitting(true);
     try {
-      // 1. Create the organization
-      const { data: org, error: orgError } = await supabase
+      // 1. Create the organization (generate ID client-side to avoid SELECT RLS issue)
+      const orgId = crypto.randomUUID();
+      const { error: orgError } = await supabase
         .from('organizations')
         .insert({
+          id: orgId,
           name: orgName.trim(),
           slug: slug || null,
           plan: 'free',
           is_active: true,
-        })
-        .select('id')
-        .single();
+        });
 
       if (orgError) throw orgError;
 
       // 2. Link user profile to org
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ organization_id: org.id })
+        .update({ organization_id: orgId })
         .eq('id', user.id);
 
       if (profileError) throw profileError;
