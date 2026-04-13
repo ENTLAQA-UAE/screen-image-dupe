@@ -32,7 +32,7 @@ BEGIN
       free_plan_id,
       'trial',
       'monthly',
-      'none',
+      'free_trial',
       now(),
       now() + interval '14 days',
       now() + interval '14 days'
