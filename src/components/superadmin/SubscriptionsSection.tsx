@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Organization, OrganizationStats, planColors } from './types';
+import { ManageSubscriptionDialog } from './ManageSubscriptionDialog';
 
 interface OrgSubscription {
   organization_id: string;
@@ -27,11 +28,13 @@ interface OrgSubscription {
 interface SubscriptionsSectionProps {
   organizations: Organization[];
   orgStats: Record<string, OrganizationStats>;
-  onEditOrg: (org: Organization) => void;
+  onEditOrg?: (org: Organization) => void;
 }
 
 export function SubscriptionsSection({ organizations, orgStats, onEditOrg }: SubscriptionsSectionProps) {
   const [subscriptions, setSubscriptions] = useState<Record<string, OrgSubscription>>({});
+  const [managingOrg, setManagingOrg] = useState<Organization | null>(null);
+  const [isManageSubOpen, setIsManageSubOpen] = useState(false);
 
   useEffect(() => {
     fetchSubscriptions();
@@ -324,7 +327,7 @@ export function SubscriptionsSection({ organizations, orgStats, onEditOrg }: Sub
                           variant="ghost"
                           size="sm"
                           className="text-primary hover:text-primary/80 text-xs gap-1.5"
-                          onClick={() => onEditOrg(org)}
+                          onClick={() => { setManagingOrg(org); setIsManageSubOpen(true); }}
                         >
                           <Pencil className="w-3.5 h-3.5" />
                           Manage Subscription
@@ -338,6 +341,14 @@ export function SubscriptionsSection({ organizations, orgStats, onEditOrg }: Sub
           </div>
         </CardContent>
       </Card>
+
+      {/* Manage Subscription Dialog */}
+      <ManageSubscriptionDialog
+        open={isManageSubOpen}
+        onOpenChange={setIsManageSubOpen}
+        organization={managingOrg}
+        onRefresh={fetchSubscriptions}
+      />
     </motion.div>
   );
 }

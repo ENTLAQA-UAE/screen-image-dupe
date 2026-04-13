@@ -223,7 +223,6 @@ export default function SuperAdmin() {
             <SubscriptionsSection
               organizations={organizations}
               orgStats={orgStats}
-              onEditOrg={() => setActiveSection('organizations')}
             />
           )}
 
