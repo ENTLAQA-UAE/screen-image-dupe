@@ -31,10 +31,32 @@ export default function Onboarding() {
       .replace(/-+/g, '-')
       .slice(0, 50);
 
-  // Auto-generate slug from org name
   const handleNameChange = (value: string) => {
     setOrgName(value);
     setSlug(generateSlug(value));
+  };
+
+  /**
+   * Single RPC call that atomically:
+   * 1. Creates the organization
+   * 2. Links the user's profile
+   * 3. Assigns org_admin role
+   * The DB trigger then auto-creates the 14-day trial subscription.
+   */
+  const createOrganization = async (name: string, orgSlug: string) => {
+    const { data, error } = await supabase.rpc('complete_onboarding', {
+      p_org_name: name.trim(),
+      p_org_slug: orgSlug || null,
+    });
+
+    if (error) throw error;
+
+    toast({
+      title: 'Organization created!',
+      description: 'Your 14-day free trial has started. Explore the platform!',
+    });
+
+    navigate('/dashboard', { replace: true });
   };
 
   // If org name came from signup metadata, auto-submit once
@@ -42,51 +64,14 @@ export default function Onboarding() {
     if (metaOrgName && user && !authLoading && !autoSubmittedRef.current) {
       autoSubmittedRef.current = true;
       setOrgName(metaOrgName);
-      setSlug(generateSlug(metaOrgName));
-      // Auto-submit via a synthetic event
-      const doAutoCreate = async () => {
-        setIsSubmitting(true);
-        try {
-          const autoSlug = generateSlug(metaOrgName);
-          const orgId = crypto.randomUUID();
-          const { error: orgError } = await supabase
-            .from('organizations')
-            .insert({
-              id: orgId,
-              name: metaOrgName.trim(),
-              slug: autoSlug || null,
-              plan: 'free',
-              is_active: true,
-            });
+      const autoSlug = generateSlug(metaOrgName);
+      setSlug(autoSlug);
 
-          if (orgError) throw orgError;
-
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .update({ organization_id: orgId })
-            .eq('id', user.id);
-
-          if (profileError) throw profileError;
-
-          const { error: roleError } = await supabase
-            .from('user_roles')
-            .insert({ user_id: user.id, role: 'org_admin' });
-
-          if (roleError && !roleError.message.includes('duplicate')) throw roleError;
-
-          toast({
-            title: 'Organization created!',
-            description: 'Your 14-day free trial has started. Explore the platform!',
-          });
-
-          navigate('/dashboard', { replace: true });
-        } catch (err: any) {
-          console.error('Auto-onboarding error:', err);
-          // Fall through to manual form — user can fix and retry
-          setIsSubmitting(false);
-        }
-      };
-      doAutoCreate();
+      setIsSubmitting(true);
+      createOrganization(metaOrgName, autoSlug).catch((err) => {
+        console.error('Auto-onboarding error:', err);
+        setIsSubmitting(false);
+      });
     }
   }, [metaOrgName, user, authLoading]);
 
@@ -96,41 +81,7 @@ export default function Onboarding() {
 
     setIsSubmitting(true);
     try {
-      // 1. Create the organization (generate ID client-side to avoid SELECT RLS issue)
-      const orgId = crypto.randomUUID();
-      const { error: orgError } = await supabase
-        .from('organizations')
-        .insert({
-          id: orgId,
-          name: orgName.trim(),
-          slug: slug || null,
-          plan: 'free',
-          is_active: true,
-        });
-
-      if (orgError) throw orgError;
-
-      // 2. Link user profile to org
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ organization_id: orgId })
-        .eq('id', user.id);
-
-      if (profileError) throw profileError;
-
-      // 3. Give user org_admin role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({ user_id: user.id, role: 'org_admin' });
-
-      if (roleError && !roleError.message.includes('duplicate')) throw roleError;
-
-      toast({
-        title: 'Organization created!',
-        description: 'Your 14-day free trial has started. Explore the platform!',
-      });
-
-      navigate('/dashboard', { replace: true });
+      await createOrganization(orgName, slug);
     } catch (err: any) {
       console.error('Onboarding error:', err);
       toast({
@@ -138,7 +89,6 @@ export default function Onboarding() {
         title: 'Something went wrong',
         description: err.message || 'Failed to create organization',
       });
-    } finally {
       setIsSubmitting(false);
     }
   };
