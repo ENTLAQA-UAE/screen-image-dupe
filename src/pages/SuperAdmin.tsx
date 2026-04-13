@@ -129,7 +129,7 @@ export default function SuperAdmin() {
       dashboard: 'Dashboard',
       organizations: 'Organizations',
       users: 'Users & Roles',
-      subscriptions: 'Subscriptions',
+      subscriptions: 'Billing & Payments',
       settings: 'Platform Settings',
       stripe: 'Stripe Settings',
     };

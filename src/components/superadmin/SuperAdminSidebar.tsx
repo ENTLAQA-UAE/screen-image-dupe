@@ -16,7 +16,7 @@ const navItems = [
   { id: 'dashboard' as ActiveSection, icon: BarChart3, labelEn: 'Dashboard', labelAr: 'لوحة التحكم' },
   { id: 'organizations' as ActiveSection, icon: Building2, labelEn: 'Organizations', labelAr: 'المنظمات' },
   { id: 'users' as ActiveSection, icon: UserCog, labelEn: 'Users & Roles', labelAr: 'المستخدمون والأدوار' },
-  { id: 'subscriptions' as ActiveSection, icon: CreditCard, labelEn: 'Subscriptions', labelAr: 'الاشتراكات' },
+  { id: 'subscriptions' as ActiveSection, icon: CreditCard, labelEn: 'Billing & Payments', labelAr: 'الفواتير والمدفوعات' },
   { id: 'settings' as ActiveSection, icon: Settings, labelEn: 'Platform Settings', labelAr: 'إعدادات المنصة' },
   { id: 'stripe' as ActiveSection, icon: Zap, labelEn: 'Stripe Settings', labelAr: 'إعدادات الدفع' },
 ];
