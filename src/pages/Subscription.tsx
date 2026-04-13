@@ -1,24 +1,36 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { getStripe } from "@/lib/stripe";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Loader2, CreditCard, Users, FileText, FolderOpen, Calendar, CheckCircle2, ArrowUpRight } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Loader2, CreditCard, Users, FileText, FolderOpen, Calendar,
+  CheckCircle2, ArrowUpRight, Crown, Zap, ExternalLink, Clock, Sparkles,
+} from "lucide-react";
 
-interface Organization {
+interface Plan {
   id: string;
   name: string;
-  plan: string;
-  max_hr_admins: number;
-  assessment_limit: number;
-  billing_cycle_start: string | null;
-  is_active: boolean;
+  slug: string;
+  description: string | null;
+  price_monthly_usd: number | null;
+  price_annual_usd: number | null;
+  max_assessments: number | null;
+  max_users: number | null;
+  max_groups: number | null;
+  features: any;
+  stripe_price_monthly_id: string | null;
+  stripe_price_annual_id: string | null;
+  sort_order: number | null;
 }
 
 interface UsageStats {
@@ -28,36 +40,18 @@ interface UsageStats {
   participants: number;
 }
 
-const PLAN_DETAILS: Record<string, { 
-  name: string; 
-  description: string; 
-  features: string[];
-  color: string;
-}> = {
-  free: {
-    name: "Free",
-    description: "Perfect for trying out the platform",
-    features: ["5 assessments", "3 HR admins", "50 participants/month", "Basic reports"],
-    color: "bg-muted text-muted-foreground",
-  },
-  starter: {
-    name: "Starter",
-    description: "For small teams getting started",
-    features: ["20 assessments", "5 HR admins", "200 participants/month", "Advanced reports", "Email support"],
-    color: "bg-blue-500/10 text-blue-600",
-  },
-  professional: {
-    name: "Professional",
-    description: "For growing organizations",
-    features: ["100 assessments", "15 HR admins", "1,000 participants/month", "AI-powered insights", "Priority support"],
-    color: "bg-primary/10 text-primary",
-  },
-  enterprise: {
-    name: "Enterprise",
-    description: "For large organizations with custom needs",
-    features: ["Unlimited assessments", "Unlimited HR admins", "Unlimited participants", "Custom integrations", "Dedicated support"],
-    color: "bg-accent/10 text-accent",
-  },
+const PLAN_COLORS: Record<string, string> = {
+  free: "border-border",
+  starter: "border-blue-500",
+  professional: "border-primary",
+  enterprise: "border-accent",
+};
+
+const PLAN_BADGE_COLORS: Record<string, string> = {
+  free: "bg-muted text-muted-foreground",
+  starter: "bg-blue-500/10 text-blue-600",
+  professional: "bg-primary/10 text-primary",
+  enterprise: "bg-accent/10 text-accent",
 };
 
 const PLAN_LIMITS: Record<string, { assessments: number; hrAdmins: number; participants: number }> = {
@@ -69,15 +63,43 @@ const PLAN_LIMITS: Record<string, { assessments: number; hrAdmins: number; parti
 
 export default function Subscription() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, isOrgAdmin, isSuperAdmin, loading: authLoading } = useAuth();
   const { t } = useLanguage();
-  
-  const [organization, setOrganization] = useState<Organization | null>(null);
+  const { toast } = useToast();
+  const {
+    subscription, isTrial, isTrialExpired, isActive, isPaid,
+    daysRemaining, planSlug, organizationId, loading: subLoading, refresh,
+  } = useSubscription();
+
+  const [organization, setOrganization] = useState<{ id: string; name: string; plan: string; is_active: boolean } | null>(null);
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [usage, setUsage] = useState<UsageStats | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  // Only org admins should see this page (simplified view), not super admins
-  const showSimplifiedView = isOrgAdmin() && !isSuperAdmin();
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
+  const [checkingOut, setCheckingOut] = useState<string | null>(null);
+  const [openingPortal, setOpeningPortal] = useState(false);
+
+  // Handle checkout result from URL params
+  useEffect(() => {
+    const checkout = searchParams.get("checkout");
+    if (checkout === "success") {
+      toast({
+        title: "Subscription activated!",
+        description: "Your payment was successful. Welcome to your new plan!",
+      });
+      refresh();
+      // Clean URL
+      navigate("/subscription", { replace: true });
+    } else if (checkout === "cancel") {
+      toast({
+        variant: "destructive",
+        title: "Checkout canceled",
+        description: "No changes were made to your subscription.",
+      });
+      navigate("/subscription", { replace: true });
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!authLoading && !isOrgAdmin() && !isSuperAdmin()) {
@@ -86,50 +108,33 @@ export default function Subscription() {
   }, [authLoading, isOrgAdmin, isSuperAdmin, navigate]);
 
   useEffect(() => {
-    if (user && !authLoading) {
+    if (user && !authLoading && organizationId) {
       fetchData();
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, organizationId]);
 
   const fetchData = async () => {
-    if (!user) return;
-    
+    if (!user || !organizationId) return;
     setLoading(true);
+
     try {
-      // Get organization
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("organization_id")
-        .eq("id", user.id)
-        .maybeSingle();
-      
-      if (!profile?.organization_id) {
-        setLoading(false);
-        return;
-      }
-      
-      const { data: org, error: orgError } = await supabase
-        .from("organizations")
-        .select("id, name, plan, max_hr_admins, assessment_limit, billing_cycle_start, is_active")
-        .eq("id", profile.organization_id)
-        .maybeSingle();
-      
-      if (orgError) throw orgError;
-      setOrganization(org);
-      
-      // Get usage stats
-      const [assessmentsRes, groupsRes, participantsRes, profilesRes, rolesRes] = await Promise.all([
-        supabase.from("assessments").select("id", { count: "exact" }).eq("organization_id", profile.organization_id),
-        supabase.from("assessment_groups").select("id", { count: "exact" }).eq("organization_id", profile.organization_id),
-        supabase.from("participants").select("id", { count: "exact" }).eq("organization_id", profile.organization_id),
-        supabase.from("profiles").select("id").eq("organization_id", profile.organization_id),
+      // Fetch org, plans, and usage in parallel
+      const [orgRes, plansRes, assessmentsRes, groupsRes, participantsRes, profilesRes, rolesRes] = await Promise.all([
+        supabase.from("organizations").select("id, name, plan, is_active").eq("id", organizationId).maybeSingle(),
+        supabase.from("plans").select("id, name, slug, description, price_monthly_usd, price_annual_usd, max_assessments, max_users, max_groups, features, stripe_price_monthly_id, stripe_price_annual_id, sort_order").eq("is_active", true).eq("is_public", true).order("sort_order", { ascending: true }),
+        supabase.from("assessments").select("id", { count: "exact" }).eq("organization_id", organizationId),
+        supabase.from("assessment_groups").select("id", { count: "exact" }).eq("organization_id", organizationId),
+        supabase.from("participants").select("id", { count: "exact" }).eq("organization_id", organizationId),
+        supabase.from("profiles").select("id").eq("organization_id", organizationId),
         supabase.from("user_roles").select("user_id").eq("role", "hr_admin"),
       ]);
-      
-      // Count HR admins in this org
+
+      if (orgRes.data) setOrganization(orgRes.data);
+      if (plansRes.data) setPlans(plansRes.data);
+
       const profileIds = new Set(profilesRes.data?.map(p => p.id) || []);
       const hrAdminCount = rolesRes.data?.filter(r => profileIds.has(r.user_id)).length || 0;
-      
+
       setUsage({
         assessments: assessmentsRes.count || 0,
         hrAdmins: hrAdminCount,
@@ -140,6 +145,83 @@ export default function Subscription() {
       console.error("Error fetching subscription data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCheckout = async (plan: Plan) => {
+    setCheckingOut(plan.id);
+
+    try {
+      const stripe = await getStripe();
+      if (!stripe) {
+        toast({
+          variant: "destructive",
+          title: "Stripe not configured",
+          description: "Payment processing is not set up. Please contact your administrator.",
+        });
+        setCheckingOut(null);
+        return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const response = await supabase.functions.invoke("create-checkout-session", {
+        body: {
+          planId: plan.id,
+          billingCycle,
+          successUrl: `${window.location.origin}/subscription?checkout=success`,
+          cancelUrl: `${window.location.origin}/subscription?checkout=cancel`,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to create checkout session");
+      }
+
+      const { url } = response.data;
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
+    } catch (error: any) {
+      console.error("Checkout error:", error);
+      toast({
+        variant: "destructive",
+        title: "Checkout failed",
+        description: error.message || "Something went wrong. Please try again.",
+      });
+    } finally {
+      setCheckingOut(null);
+    }
+  };
+
+  const handleOpenPortal = async () => {
+    setOpeningPortal(true);
+
+    try {
+      const response = await supabase.functions.invoke("create-portal-session", {
+        body: {
+          returnUrl: `${window.location.origin}/subscription`,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to open billing portal");
+      }
+
+      const { url } = response.data;
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Portal unavailable",
+        description: error.message || "Could not open billing portal.",
+      });
+    } finally {
+      setOpeningPortal(false);
     }
   };
 
@@ -154,22 +236,7 @@ export default function Subscription() {
     return "text-muted-foreground";
   };
 
-  const getProgressColor = (percentage: number) => {
-    if (percentage >= 90) return "bg-destructive";
-    if (percentage >= 70) return "bg-yellow-500";
-    return "bg-primary";
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "Not set";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
-  if (authLoading || loading) {
+  if (authLoading || subLoading || loading) {
     return (
       <DashboardLayout activeItem="Subscription">
         <div className="flex items-center justify-center h-64">
@@ -179,114 +246,90 @@ export default function Subscription() {
     );
   }
 
-  const plan = organization?.plan || "free";
-  const planDetails = PLAN_DETAILS[plan] || PLAN_DETAILS.free;
-  const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+  const currentPlanSlug = planSlug || organization?.plan || "free";
+  const limits = PLAN_LIMITS[currentPlanSlug] || PLAN_LIMITS.free;
 
   const usageItems = [
-    {
-      label: t.orgDashboard.assessments,
-      icon: FileText,
-      current: usage?.assessments || 0,
-      limit: organization?.assessment_limit || limits.assessments,
-    },
-    {
-      label: t.orgDashboard.hrAdmins,
-      icon: Users,
-      current: usage?.hrAdmins || 0,
-      limit: organization?.max_hr_admins || limits.hrAdmins,
-    },
-    {
-      label: t.hrDashboard.totalParticipants,
-      icon: FolderOpen,
-      current: usage?.participants || 0,
-      limit: limits.participants,
-    },
+    { label: t.orgDashboard.assessments, icon: FileText, current: usage?.assessments || 0, limit: limits.assessments },
+    { label: t.orgDashboard.hrAdmins, icon: Users, current: usage?.hrAdmins || 0, limit: limits.hrAdmins },
+    { label: t.hrDashboard.totalParticipants, icon: FolderOpen, current: usage?.participants || 0, limit: limits.participants },
   ];
+
+  const getPrice = (plan: Plan) => {
+    if (billingCycle === "annual" && plan.price_annual_usd) {
+      return Math.round(plan.price_annual_usd / 12);
+    }
+    return plan.price_monthly_usd || 0;
+  };
+
+  const canCheckout = (plan: Plan) => {
+    const priceId = billingCycle === "annual" ? plan.stripe_price_annual_id : plan.stripe_price_monthly_id;
+    return !!priceId && plan.slug !== currentPlanSlug;
+  };
+
+  const isCurrentPlan = (plan: Plan) => plan.slug === currentPlanSlug;
 
   return (
     <DashboardLayout activeItem="Subscription">
-      <div className="p-8 space-y-6">
+      <div className="space-y-6">
         {/* Header */}
-        <div>
-          <motion.h1
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-2xl font-display font-bold text-foreground mb-1"
-          >
-            {t.subscription.title}
-          </motion.h1>
-          <p className="text-muted-foreground">
-            {t.subscription.description}
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+            <h1 className="text-2xl font-bold text-foreground mb-1">{t.subscription.title}</h1>
+            <p className="text-muted-foreground">{t.subscription.description}</p>
+          </motion.div>
+
+          {/* Billing Portal Button (for paid subscribers) */}
+          {isPaid && subscription?.stripe_customer_id && (
+            <Button variant="outline" onClick={handleOpenPortal} disabled={openingPortal}>
+              {openingPortal ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <ExternalLink className="w-4 h-4 me-2" />}
+              Manage Billing
+            </Button>
+          )}
         </div>
 
-        {/* Current Plan Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <Card>
-            <CardHeader className="flex flex-row items-start justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-3">
-                  <CreditCard className="w-5 h-5" />
-                  {t.subscription.currentPlan}
-                </CardTitle>
-                <CardDescription>
-                  {t.subscription.yourSubscription}
-                </CardDescription>
-              </div>
-              <Badge className={planDetails.color}>
-                {planDetails.name}
-              </Badge>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Plan Info */}
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-lg font-semibold">{planDetails.name} Plan</h3>
-                    <p className="text-muted-foreground">{planDetails.description}</p>
+        {/* Current Plan Status Banner */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <Card className={`border-2 ${PLAN_COLORS[currentPlanSlug] || "border-border"}`}>
+            <CardContent className="py-5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Crown className="w-6 h-6 text-primary" />
                   </div>
-                  <ul className="space-y-2">
-                    {planDetails.features.map((feature, index) => (
-                      <li key={index} className="flex items-center gap-2 text-sm">
-                        <CheckCircle2 className="w-4 h-4 text-primary" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Billing Info */}
-                <div className="space-y-4">
-                  <div className="p-4 rounded-lg bg-muted/50 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">{t.subscription.organization}</span>
-                      <span className="font-medium">{organization?.name}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">{t.subscription.status}</span>
-                      <Badge variant={organization?.is_active ? "default" : "destructive"}>
-                        {organization?.is_active ? t.subscription.active : t.subscription.inactive}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-semibold">{subscription?.plan?.name || "Free"} Plan</h3>
+                      <Badge className={PLAN_BADGE_COLORS[currentPlanSlug] || PLAN_BADGE_COLORS.free}>
+                        {currentPlanSlug}
                       </Badge>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        {t.subscription.billingCycleStart}
-                      </span>
-                      <span className="font-medium">{formatDate(organization?.billing_cycle_start || null)}</span>
-                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {isTrial && !isTrialExpired && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          Trial — {daysRemaining} day{daysRemaining !== 1 ? "s" : ""} remaining
+                        </span>
+                      )}
+                      {isTrialExpired && (
+                        <span className="text-destructive flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          Trial expired — upgrade to continue
+                        </span>
+                      )}
+                      {isPaid && (
+                        <span className="flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                          Active — renews {new Date(subscription!.current_period_end).toLocaleDateString()}
+                        </span>
+                      )}
+                      {isActive && !isTrial && !isPaid && "Active"}
+                    </p>
                   </div>
-                  
-                  {plan !== "enterprise" && (
-                    <Button className="w-full" variant="outline">
-                      <ArrowUpRight className="w-4 h-4 me-2" />
-                      {t.subscription.upgradePlan}
-                    </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  {organization && (
+                    <Badge variant="outline" className="text-xs">{organization.name}</Badge>
                   )}
                 </div>
               </div>
@@ -295,50 +338,34 @@ export default function Subscription() {
         </motion.div>
 
         {/* Usage Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <Card>
-            <CardHeader>
-              <CardTitle>{t.subscription.usageOverview}</CardTitle>
-              <CardDescription>
-                {t.subscription.trackUsage}
-              </CardDescription>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base">{t.subscription.usageOverview}</CardTitle>
+              <CardDescription>{t.subscription.trackUsage}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid md:grid-cols-3 gap-6">
+              <div className="grid md:grid-cols-3 gap-4">
                 {usageItems.map((item) => {
                   const percentage = getUsagePercentage(item.current, item.limit);
                   const isUnlimited = item.limit === -1;
-                  
+
                   return (
-                    <div key={item.label} className="space-y-3 p-4 rounded-lg border bg-card">
+                    <div key={item.label} className="space-y-2.5 p-4 rounded-lg border bg-card">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <item.icon className="w-5 h-5 text-muted-foreground" />
-                          <span className="font-medium">{item.label}</span>
+                          <item.icon className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm font-medium">{item.label}</span>
                         </div>
                         <span className={`text-sm font-medium ${isUnlimited ? "text-muted-foreground" : getUsageColor(percentage)}`}>
                           {isUnlimited ? t.orgDashboard.unlimited : `${item.current} / ${item.limit}`}
                         </span>
                       </div>
                       {!isUnlimited && (
-                        <div className="space-y-1">
-                          <Progress 
-                            value={percentage} 
-                            className="h-2"
-                          />
-                          <p className="text-xs text-muted-foreground text-right">
-                            {percentage.toFixed(0)}% {t.subscription.used}
-                          </p>
-                        </div>
+                        <Progress value={percentage} className="h-1.5" />
                       )}
                       {isUnlimited && (
-                        <p className="text-xs text-muted-foreground">
-                          {item.current} {t.subscription.currentlyInUse}
-                        </p>
+                        <p className="text-xs text-muted-foreground">{item.current} {t.subscription.currentlyInUse}</p>
                       )}
                     </div>
                   );
@@ -348,64 +375,167 @@ export default function Subscription() {
           </Card>
         </motion.div>
 
-        {/* Plan Comparison - Only for super admins */}
-        {!showSimplifiedView && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>{t.subscription.availablePlans}</CardTitle>
-                <CardDescription>
-                  {t.subscription.comparePlans}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-4 gap-4">
-                  {Object.entries(PLAN_DETAILS).map(([key, details]) => {
-                    const isCurrentPlan = key === plan;
-                    const planLimits = PLAN_LIMITS[key];
-                    
-                    return (
-                      <div
-                        key={key}
-                        className={`p-4 rounded-lg border-2 transition-all ${
-                          isCurrentPlan 
-                            ? "border-primary bg-primary/5" 
-                            : "border-border hover:border-muted-foreground/50"
-                        }`}
-                      >
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <Badge className={details.color}>{details.name}</Badge>
-                            {isCurrentPlan && (
-                              <Badge variant="outline" className="text-xs">{t.subscription.current}</Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-muted-foreground">{details.description}</p>
-                          <div className="space-y-1 text-sm">
-                            <p>
-                              <span className="font-medium">
-                                {planLimits.assessments === -1 ? t.orgDashboard.unlimited : planLimits.assessments}
-                              </span> {t.subscription.assessments}
-                            </p>
-                            <p>
-                              <span className="font-medium">
-                                {planLimits.hrAdmins === -1 ? t.orgDashboard.unlimited : planLimits.hrAdmins}
-                              </span> {t.subscription.hrAdmins}
-                            </p>
-                            <p>
-                              <span className="font-medium">
-                                {planLimits.participants === -1 ? t.orgDashboard.unlimited : planLimits.participants}
-                              </span> {t.subscription.participants}
-                            </p>
-                          </div>
-                        </div>
+        {/* Plans Section */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold">{t.subscription.availablePlans}</h2>
+              <p className="text-sm text-muted-foreground">{t.subscription.comparePlans}</p>
+            </div>
+
+            {/* Billing Cycle Toggle */}
+            <div className="flex items-center bg-muted/50 rounded-lg p-1 border border-border/60">
+              <button
+                onClick={() => setBillingCycle("monthly")}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                  billingCycle === "monthly" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingCycle("annual")}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-1.5 ${
+                  billingCycle === "annual" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                Annual
+                <Badge className="bg-green-500/10 text-green-700 border-green-500/20 text-[10px] px-1.5 py-0">-20%</Badge>
+              </button>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {plans.map((plan) => {
+              const price = getPrice(plan);
+              const isCurrent = isCurrentPlan(plan);
+              const canBuy = canCheckout(plan);
+              const isCheckingOut = checkingOut === plan.id;
+              const features = Array.isArray(plan.features) ? plan.features : [];
+              const planLimits = PLAN_LIMITS[plan.slug] || { assessments: 0, hrAdmins: 0, participants: 0 };
+
+              return (
+                <Card
+                  key={plan.id}
+                  className={`relative transition-all ${
+                    isCurrent ? `border-2 ${PLAN_COLORS[plan.slug]} bg-card shadow-md` : "border hover:shadow-md"
+                  }`}
+                >
+                  {isCurrent && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <Badge className="bg-primary text-primary-foreground text-xs shadow-sm">
+                        {t.subscription.current}
+                      </Badge>
+                    </div>
+                  )}
+                  <CardHeader className="pb-3 pt-5">
+                    <div className="flex items-center justify-between">
+                      <Badge className={PLAN_BADGE_COLORS[plan.slug] || PLAN_BADGE_COLORS.free}>
+                        {plan.name}
+                      </Badge>
+                    </div>
+                    <div className="mt-3">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-bold">${price}</span>
+                        {price > 0 && <span className="text-sm text-muted-foreground">/mo</span>}
                       </div>
-                    );
-                  })}
+                      {billingCycle === "annual" && plan.price_annual_usd && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          ${plan.price_annual_usd} billed annually
+                        </p>
+                      )}
+                      {price === 0 && <p className="text-xs text-muted-foreground mt-0.5">Free forever</p>}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4 pb-5">
+                    {plan.description && (
+                      <p className="text-sm text-muted-foreground">{plan.description}</p>
+                    )}
+
+                    {/* Limits */}
+                    <div className="space-y-1.5 text-sm">
+                      <p>
+                        <span className="font-medium">
+                          {planLimits.assessments === -1 ? "Unlimited" : planLimits.assessments}
+                        </span> assessments
+                      </p>
+                      <p>
+                        <span className="font-medium">
+                          {planLimits.hrAdmins === -1 ? "Unlimited" : planLimits.hrAdmins}
+                        </span> HR admins
+                      </p>
+                      <p>
+                        <span className="font-medium">
+                          {planLimits.participants === -1 ? "Unlimited" : planLimits.participants}
+                        </span> participants/mo
+                      </p>
+                    </div>
+
+                    {/* Features from DB */}
+                    {features.length > 0 && (
+                      <div className="space-y-1.5 pt-2 border-t border-border/60">
+                        {features.map((feature: string, i: number) => (
+                          <div key={i} className="flex items-start gap-2 text-sm">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                            <span>{feature}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Action Button */}
+                    <div className="pt-2">
+                      {isCurrent ? (
+                        <Button variant="outline" className="w-full" disabled>
+                          <CheckCircle2 className="w-4 h-4 me-2" />
+                          Current Plan
+                        </Button>
+                      ) : canBuy ? (
+                        <Button
+                          className="w-full"
+                          onClick={() => handleCheckout(plan)}
+                          disabled={!!checkingOut}
+                        >
+                          {isCheckingOut ? (
+                            <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                          ) : (
+                            <Zap className="w-4 h-4 me-2" />
+                          )}
+                          {isCheckingOut ? "Redirecting..." : "Upgrade"}
+                        </Button>
+                      ) : (
+                        <Button variant="outline" className="w-full" disabled>
+                          <ArrowUpRight className="w-4 h-4 me-2" />
+                          Contact Sales
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </motion.div>
+
+        {/* Billing Portal Info */}
+        {isPaid && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            <Card className="bg-muted/30">
+              <CardContent className="py-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <CreditCard className="w-5 h-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">Manage your billing</p>
+                      <p className="text-xs text-muted-foreground">
+                        Update payment method, view invoices, or cancel your subscription
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handleOpenPortal} disabled={openingPortal}>
+                    {openingPortal ? <Loader2 className="w-4 h-4 me-2 animate-spin" /> : <ExternalLink className="w-4 h-4 me-2" />}
+                    Billing Portal
+                  </Button>
                 </div>
               </CardContent>
             </Card>

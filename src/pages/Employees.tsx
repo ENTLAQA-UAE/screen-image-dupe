@@ -309,14 +309,14 @@ const Employees = () => {
 
   return (
     <DashboardLayout activeItem="Employees">
-      <div className="p-8">
+      <div>
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <motion.h1
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-2xl font-display font-bold text-foreground mb-1"
+              className="text-2xl font-bold text-foreground mb-1"
             >
               {t.employees.title}
             </motion.h1>
@@ -325,14 +325,14 @@ const Employees = () => {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-0 shadow-md px-4 py-3">
+            <Card className="bg-white dark:bg-card border border-border border-l-4 border-l-primary shadow-sm px-4 py-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-                  <Users className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Users className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{employees.length}</p>
-                  <p className="text-xs text-blue-600/70 dark:text-blue-400/70">{t.employees.title}</p>
+                  <p className="text-2xl font-bold text-foreground">{employees.length}</p>
+                  <p className="text-xs text-muted-foreground">{t.employees.title}</p>
                 </div>
               </div>
             </Card>
@@ -399,7 +399,7 @@ const Employees = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-0 shadow-lg">
+            <Card className="bg-white dark:bg-card border border-border shadow-sm">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -420,8 +420,8 @@ const Employees = () => {
                     >
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-md">
-                            <User className="w-5 h-5 text-white" />
+                          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <User className="w-5 h-5 text-primary" />
                           </div>
                           <div>
                             <p className="font-medium">{employee.full_name || (language === 'ar' ? 'غير معروف' : 'Unknown')}</p>

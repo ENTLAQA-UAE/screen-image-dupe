@@ -1,18 +1,19 @@
 import { ReactNode, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useOrganizationBranding } from "@/contexts/OrganizationBrandingContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { NotificationCenter } from "@/components/dashboard/NotificationCenter";
+import { TrialBanner } from "@/components/TrialBanner";
+import { TrialExpiredGate } from "@/components/TrialExpiredGate";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { 
-  BarChart3, 
-  FileText, 
-  Users, 
+import {
+  BarChart3,
+  FileText,
+  Users,
   LogOut,
-  Bell,
   Search,
   FolderKanban,
   UserCircle,
@@ -21,9 +22,9 @@ import {
   CreditCard,
   PieChart,
   Library,
-  ChevronRight,
   Menu,
-  X,
+  PanelLeftClose,
+  PanelLeft,
 } from "lucide-react";
 
 interface NavItem {
@@ -59,12 +60,13 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, signOut, isOrgAdmin, isHrAdmin } = useAuth();
   const { t, isRTL, dir } = useLanguage();
   const { branding } = useOrganizationBranding();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // Determine which nav items to show based on role
   const navItems = useMemo(() => {
     if (isOrgAdmin()) return orgAdminNavItems;
     if (isHrAdmin()) return hrAdminNavItems;
@@ -94,9 +96,9 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
     if (!activeItem) return false;
     const labelKeyLower = labelKey.toLowerCase();
     const activeItemLower = activeItem.toLowerCase();
-    
+
     if (labelKeyLower === activeItemLower) return true;
-    
+
     const mappings: Record<string, string[]> = {
       'dashboard': ['dashboard'],
       'assessments': ['assessments'],
@@ -114,40 +116,47 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
     return labelMappings.some(m => activeItemLower.includes(m.replace('-', ' ').replace(/\s+/g, '')));
   };
 
+  // Tenant branding support
   const sidebarBg = branding?.primary_color || undefined;
   const useCustomColor = !!branding?.primary_color;
 
-  // Shared navigation content
-  const NavigationContent = ({ onItemClick }: { onItemClick?: () => void }) => (
+  const sidebarWidth = sidebarCollapsed ? 'w-[68px]' : 'w-60';
+  const contentOffset = sidebarCollapsed ? '68px' : '240px';
+
+  const NavigationContent = ({ onItemClick, collapsed = false }: { onItemClick?: () => void; collapsed?: boolean }) => (
     <>
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        <p className={`px-4 py-2 text-[10px] font-semibold uppercase tracking-widest ${useCustomColor ? 'text-white/40' : 'text-sidebar-foreground/40'}`}>
-          Menu
-        </p>
-        {navItems.map((item, index) => {
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        {!collapsed && (
+          <p className={`px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest ${useCustomColor ? 'text-white/40' : 'text-sidebar-foreground/40'}`}>
+            {t.nav?.menu || 'Menu'}
+          </p>
+        )}
+        {navItems.map((item) => {
           const label = getNavLabel(item.labelKey);
           const isActive = isActiveItem(item.labelKey);
-          
+
           return (
             <Link
               key={item.labelKey}
               to={item.href}
               onClick={onItemClick}
-              className={`group w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+              title={collapsed ? label : undefined}
+              className={`group flex items-center gap-3 rounded-lg text-[13px] font-medium transition-all duration-150 ${
+                collapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'
+              } ${
                 useCustomColor
-                  ? isActive 
-                    ? "bg-white/20 text-white shadow-sm" 
-                    : "text-white/70 hover:bg-white/10 hover:text-white"
-                  : isActive 
-                    ? "bg-accent/10 text-accent border border-accent/20" 
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                  ? isActive
+                    ? "bg-white/15 text-white shadow-sm"
+                    : "text-white/60 hover:bg-white/10 hover:text-white"
+                  : isActive
+                    ? "bg-sidebar-primary/10 text-sidebar-primary font-semibold"
+                    : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
               }`}
-              style={{ animationDelay: `${index * 50}ms` }}
             >
-              <item.icon className={`w-[18px] h-[18px] flex-shrink-0 transition-transform duration-200 ${isActive ? '' : 'group-hover:scale-110'}`} />
-              <span className="flex-1">{label}</span>
-              {isActive && (
-                <ChevronRight className={`w-4 h-4 opacity-60 ${isRTL ? 'rotate-180' : ''}`} />
+              <item.icon className={`flex-shrink-0 transition-colors duration-150 ${collapsed ? 'w-5 h-5' : 'w-[18px] h-[18px]'}`} />
+              {!collapsed && <span className="flex-1 truncate">{label}</span>}
+              {isActive && !collapsed && (
+                <div className={`w-1.5 h-1.5 rounded-full ${useCustomColor ? 'bg-white' : 'bg-sidebar-primary'}`} />
               )}
             </Link>
           );
@@ -155,61 +164,73 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
       </nav>
 
       {/* User Section */}
-      <div className={`p-4 ${useCustomColor ? 'border-t border-white/10 bg-black/10' : 'border-t border-sidebar-border bg-sidebar-accent/30'}`}>
-        <div className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${useCustomColor ? 'hover:bg-white/10' : 'hover:bg-sidebar-accent/50'}`}>
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${useCustomColor ? 'bg-white/20' : 'bg-accent/20'}`}>
-            <span className={`font-semibold ${useCustomColor ? 'text-white' : 'text-accent'}`}>
+      <div className={`p-3 ${useCustomColor ? 'border-t border-white/10' : 'border-t border-sidebar-border'}`}>
+        {!collapsed && (
+          <div className={`flex items-center gap-3 px-3 py-2 rounded-lg mb-1 ${useCustomColor ? 'hover:bg-white/5' : ''}`}>
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-semibold ${
+              useCustomColor ? 'bg-white/15 text-white' : 'bg-sidebar-primary/15 text-sidebar-primary'
+            }`}>
               {getUserName().charAt(0).toUpperCase()}
-            </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`text-sm font-medium truncate ${useCustomColor ? 'text-white' : 'text-sidebar-foreground'}`}>
+                {getUserName()}
+              </p>
+              <p className={`text-[11px] truncate ${useCustomColor ? 'text-white/40' : 'text-sidebar-foreground/40'}`}>
+                {getRoleLabel()}
+              </p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className={`text-sm font-semibold truncate ${useCustomColor ? 'text-white' : 'text-sidebar-foreground'}`}>
-              {getUserName()}
-            </p>
-            <p className={`text-xs truncate ${useCustomColor ? 'text-white/50' : 'text-sidebar-foreground/50'}`}>
-              {getRoleLabel()}
-            </p>
-          </div>
-        </div>
+        )}
         <button
           onClick={() => {
             onItemClick?.();
             handleSignOut();
           }}
-          className={`w-full flex items-center gap-3 px-4 py-2.5 mt-2 rounded-xl text-sm font-medium transition-all duration-200 ${useCustomColor ? 'text-white/70 hover:bg-white/10 hover:text-white' : 'text-muted-foreground hover:bg-destructive/10 hover:text-destructive'}`}
+          title={collapsed ? t.nav.signOut : undefined}
+          className={`w-full flex items-center gap-3 rounded-lg text-[13px] font-medium transition-all duration-150 ${
+            collapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'
+          } ${
+            useCustomColor
+              ? 'text-white/50 hover:bg-white/10 hover:text-white'
+              : 'text-sidebar-foreground/40 hover:bg-destructive/10 hover:text-destructive'
+          }`}
         >
           <LogOut className="w-4 h-4 flex-shrink-0" />
-          {t.nav.signOut}
+          {!collapsed && t.nav.signOut}
         </button>
       </div>
     </>
   );
 
-  // Sidebar header content
-  const SidebarHeader = () => (
-    <div className={`p-4 sm:p-6 ${useCustomColor ? 'border-b border-white/10' : 'border-b border-sidebar-border'}`}>
-      <Link to="/" className="flex items-center gap-3 group">
+  const SidebarHeader = ({ collapsed = false }: { collapsed?: boolean }) => (
+    <div className={`p-4 ${useCustomColor ? 'border-b border-white/10' : 'border-b border-sidebar-border'}`}>
+      <Link to="/" className={`flex items-center group ${collapsed ? 'justify-center' : 'gap-3'}`}>
         {branding?.logo_url ? (
-          <img 
-            src={branding.logo_url} 
-            alt={branding.name || "Organization"} 
-            className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-contain bg-white/10 p-1 transition-transform duration-200 group-hover:scale-105"
+          <img
+            src={branding.logo_url}
+            alt={branding.name || "Organization"}
+            className="w-8 h-8 rounded-lg object-contain bg-white/10 p-0.5 transition-transform duration-200 group-hover:scale-105"
           />
         ) : (
-          <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-105 ${useCustomColor ? 'bg-white/20' : 'bg-accent shadow-glow'}`}>
-            <span className={`font-display font-bold text-base sm:text-lg ${useCustomColor ? 'text-white' : 'text-accent-foreground'}`}>
-              {branding?.name?.charAt(0) || "J"}
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-105 ${
+            useCustomColor ? 'bg-white/15' : 'bg-sidebar-primary'
+          }`}>
+            <span className={`font-bold text-sm ${useCustomColor ? 'text-white' : 'text-sidebar-primary-foreground'}`}>
+              Q
             </span>
           </div>
         )}
-        <div className="flex flex-col">
-          <span className={`font-display font-bold text-sm sm:text-base truncate max-w-[140px] ${useCustomColor ? 'text-white' : 'text-sidebar-foreground'}`}>
-            {branding?.name || "Jadarat"}
-          </span>
-          <span className={`text-[9px] sm:text-[10px] -mt-0.5 tracking-widest uppercase ${useCustomColor ? 'text-white/50' : 'text-sidebar-foreground/50'}`}>
-            Assess Platform
-          </span>
-        </div>
+        {!collapsed && (
+          <div className="flex flex-col min-w-0">
+            <span className={`font-bold text-sm truncate ${useCustomColor ? 'text-white' : 'text-sidebar-foreground'}`}>
+              {branding?.name || "Qudurat"}
+            </span>
+            <span className={`text-[10px] -mt-0.5 tracking-wider uppercase ${useCustomColor ? 'text-white/40' : 'text-sidebar-foreground/40'}`}>
+              Assessment Platform
+            </span>
+          </div>
+        )}
       </Link>
     </div>
   );
@@ -217,7 +238,7 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
   return (
     <div className="min-h-screen bg-background" dir={dir}>
       {/* Mobile Header */}
-      <header className="lg:hidden h-14 sm:h-16 bg-card/95 backdrop-blur-sm border-b border-border flex items-center justify-between px-4 sticky top-0 z-50">
+      <header className="lg:hidden h-14 bg-card border-b border-border flex items-center justify-between px-4 sticky top-0 z-50">
         <div className="flex items-center gap-3">
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
@@ -225,10 +246,10 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent 
-              side={isRTL ? "right" : "left"} 
+            <SheetContent
+              side={isRTL ? "right" : "left"}
               className="p-0 w-72"
-              style={{ 
+              style={{
                 backgroundColor: sidebarBg || 'hsl(var(--sidebar-background))',
                 color: useCustomColor ? '#ffffff' : undefined,
               }}
@@ -239,69 +260,110 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
           </Sheet>
           <Link to="/" className="flex items-center gap-2">
             {branding?.logo_url ? (
-              <img 
-                src={branding.logo_url} 
-                alt={branding.name || "Organization"} 
-                className="w-8 h-8 rounded-lg object-contain"
+              <img
+                src={branding.logo_url}
+                alt={branding.name || "Organization"}
+                className="w-7 h-7 rounded-md object-contain"
               />
             ) : (
-              <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-                <span className="font-display font-bold text-sm text-accent-foreground">
-                  {branding?.name?.charAt(0) || "J"}
-                </span>
+              <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
+                <span className="font-bold text-xs text-primary-foreground">Q</span>
               </div>
             )}
-            <span className="font-display font-bold text-sm truncate max-w-[120px]">
-              {branding?.name || "Jadarat"}
+            <span className="font-bold text-sm">
+              {branding?.name || "Qudurat"}
             </span>
           </Link>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <LanguageSwitcher />
           <NotificationCenter />
         </div>
       </header>
 
       {/* Desktop Sidebar */}
-      <aside 
-        className={`hidden lg:flex w-64 h-screen fixed top-0 flex-col shadow-xl ${isRTL ? 'right-0' : 'left-0'}`}
-        style={{ 
+      <aside
+        className={`hidden lg:flex ${sidebarWidth} h-screen fixed top-0 flex-col transition-all duration-200 z-50 ${isRTL ? 'right-0' : 'left-0'}`}
+        style={{
           backgroundColor: sidebarBg || 'hsl(var(--sidebar-background))',
           color: useCustomColor ? '#ffffff' : undefined,
         }}
       >
-        <SidebarHeader />
-        <NavigationContent />
+        <SidebarHeader collapsed={sidebarCollapsed} />
+        <NavigationContent collapsed={sidebarCollapsed} />
+
+        {/* Collapse Toggle */}
+        <div className={`px-3 pb-3 ${useCustomColor ? '' : ''}`}>
+          <button
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className={`w-full flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-all duration-150 ${
+              sidebarCollapsed ? 'justify-center' : ''
+            } ${
+              useCustomColor
+                ? 'text-white/40 hover:bg-white/10 hover:text-white/70'
+                : 'text-sidebar-foreground/30 hover:bg-sidebar-accent hover:text-sidebar-foreground/60'
+            }`}
+          >
+            {sidebarCollapsed ? (
+              <PanelLeft className="w-4 h-4" />
+            ) : (
+              <>
+                <PanelLeftClose className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
+                <span>{t.nav?.collapse || 'Collapse'}</span>
+              </>
+            )}
+          </button>
+        </div>
       </aside>
 
-      {/* Main Content */}
-      <div className={`lg:${isRTL ? 'pr-64' : 'pl-64'}`} style={{ [isRTL ? 'paddingRight' : 'paddingLeft']: undefined }}>
-        <div className={`hidden lg:block ${isRTL ? 'pr-64' : 'pl-64'}`} style={{ display: 'contents' }}>
-          {/* This div is just for spacing on desktop */}
-        </div>
-        
-        {/* Desktop Header */}
-        <header className={`hidden lg:flex h-16 bg-card/80 backdrop-blur-sm border-b border-border items-center justify-between px-4 sm:px-8 sticky top-0 z-40 ${isRTL ? 'lg:mr-64' : 'lg:ml-64'}`}>
+      {/* Main Content Area */}
+      <div
+        className="transition-all duration-200"
+        style={{
+          [isRTL ? 'marginRight' : 'marginLeft']: contentOffset,
+        }}
+      >
+        {/* Desktop Top Bar */}
+        <header
+          className={`hidden lg:flex h-16 bg-card border-b border-border items-center justify-between px-6 sticky top-0 z-40`}
+          style={{
+            [isRTL ? 'marginRight' : 'marginLeft']: contentOffset,
+          }}
+        >
           <div className="flex items-center gap-4">
-            <div className="relative group">
-              <Search className={`w-4 h-4 absolute top-1/2 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-accent ${isRTL ? 'right-3' : 'left-3'}`} />
+            <div className="relative">
+              <Search className={`w-4 h-4 absolute top-1/2 -translate-y-1/2 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
               <input
                 type="text"
                 placeholder={t.nav.search}
-                className={`w-48 lg:w-80 h-10 rounded-xl border-2 border-border bg-background text-sm transition-all duration-200 focus:outline-none focus:border-accent focus:ring-4 focus:ring-accent/10 ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
+                className={`w-64 h-9 rounded-lg border border-border bg-background text-sm transition-all duration-150 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 placeholder:text-muted-foreground/60 ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
                 dir={dir}
               />
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <LanguageSwitcher />
             <NotificationCenter />
           </div>
         </header>
 
+        {/* Trial Banner */}
+        <div style={{ [isRTL ? 'marginRight' : 'marginLeft']: contentOffset }}>
+          <TrialBanner />
+        </div>
+
         {/* Page Content */}
-        <main className={`min-h-[calc(100vh-4rem)] ${isRTL ? 'lg:mr-64' : 'lg:ml-64'}`}>
-          {children}
+        <main
+          className="min-h-[calc(100vh-4rem)]"
+          style={{
+            [isRTL ? 'marginRight' : 'marginLeft']: contentOffset,
+          }}
+        >
+          <TrialExpiredGate>
+            <div className="p-4 sm:p-6 lg:p-8">
+              {children}
+            </div>
+          </TrialExpiredGate>
         </main>
       </div>
     </div>

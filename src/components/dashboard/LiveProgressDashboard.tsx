@@ -63,11 +63,11 @@ const getAssessmentIcon = (type: string) => {
 
 const getTypeColor = (type: string) => {
   switch (type?.toLowerCase()) {
-    case 'cognitive': return { bg: "from-blue-500 to-blue-600", light: "bg-blue-50 dark:bg-blue-950/30" };
-    case 'personality': return { bg: "from-rose-500 to-pink-500", light: "bg-rose-50 dark:bg-rose-950/30" };
-    case 'situational': return { bg: "from-amber-500 to-orange-500", light: "bg-amber-50 dark:bg-amber-950/30" };
-    case 'language': return { bg: "from-violet-500 to-purple-500", light: "bg-violet-50 dark:bg-violet-950/30" };
-    default: return { bg: "from-slate-500 to-slate-600", light: "bg-slate-50 dark:bg-slate-950/30" };
+    case 'cognitive': return { bg: "bg-primary/10 text-primary", icon: "text-primary", border: "border-l-primary", light: "bg-white dark:bg-card" };
+    case 'personality': return { bg: "bg-pink-500/10 text-pink-500", icon: "text-pink-500", border: "border-l-pink-500", light: "bg-white dark:bg-card" };
+    case 'situational': return { bg: "bg-cta/10 text-cta", icon: "text-cta", border: "border-l-cta", light: "bg-white dark:bg-card" };
+    case 'language': return { bg: "bg-violet-500/10 text-violet-500", icon: "text-violet-500", border: "border-l-violet-500", light: "bg-white dark:bg-card" };
+    default: return { bg: "bg-muted text-muted-foreground", icon: "text-muted-foreground", border: "border-l-border", light: "bg-white dark:bg-card" };
   }
 };
 
@@ -239,15 +239,15 @@ export function LiveProgressDashboard({ organizationId }: LiveProgressDashboardP
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/30 dark:to-emerald-900/20 rounded-xl p-3 sm:p-4 border-0 shadow-sm"
+          className="bg-white dark:bg-card rounded-xl p-3 sm:p-4 border border-border shadow-sm border-l-4 border-l-success"
         >
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shrink-0">
-              <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-success/10 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-success" />
             </div>
             <div className="min-w-0">
-              <p className="text-xl sm:text-2xl font-bold text-emerald-700 dark:text-emerald-300">{stats.completedToday}</p>
-              <p className="text-[10px] sm:text-xs text-emerald-600/70 dark:text-emerald-400/70 truncate">Completed Today</p>
+              <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.completedToday}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Completed Today</p>
             </div>
           </div>
         </motion.div>
@@ -256,15 +256,15 @@ export function LiveProgressDashboard({ organizationId }: LiveProgressDashboardP
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 rounded-xl p-3 sm:p-4 border-0 shadow-sm"
+          className="bg-white dark:bg-card rounded-xl p-3 sm:p-4 border border-border shadow-sm border-l-4 border-l-primary"
         >
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shrink-0">
-              <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
             </div>
             <div className="min-w-0">
-              <p className="text-xl sm:text-2xl font-bold text-blue-700 dark:text-blue-300">{stats.inProgress}</p>
-              <p className="text-[10px] sm:text-xs text-blue-600/70 dark:text-blue-400/70 truncate">In Progress</p>
+              <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.inProgress}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">In Progress</p>
             </div>
           </div>
         </motion.div>
@@ -273,15 +273,15 @@ export function LiveProgressDashboard({ organizationId }: LiveProgressDashboardP
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 rounded-xl p-3 sm:p-4 border-0 shadow-sm"
+          className="bg-white dark:bg-card rounded-xl p-3 sm:p-4 border border-border shadow-sm border-l-4 border-l-cta"
         >
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shrink-0">
-              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-cta/10 flex items-center justify-center shrink-0">
+              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-cta" />
             </div>
             <div className="min-w-0">
-              <p className="text-xl sm:text-2xl font-bold text-amber-700 dark:text-amber-300">{stats.totalActive}</p>
-              <p className="text-[10px] sm:text-xs text-amber-600/70 dark:text-amber-400/70 truncate">Pending</p>
+              <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.totalActive}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Pending</p>
             </div>
           </div>
         </motion.div>
@@ -290,12 +290,12 @@ export function LiveProgressDashboard({ organizationId }: LiveProgressDashboardP
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-950/30 dark:to-violet-900/20 rounded-xl p-3 sm:p-4 border-0 shadow-sm"
+          className="bg-white dark:bg-card rounded-xl p-3 sm:p-4 border border-border shadow-sm border-l-4 border-l-violet-500"
         >
           <div className="flex items-center justify-between">
             <div className="min-w-0">
-              <p className="text-[10px] sm:text-xs text-violet-600/70 dark:text-violet-400/70 mb-1">Completion Rate</p>
-              <p className="text-xl sm:text-2xl font-bold text-violet-700 dark:text-violet-300">{stats.completionRate}%</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Completion Rate</p>
+              <p className="text-xl sm:text-2xl font-bold text-foreground">{stats.completionRate}%</p>
             </div>
             <div className="relative w-12 h-12 sm:w-14 sm:h-14 shrink-0">
               <svg className="w-full h-full -rotate-90">
@@ -345,11 +345,11 @@ export function LiveProgressDashboard({ organizationId }: LiveProgressDashboardP
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 20 }}
                     transition={{ delay: index * 0.05 }}
-                    className={`rounded-xl p-3 sm:p-4 ${colors.light} border border-border/50`}
+                    className={`rounded-xl p-3 sm:p-4 ${colors.light} border border-border/50 border-l-4 ${colors.border}`}
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${colors.bg} flex items-center justify-center shadow-lg shrink-0`}>
-                        <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl ${colors.bg} flex items-center justify-center shrink-0`}>
+                        <IconComponent className={`w-5 h-5 sm:w-6 sm:h-6 ${colors.icon}`} />
                       </div>
                       
                       <div className="flex-1 min-w-0">

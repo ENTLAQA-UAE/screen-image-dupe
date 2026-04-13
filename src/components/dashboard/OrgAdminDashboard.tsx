@@ -167,18 +167,18 @@ export function OrgAdminDashboard({ organizationId, organizationName, userName }
   ];
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <motion.h1
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-2xl font-display font-bold text-foreground mb-1"
+            className="text-xl sm:text-2xl font-bold text-foreground mb-1"
           >
             {t.dashboard.welcome}, {userName}
           </motion.h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             {t.orgDashboard.adminDashboard} {organizationName}
           </p>
         </div>
@@ -204,78 +204,48 @@ export function OrgAdminDashboard({ organizationId, organizationName, userName }
         </motion.div>
       )}
 
-      {/* Overview Stats - Colorful Gradient Cards */}
+      {/* Overview Stats - Clean Professional Cards */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="grid md:grid-cols-4 gap-4"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
       >
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-0 shadow-md p-5">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm font-medium text-blue-600 dark:text-blue-400">{t.orgDashboard.totalAssessments}</p>
-              <p className="text-3xl font-bold text-blue-700 dark:text-blue-300 mt-1">{stats.totalAssessments}</p>
-            </div>
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-              <FileText className="w-7 h-7 text-white" />
-            </div>
+        <Card className="bg-card border border-border/60 shadow-card p-4 sm:p-5">
+          <div className="flex items-start justify-between mb-3">
+            <p className="text-sm font-medium text-muted-foreground">{t.orgDashboard.totalAssessments}</p>
+            <FileText className="w-5 h-5 text-muted-foreground/40" />
           </div>
-          <p className="text-xs text-blue-600/70 dark:text-blue-400/70 mt-2">
-            {stats.assessmentLimit === -1 ? t.orgDashboard.unlimited : `${t.orgDashboard.ofLimit} ${stats.assessmentLimit} ${t.orgDashboard.limit}`}
+          <p className="text-3xl font-bold text-foreground mb-1">{stats.totalAssessments}</p>
+          <p className="text-xs text-muted-foreground">
+            {stats.assessmentLimit === -1 ? t.orgDashboard.unlimited : `${t.orgDashboard.ofLimit} ${stats.assessmentLimit}`}
           </p>
         </Card>
-        <Card className="bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-950/30 dark:to-violet-900/20 border-0 shadow-md p-5">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm font-medium text-violet-600 dark:text-violet-400">{t.orgDashboard.hrAdmins}</p>
-              <p className="text-3xl font-bold text-violet-700 dark:text-violet-300 mt-1">{stats.totalHRAdmins}</p>
-            </div>
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shadow-lg">
-              <Shield className="w-7 h-7 text-white" />
-            </div>
+        <Card className="bg-card border border-border/60 shadow-card p-4 sm:p-5">
+          <div className="flex items-start justify-between mb-3">
+            <p className="text-sm font-medium text-muted-foreground">{t.orgDashboard.hrAdmins}</p>
+            <Shield className="w-5 h-5 text-muted-foreground/40" />
           </div>
-          <p className="text-xs text-violet-600/70 dark:text-violet-400/70 mt-2">
-            {stats.maxHRAdmins === -1 ? t.orgDashboard.unlimited : `${t.orgDashboard.ofLimit} ${stats.maxHRAdmins} ${t.orgDashboard.limit}`}
+          <p className="text-3xl font-bold text-foreground mb-1">{stats.totalHRAdmins}</p>
+          <p className="text-xs text-muted-foreground">
+            {stats.maxHRAdmins === -1 ? t.orgDashboard.unlimited : `${t.orgDashboard.ofLimit} ${stats.maxHRAdmins}`}
           </p>
         </Card>
-        <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/30 dark:to-emerald-900/20 border-0 shadow-md p-5">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">{t.orgDashboard.totalParticipants}</p>
-              <p className="text-3xl font-bold text-emerald-700 dark:text-emerald-300 mt-1">{stats.totalParticipants}</p>
-            </div>
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg">
-              <Users className="w-7 h-7 text-white" />
-            </div>
+        <Card className="bg-card border border-border/60 shadow-card p-4 sm:p-5">
+          <div className="flex items-start justify-between mb-3">
+            <p className="text-sm font-medium text-muted-foreground">{t.orgDashboard.totalParticipants}</p>
+            <Users className="w-5 h-5 text-muted-foreground/40" />
           </div>
-          <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-2">
-            {t.orgDashboard.allTime}
-          </p>
+          <p className="text-3xl font-bold text-foreground mb-1">{stats.totalParticipants}</p>
+          <p className="text-xs text-muted-foreground">{t.orgDashboard.allTime}</p>
         </Card>
-        <Card className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 border-0 shadow-md p-5">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm font-medium text-amber-600 dark:text-amber-400">{t.orgDashboard.completionRate}</p>
-              <p className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-1">
-                {t.orgDashboard.assessmentCompletion}
-              </p>
-            </div>
-            <div className="relative">
-              <svg width="60" height="60" className="-rotate-90">
-                <circle cx="30" cy="30" r="24" fill="none" strokeWidth="6" className="stroke-amber-200 dark:stroke-amber-800/50" />
-                <circle
-                  cx="30" cy="30" r="24" fill="none" strokeWidth="6" strokeLinecap="round"
-                  strokeDasharray={2 * Math.PI * 24}
-                  strokeDashoffset={2 * Math.PI * 24 * (1 - stats.completionRate / 100)}
-                  className="stroke-amber-500 transition-all duration-700 ease-out"
-                />
-              </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-lg font-bold text-amber-700 dark:text-amber-300">
-                {stats.completionRate}%
-              </span>
-            </div>
+        <Card className="bg-card border border-border/60 shadow-card p-4 sm:p-5">
+          <div className="flex items-start justify-between mb-3">
+            <p className="text-sm font-medium text-muted-foreground">{t.orgDashboard.completionRate}</p>
+            <TrendingUp className="w-5 h-5 text-muted-foreground/40" />
           </div>
+          <p className="text-3xl font-bold text-foreground mb-1">{stats.completionRate}%</p>
+          <p className="text-xs text-muted-foreground">{t.orgDashboard.assessmentCompletion}</p>
         </Card>
       </motion.div>
 

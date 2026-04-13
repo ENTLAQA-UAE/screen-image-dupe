@@ -94,7 +94,8 @@ interface EmployeeSummary {
   lastCompleted: string | null;
 }
 
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899"];
+// Chart colors aligned with design system --chart-* variables
+const COLORS = ["hsl(243 75% 59%)", "hsl(160 84% 39%)", "hsl(38 92% 50%)", "hsl(263 70% 58%)", "hsl(330 81% 60%)"];
 
 const getTypeIcon = (type: string) => {
   switch (type?.toLowerCase()) {
@@ -454,14 +455,14 @@ const Reports = () => {
 
   return (
     <DashboardLayout activeItem="Reports">
-      <div className="p-8">
+      <div>
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <motion.h1
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-2xl font-display font-bold text-foreground mb-1"
+              className="text-2xl font-bold text-foreground mb-1"
             >
               {t.reports.title}
             </motion.h1>
@@ -500,15 +501,15 @@ const Reports = () => {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {/* Total Assessments */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <Card className="h-full bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/20 border-0 shadow-md overflow-hidden">
+              <Card className="h-full bg-white dark:bg-card border border-border border-l-4 border-l-primary shadow-sm overflow-hidden">
                 <CardContent className="pt-6 pb-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-blue-600 dark:text-blue-400">{t.dashboard.totalAssessments}</p>
-                      <p className="text-4xl font-bold text-blue-700 dark:text-blue-300 mt-1">{stats.totalAssessments}</p>
+                      <p className="text-sm font-medium text-primary">{t.dashboard.totalAssessments}</p>
+                      <p className="text-4xl font-bold text-foreground mt-1">{stats.totalAssessments}</p>
                     </div>
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-                      <FileText className="w-8 h-8 text-white" />
+                    <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                      <FileText className="w-8 h-8 text-primary" />
                     </div>
                   </div>
                 </CardContent>
@@ -517,12 +518,12 @@ const Reports = () => {
 
             {/* Completion Rate with Circular Progress */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-              <Card className="h-full bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/30 dark:to-emerald-900/20 border-0 shadow-md overflow-hidden">
+              <Card className="h-full bg-white dark:bg-card border border-border border-l-4 border-l-success shadow-sm overflow-hidden">
                 <CardContent className="pt-5 pb-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">{t.dashboard.completionRate}</p>
-                      <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-1">
+                      <p className="text-sm font-medium text-success">{t.dashboard.completionRate}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
                         {stats.completedParticipants} / {stats.totalParticipants}
                       </p>
                     </div>
@@ -547,15 +548,15 @@ const Reports = () => {
 
             {/* Active Groups */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-              <Card className="h-full bg-gradient-to-br from-violet-50 to-violet-100 dark:from-violet-950/30 dark:to-violet-900/20 border-0 shadow-md overflow-hidden">
+              <Card className="h-full bg-white dark:bg-card border border-border border-l-4 border-l-violet-500 shadow-sm overflow-hidden">
                 <CardContent className="pt-6 pb-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-violet-600 dark:text-violet-400">{t.dashboard.activeGroups}</p>
-                      <p className="text-4xl font-bold text-violet-700 dark:text-violet-300 mt-1">{stats.activeGroups}</p>
+                      <p className="text-sm font-medium text-violet-500">{t.dashboard.activeGroups}</p>
+                      <p className="text-4xl font-bold text-foreground mt-1">{stats.activeGroups}</p>
                     </div>
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500 to-violet-600 flex items-center justify-center shadow-lg">
-                      <Users className="w-8 h-8 text-white" />
+                    <div className="w-16 h-16 rounded-2xl bg-violet-500/10 flex items-center justify-center">
+                      <Users className="w-8 h-8 text-violet-500" />
                     </div>
                   </div>
                 </CardContent>
@@ -564,12 +565,12 @@ const Reports = () => {
 
             {/* Average Score with Circular Progress */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-              <Card className="h-full bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950/30 dark:to-amber-900/20 border-0 shadow-md overflow-hidden">
+              <Card className="h-full bg-white dark:bg-card border border-border border-l-4 border-l-cta shadow-sm overflow-hidden">
                 <CardContent className="pt-5 pb-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-amber-600 dark:text-amber-400">{t.employees.averageScore}</p>
-                      <p className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-1">
+                      <p className="text-sm font-medium text-cta">{t.employees.averageScore}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
                         {t.reports.organizationOverview}
                       </p>
                     </div>
@@ -613,11 +614,11 @@ const Reports = () => {
             <div className="grid lg:grid-cols-2 gap-6">
               {/* Completion Trend */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-                <Card className="h-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-0 shadow-lg">
+                <Card className="h-full bg-white dark:bg-card border border-border shadow-sm">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                        <Activity className="w-5 h-5 text-white" />
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <Activity className="w-5 h-5 text-primary" />
                       </div>
                       {t.reports.completionTrendLast30}
                     </CardTitle>
@@ -662,11 +663,11 @@ const Reports = () => {
 
               {/* Assessment Types Distribution */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-                <Card className="h-full bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 border-0 shadow-lg">
+                <Card className="h-full bg-white dark:bg-card border border-border shadow-sm">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                        <PieChart className="w-5 h-5 text-white" />
+                      <div className="w-10 h-10 rounded-xl bg-cta/10 flex items-center justify-center">
+                        <PieChart className="w-5 h-5 text-cta" />
                       </div>
                       {t.reports.assessmentTypes}
                     </CardTitle>
@@ -715,12 +716,12 @@ const Reports = () => {
 
           {/* Group Analytics Tab */}
           <TabsContent value="groups" className="space-y-6">
-            <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-0 shadow-lg">
+            <Card className="bg-white dark:bg-card border border-border shadow-sm">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center">
-                      <Users className="w-5 h-5 text-white" />
+                    <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-violet-500" />
                     </div>
                     <div>
                       <CardTitle>Active Assessment Groups</CardTitle>
@@ -752,11 +753,11 @@ const Reports = () => {
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.05 }}
-                            className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800/50 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                            className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-secondary/50 shadow-sm hover:shadow-md transition-all cursor-pointer"
                             onClick={() => navigate(`/assessment-groups/${group.id}/report`)}
                           >
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center flex-shrink-0 shadow-md">
-                              <TypeIcon className="w-6 h-6 text-white" />
+                            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <TypeIcon className="w-6 h-6 text-primary" />
                             </div>
 
                             <div className="flex-1 min-w-0">
@@ -808,11 +809,11 @@ const Reports = () => {
 
           {/* Employee Reports Tab */}
           <TabsContent value="employees" className="space-y-6">
-            <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-0 shadow-lg">
+            <Card className="bg-white dark:bg-card border border-border shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                    <Award className="w-5 h-5 text-white" />
+                  <div className="w-10 h-10 rounded-xl bg-cta/10 flex items-center justify-center">
+                    <Award className="w-5 h-5 text-cta" />
                   </div>
                   Top Performers
                 </CardTitle>
@@ -832,7 +833,7 @@ const Reports = () => {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.05 }}
-                        className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800/50 shadow-sm hover:shadow-md transition-all cursor-pointer"
+                        className="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-secondary/50 shadow-sm hover:shadow-md transition-all cursor-pointer"
                         onClick={() => navigate(`/employees/${encodeURIComponent(employee.email)}`)}
                       >
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-white shadow-md ${

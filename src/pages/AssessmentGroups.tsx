@@ -106,11 +106,11 @@ const getAssessmentIcon = (type: string) => {
 
 const getIconColor = (type: string) => {
   switch (type?.toLowerCase()) {
-    case 'cognitive': return "bg-gradient-to-br from-blue-500 to-cyan-500";
-    case 'personality': return "bg-gradient-to-br from-rose-500 to-pink-500";
-    case 'situational': return "bg-gradient-to-br from-amber-500 to-orange-500";
-    case 'language': return "bg-gradient-to-br from-violet-500 to-purple-500";
-    default: return "bg-gradient-to-br from-slate-500 to-slate-600";
+    case 'cognitive': return "bg-primary/10 text-primary";
+    case 'personality': return "bg-pink-500/10 text-pink-500";
+    case 'situational': return "bg-cta/10 text-cta";
+    case 'language': return "bg-violet-500/10 text-violet-500";
+    default: return "bg-muted text-muted-foreground";
   }
 };
 
@@ -449,7 +449,7 @@ const AssessmentGroups = () => {
 
   return (
     <DashboardLayout activeItem="Assessment Groups">
-      <div className="p-8">
+      <div>
         {/* Limit Warning */}
         <LimitWarning 
           resourceType="groups" 
@@ -463,7 +463,7 @@ const AssessmentGroups = () => {
             <motion.h1 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-2xl font-display font-bold text-foreground mb-1"
+              className="text-2xl font-bold text-foreground mb-1"
             >
               {t.groups.title}{" "}
               <LimitBadge currentUsage={usage.groups} limit={limits.groups} />
@@ -530,10 +530,10 @@ const AssessmentGroups = () => {
             )}
           </div>
         ) : (
-          <div className="rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/30 border-0 shadow-lg overflow-hidden">
+          <div className="rounded-2xl bg-white dark:bg-card border border-border shadow-sm overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-white/5">
+                <tr className="border-b border-border bg-muted/30">
                   <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">{t.groups.groupName}</th>
                   <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">{t.assessments.title}</th>
                   <th className="text-left py-4 px-6 text-sm font-semibold text-foreground">{t.assessments.status}</th>
@@ -554,12 +554,12 @@ const AssessmentGroups = () => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: index * 0.05 }}
-                      className="border-b border-slate-200 dark:border-slate-700 last:border-b-0 hover:bg-white/60 dark:hover:bg-white/5 transition-colors"
+                      className="border-b border-border last:border-b-0 hover:bg-muted/50 transition-colors"
                     >
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-md ${iconColor}`}>
-                            <IconComponent className="w-5 h-5 text-white" />
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconColor}`}>
+                            <IconComponent className="w-5 h-5" />
                           </div>
                           <span className="font-medium text-foreground">{group.name}</span>
                         </div>
@@ -571,7 +571,7 @@ const AssessmentGroups = () => {
                         <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium ${
                           status === 'active' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
                           status === 'completed' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' :
-                          'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                          'bg-muted text-muted-foreground'
                         }`}>
                           {status === "active" && <Play className="w-3 h-3 mr-1.5" />}
                           {status === "completed" && <CheckCircle2 className="w-3 h-3 mr-1.5" />}

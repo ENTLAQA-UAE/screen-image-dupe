@@ -805,36 +805,36 @@ export default function TakeAssessment() {
 
   // Render components
   const renderLoading = () => (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      <motion.div 
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/5 to-primary/10">
+      <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="text-center"
       >
-        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mx-auto mb-6 shadow-xl">
+        <div className="w-20 h-20 rounded-full gradient-primary flex items-center justify-center mx-auto mb-6 shadow-xl">
           <Loader2 className="w-10 h-10 animate-spin text-white" />
         </div>
-        <p className="text-lg font-medium text-slate-600">{t.loading}</p>
+        <p className="text-lg font-medium text-muted-foreground">{t.loading}</p>
       </motion.div>
     </div>
   );
 
   const renderError = () => (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-rose-50 to-pink-100 p-4">
-      <motion.div 
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-destructive/5 via-destructive/10 to-destructive/5 p-4">
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-md w-full"
       >
         <Card className="text-center shadow-2xl border-0 overflow-hidden">
-          <div className="bg-gradient-to-r from-red-500 to-rose-500 p-6">
+          <div className="bg-gradient-to-r from-destructive to-destructive/80 p-6">
             <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto">
               <XCircle className="w-8 h-8 text-white" />
             </div>
           </div>
           <CardContent className="pt-6 pb-8">
-            <h1 className="text-2xl font-bold mb-2 font-display text-slate-800">{t.unableToLoad}</h1>
-            <p className="text-slate-500">{errorMessage}</p>
+            <h1 className="text-2xl font-bold mb-2 font-display text-foreground">{t.unableToLoad}</h1>
+            <p className="text-muted-foreground">{errorMessage}</p>
           </CardContent>
         </Card>
       </motion.div>
@@ -844,22 +844,20 @@ export default function TakeAssessment() {
   const renderNotStarted = () => {
     const orgData = errorOrganization;
     const assessmentTitle = errorAssessment?.title;
-    
+
     return (
-      <div 
-        className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-100 p-4" 
+      <div
+        className="min-h-screen flex items-center justify-center bg-gradient-to-br from-warning/5 via-warning/10 to-warning/5 p-4"
         dir={isArabic ? "rtl" : "ltr"}
       >
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="max-w-md w-full"
         >
           <Card className="text-center shadow-2xl border-0 overflow-hidden">
             {orgData && (
-              <div 
-                className="p-4 bg-gradient-to-r from-amber-500 to-orange-500"
-              >
+              <div className="p-4 bg-gradient-to-r from-warning to-warning/80">
                 {orgData.logoUrl ? (
                   <img src={orgData.logoUrl} alt={orgData.name} className="h-10 mx-auto object-contain brightness-0 invert" />
                 ) : (
@@ -871,16 +869,16 @@ export default function TakeAssessment() {
               </div>
             )}
             <CardContent className="pt-8 pb-8">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-warning to-warning/80 flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <Clock className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-2xl font-bold mb-2 font-display text-slate-800">{t.notYetOpen}</h1>
+              <h1 className="text-2xl font-bold mb-2 font-display text-foreground">{t.notYetOpen}</h1>
               {assessmentTitle && (
-                <p className="text-sm text-slate-500 mb-3 font-medium">{assessmentTitle}</p>
+                <p className="text-sm text-muted-foreground mb-3 font-medium">{assessmentTitle}</p>
               )}
-              <p className="text-slate-600">
+              <p className="text-foreground/80">
                 {t.notYetOpenDesc}{" "}
-                <span className="font-semibold text-amber-600">
+                <span className="font-semibold text-warning">
                   {startDate ? new Date(startDate).toLocaleDateString(isArabic ? "ar-SA" : "en-US", {
                     weekday: "long",
                     year: "numeric",
@@ -901,20 +899,20 @@ export default function TakeAssessment() {
   const renderExpired = () => {
     const orgData = errorOrganization;
     const assessmentTitle = errorAssessment?.title;
-    
+
     return (
-      <div 
-        className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-rose-50 to-pink-100 p-4" 
+      <div
+        className="min-h-screen flex items-center justify-center bg-gradient-to-br from-destructive/5 via-destructive/10 to-destructive/5 p-4"
         dir={isArabic ? "rtl" : "ltr"}
       >
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="max-w-md w-full"
         >
           <Card className="text-center shadow-2xl border-0 overflow-hidden">
             {orgData && (
-              <div className="p-4 bg-gradient-to-r from-red-500 to-rose-500">
+              <div className="p-4 bg-gradient-to-r from-destructive to-destructive/80">
                 {orgData.logoUrl ? (
                   <img src={orgData.logoUrl} alt={orgData.name} className="h-10 mx-auto object-contain brightness-0 invert" />
                 ) : (
@@ -926,16 +924,16 @@ export default function TakeAssessment() {
               </div>
             )}
             <CardContent className="pt-8 pb-8">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-400 to-rose-500 flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-destructive to-destructive/80 flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <AlertTriangle className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-2xl font-bold mb-2 font-display text-slate-800">{t.assessmentEnded}</h1>
+              <h1 className="text-2xl font-bold mb-2 font-display text-foreground">{t.assessmentEnded}</h1>
               {assessmentTitle && (
-                <p className="text-sm text-slate-500 mb-3 font-medium">{assessmentTitle}</p>
+                <p className="text-sm text-muted-foreground mb-3 font-medium">{assessmentTitle}</p>
               )}
-              <p className="text-slate-600">{t.assessmentEndedDesc}</p>
+              <p className="text-foreground/80">{t.assessmentEndedDesc}</p>
               {endDate && (
-                <p className="text-xs text-slate-400 mt-3">
+                <p className="text-xs text-muted-foreground mt-3">
                   {isArabic ? "انتهى في" : "Ended on"}{" "}
                   {new Date(endDate).toLocaleDateString(isArabic ? "ar-SA" : "en-US", {
                     year: "numeric",
@@ -954,20 +952,20 @@ export default function TakeAssessment() {
   const renderClosed = () => {
     const orgData = errorOrganization;
     const assessmentTitle = errorAssessment?.title;
-    
+
     return (
-      <div 
-        className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 via-gray-100 to-zinc-200 p-4" 
+      <div
+        className="min-h-screen flex items-center justify-center bg-gradient-to-br from-muted via-muted/50 to-muted p-4"
         dir={isArabic ? "rtl" : "ltr"}
       >
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="max-w-md w-full"
         >
           <Card className="text-center shadow-2xl border-0 overflow-hidden">
             {orgData && (
-              <div className="p-4 bg-gradient-to-r from-slate-500 to-gray-600">
+              <div className="p-4 bg-gradient-to-r from-muted-foreground to-muted-foreground/80">
                 {orgData.logoUrl ? (
                   <img src={orgData.logoUrl} alt={orgData.name} className="h-10 mx-auto object-contain brightness-0 invert" />
                 ) : (
@@ -979,14 +977,14 @@ export default function TakeAssessment() {
               </div>
             )}
             <CardContent className="pt-8 pb-8">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-400 to-gray-500 flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-muted-foreground to-muted-foreground/80 flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <XCircle className="w-8 h-8 text-white" />
               </div>
-              <h1 className="text-2xl font-bold mb-2 font-display text-slate-800">{t.assessmentClosed}</h1>
+              <h1 className="text-2xl font-bold mb-2 font-display text-foreground">{t.assessmentClosed}</h1>
               {assessmentTitle && (
-                <p className="text-sm text-slate-500 mb-3 font-medium">{assessmentTitle}</p>
+                <p className="text-sm text-muted-foreground mb-3 font-medium">{assessmentTitle}</p>
               )}
-              <p className="text-slate-600">{t.assessmentClosedDesc}</p>
+              <p className="text-foreground/80">{t.assessmentClosedDesc}</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -995,20 +993,20 @@ export default function TakeAssessment() {
   };
 
   const renderRegister = () => (
-    <div 
-      className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-100" 
+    <div
+      className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-primary/5 to-primary/10"
       dir={isArabic ? "rtl" : "ltr"}
     >
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-lg w-full"
       >
         <Card className="shadow-2xl border-0 overflow-hidden">
-          <div 
+          <div
             className="p-6 text-center text-white"
-            style={{ 
-              background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6, #6366f1)'
+            style={{
+              background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, hsl(243 75% 59%), hsl(243 70% 68%))'
             }}
           >
             {organization?.logoUrl ? (
@@ -1025,34 +1023,34 @@ export default function TakeAssessment() {
           <CardContent className="p-6 space-y-4">
             {/* Employee Code - First and Required */}
             <div className="space-y-2">
-              <Label htmlFor="employee_code" className="flex items-center gap-1 text-slate-700">
-                {t.employeeCode} <span className="text-red-500">*</span>
+              <Label htmlFor="employee_code" className="flex items-center gap-1 text-foreground/80">
+                {t.employeeCode} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="employee_code"
                 value={regForm.employee_code}
                 onChange={(e) => setRegForm({ ...regForm, employee_code: e.target.value })}
                 placeholder={isArabic ? "أدخل رقم الموظف" : "Enter employee code"}
-                className="border-slate-200 focus:border-blue-400 transition-all"
+                className="border-border focus:border-primary transition-all"
                 style={{ textAlign: isArabic ? 'right' : 'left' }}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="full_name" className="flex items-center gap-1 text-slate-700">
-                {t.fullName} <span className="text-red-500">*</span>
+              <Label htmlFor="full_name" className="flex items-center gap-1 text-foreground/80">
+                {t.fullName} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="full_name"
                 value={regForm.full_name}
                 onChange={(e) => setRegForm({ ...regForm, full_name: e.target.value })}
                 placeholder={isArabic ? "أدخل اسمك الكامل" : "Enter your full name"}
-                className="border-slate-200 focus:border-blue-400 transition-all"
+                className="border-border focus:border-primary transition-all"
                 style={{ textAlign: isArabic ? 'right' : 'left' }}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email" className="flex items-center gap-1 text-slate-700">
-                {t.email} <span className="text-red-500">*</span>
+              <Label htmlFor="email" className="flex items-center gap-1 text-foreground/80">
+                {t.email} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="email"
@@ -1060,40 +1058,40 @@ export default function TakeAssessment() {
                 value={regForm.email}
                 onChange={(e) => setRegForm({ ...regForm, email: e.target.value })}
                 placeholder={isArabic ? "بريدك@الشركة.com" : "your.email@company.com"}
-                className="border-slate-200 focus:border-blue-400 transition-all"
+                className="border-border focus:border-primary transition-all"
                 style={{ textAlign: isArabic ? 'right' : 'left', direction: 'ltr' }}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="department" className="text-slate-700">{t.department}</Label>
+                <Label htmlFor="department" className="text-foreground/80">{t.department}</Label>
                 <Input
                   id="department"
                   value={regForm.department}
                   onChange={(e) => setRegForm({ ...regForm, department: e.target.value })}
                   placeholder={isArabic ? "مثال: تقنية المعلومات" : "e.g., IT"}
-                  className="border-slate-200 focus:border-blue-400 transition-all"
+                  className="border-border focus:border-primary transition-all"
                   style={{ textAlign: isArabic ? 'right' : 'left' }}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="job_title" className="text-slate-700">{t.jobTitle}</Label>
+                <Label htmlFor="job_title" className="text-foreground/80">{t.jobTitle}</Label>
                 <Input
                   id="job_title"
                   value={regForm.job_title}
                   onChange={(e) => setRegForm({ ...regForm, job_title: e.target.value })}
                   placeholder={isArabic ? "مثال: مدير" : "e.g., Manager"}
-                  className="border-slate-200 focus:border-blue-400 transition-all"
+                  className="border-border focus:border-primary transition-all"
                   style={{ textAlign: isArabic ? 'right' : 'left' }}
                 />
               </div>
             </div>
-            <Button 
-              className="w-full mt-4 h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all" 
-              size="lg" 
+            <Button
+              className="w-full mt-4 h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all"
+              size="lg"
               onClick={handleRegister}
-              style={{ 
-                background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6, #6366f1)'
+              style={{
+                background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, hsl(243 75% 59%), hsl(243 70% 68%))'
               }}
             >
               {t.continue}
@@ -1106,21 +1104,21 @@ export default function TakeAssessment() {
   );
 
   const renderIntro = () => (
-    <div 
-      className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-100" 
+    <div
+      className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-primary/5 to-primary/10"
       dir={isArabic ? "rtl" : "ltr"}
     >
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-5xl w-full"
       >
         <Card className="shadow-2xl border-0 overflow-hidden">
           {/* Header with gradient */}
-          <div 
+          <div
             className="p-6 text-center text-white"
-            style={{ 
-              background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6, #6366f1)'
+            style={{
+              background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, hsl(243 75% 59%), hsl(243 70% 68%))'
             }}
           >
             {organization?.logoUrl ? (
@@ -1138,9 +1136,9 @@ export default function TakeAssessment() {
           </div>
 
           <CardContent className="p-6 space-y-6">
-            {/* Assessment Info - Colorful Cards */}
+            {/* Assessment Info Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-lg">
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-br from-primary to-primary/80 text-white shadow-lg">
                 <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
                   <FileText className="w-6 h-6" />
                 </div>
@@ -1149,7 +1147,7 @@ export default function TakeAssessment() {
                   <p className="text-2xl font-bold">{assessmentData?.questions.length}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg">
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-br from-success to-success/80 text-white shadow-lg">
                 <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
                   <Clock className="w-6 h-6" />
                 </div>
@@ -1158,7 +1156,7 @@ export default function TakeAssessment() {
                     {assessmentData?.assessment.config?.timeLimit ? t.timeLimit : t.estimatedTime}
                   </p>
                   <p className="text-2xl font-bold">
-                    {assessmentData?.assessment.config?.timeLimit || 
+                    {assessmentData?.assessment.config?.timeLimit ||
                      Math.ceil((assessmentData?.questions.length || 20) * 0.5)} <span className="text-base font-normal">{t.minutes}</span>
                   </p>
                 </div>
@@ -1166,43 +1164,43 @@ export default function TakeAssessment() {
             </div>
 
             {/* Instructions */}
-            <div className="space-y-3 bg-slate-50 rounded-xl p-5">
-              <h3 className="font-semibold font-display text-slate-800 flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold">i</div>
+            <div className="space-y-3 bg-muted/50 rounded-xl p-5">
+              <h3 className="font-semibold font-display text-foreground flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">i</div>
                 {t.instructions}
               </h3>
               <ul className={`space-y-3 ${isArabic ? "pr-2" : "pl-2"}`}>
                 <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <div className="w-5 h-5 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-success" />
                   </div>
-                  <span className="text-slate-600">{t.instruction1}</span>
+                  <span className="text-muted-foreground">{t.instruction1}</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <div className="w-5 h-5 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-success" />
                   </div>
-                  <span className="text-slate-600">{t.instruction2}</span>
+                  <span className="text-muted-foreground">{t.instruction2}</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <div className="w-5 h-5 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-success" />
                   </div>
-                  <span className="text-slate-600">{t.instruction3}</span>
+                  <span className="text-muted-foreground">{t.instruction3}</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <div className="w-5 h-5 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-success" />
                   </div>
-                  <span className="text-slate-600">{t.instruction4}</span>
+                  <span className="text-muted-foreground">{t.instruction4}</span>
                 </li>
-                <li className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
-                  <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                  <span className="text-amber-700 font-medium">{t.instruction5}</span>
+                <li className="flex items-start gap-3 p-3 bg-warning/10 rounded-lg border border-warning/30">
+                  <AlertTriangle className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
+                  <span className="text-warning font-medium">{t.instruction5}</span>
                 </li>
-                <li className="flex items-start gap-3 p-4 bg-red-50 rounded-lg border-2 border-red-300">
-                  <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
-                  <span className="text-red-700 font-bold">{t.integrityWarning}</span>
+                <li className="flex items-start gap-3 p-4 bg-destructive/5 rounded-lg border-2 border-destructive/30">
+                  <AlertTriangle className="w-6 h-6 text-destructive flex-shrink-0 mt-0.5" />
+                  <span className="text-destructive font-bold">{t.integrityWarning}</span>
                 </li>
               </ul>
             </div>
@@ -1228,32 +1226,32 @@ export default function TakeAssessment() {
             )}
 
             {assessmentData?.participant && (
-              <div className="text-center p-3 bg-slate-100 rounded-xl">
-                <p className="text-sm text-slate-600">
-                  {t.takingAs}: <strong className="text-slate-800">{assessmentData.participant.full_name}</strong>
+              <div className="text-center p-3 bg-muted/50 rounded-xl">
+                <p className="text-sm text-muted-foreground">
+                  {t.takingAs}: <strong className="text-foreground">{assessmentData.participant.full_name}</strong>
                 </p>
               </div>
             )}
 
             {/* Integrity Acknowledgement Checkbox */}
-            <div className="flex items-start gap-3 p-4 bg-red-50 rounded-xl border-2 border-red-200">
-              <Checkbox 
+            <div className="flex items-start gap-3 p-4 bg-destructive/5 rounded-xl border-2 border-destructive/20">
+              <Checkbox
                 id="integrity-acknowledge"
                 checked={integrityAcknowledged}
                 onCheckedChange={(checked) => setIntegrityAcknowledged(checked === true)}
-                className="mt-0.5 border-red-400 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                className="mt-0.5 border-destructive data-[state=checked]:bg-destructive data-[state=checked]:border-destructive"
               />
-              <Label 
-                htmlFor="integrity-acknowledge" 
-                className="text-sm text-red-700 font-medium cursor-pointer leading-relaxed"
+              <Label
+                htmlFor="integrity-acknowledge"
+                className="text-sm text-destructive font-medium cursor-pointer leading-relaxed"
               >
                 {t.integrityAcknowledge}
               </Label>
             </div>
 
-            <Button 
-              className="w-full h-14 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed" 
-              size="lg" 
+            <Button
+              className="w-full h-14 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              size="lg"
               onClick={() => {
                 if (!integrityAcknowledged) {
                   toast.error(t.mustAcknowledge);
@@ -1262,10 +1260,10 @@ export default function TakeAssessment() {
                 handleStartAssessment();
               }}
               disabled={!integrityAcknowledged}
-              style={{ 
-                background: integrityAcknowledged 
-                  ? (primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6, #6366f1)')
-                  : 'linear-gradient(135deg, #94a3b8, #64748b)'
+              style={{
+                background: integrityAcknowledged
+                  ? (primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, hsl(243 75% 59%), hsl(243 70% 68%))')
+                  : 'hsl(var(--muted-foreground))'
               }}
             >
               {t.startAssessment}
@@ -1288,8 +1286,8 @@ export default function TakeAssessment() {
     const canSwipePrev = !isFirst;
 
     return (
-      <div 
-        className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 overflow-x-hidden" 
+      <div
+        className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-primary/10 overflow-x-hidden"
         dir={isArabic ? "rtl" : "ltr"}
         {...(isMobile ? swipeHandlers : {})}
       >
@@ -1307,8 +1305,8 @@ export default function TakeAssessment() {
         {/* Header with progress and timer */}
         <div 
           className="sticky top-0 z-10 backdrop-blur-md border-b border-white/20 shadow-sm"
-          style={{ 
-            background: primaryColor ? `linear-gradient(135deg, ${primaryColor}ee, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6ee, #6366f1dd)',
+          style={{
+            background: primaryColor ? `linear-gradient(135deg, ${primaryColor}ee, ${primaryColor}dd)` : 'linear-gradient(135deg, hsl(243 75% 59% / 0.93), hsl(243 70% 68% / 0.87))',
           }}
         >
           <div className="max-w-5xl mx-auto px-3 sm:px-6 py-3 sm:py-4">
@@ -1395,19 +1393,19 @@ export default function TakeAssessment() {
                 <Card className="shadow-2xl border-0 overflow-hidden">
                   <CardContent className="p-6 sm:p-8" style={{ textAlign: isArabic ? 'right' : 'left' }}>
                     <div className="flex items-center gap-3 mb-6">
-                      <div 
+                      <div
                         className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg"
-                        style={{ 
-                          background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6, #6366f1)'
+                        style={{
+                          background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, hsl(243 75% 59%), hsl(243 70% 68%))'
                         }}
                       >
                         {currentQuestionIndex + 1}
                       </div>
-                      <div className="flex-1 h-px bg-gradient-to-r from-slate-200 to-transparent" />
+                      <div className="flex-1 h-px bg-gradient-to-r from-border to-transparent" />
                     </div>
                     
-                    <h2 
-                      className={`text-lg sm:text-xl font-semibold mb-6 sm:mb-8 font-display leading-relaxed text-slate-800 ${isArabic ? 'text-right' : 'text-left'}`}
+                    <h2
+                      className={`text-lg sm:text-xl font-semibold mb-6 sm:mb-8 font-display leading-relaxed text-foreground ${isArabic ? 'text-right' : 'text-left'}`}
                       style={{ unicodeBidi: 'plaintext' }}
                     >
                       {question.text}
@@ -1425,8 +1423,8 @@ export default function TakeAssessment() {
                               whileTap={{ scale: 0.98 }}
                               className={`flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-xl border-2 cursor-pointer transition-all ${
                                 isChecked 
-                                  ? "border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-md" 
-                                  : "border-slate-200 hover:border-blue-300 hover:bg-slate-50"
+                                  ? "border-primary bg-gradient-to-r from-primary/5 to-primary/10 shadow-md" 
+                                  : "border-border hover:border-primary/40 hover:bg-muted/30"
                               }`}
                               onClick={() => handleMultiAnswer(question.id, optionValue, !isChecked)}
                             >
@@ -1436,7 +1434,7 @@ export default function TakeAssessment() {
                                 className="w-5 h-5"
                               />
                               <Label 
-                                className={`flex-1 cursor-pointer text-sm sm:text-base text-slate-700 ${isArabic ? 'text-right' : 'text-left'}`}
+                                className={`flex-1 cursor-pointer text-sm sm:text-base text-foreground/80 ${isArabic ? 'text-right' : 'text-left'}`}
                                 style={{ unicodeBidi: 'plaintext' }}
                               >
                                 {option.text}
@@ -1463,8 +1461,8 @@ export default function TakeAssessment() {
                               whileTap={{ scale: 0.98 }}
                               className={`flex items-center gap-3 sm:gap-4 p-4 sm:p-5 rounded-xl border-2 cursor-pointer transition-all ${
                                 isSelected 
-                                  ? "border-blue-500 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-md" 
-                                  : "border-slate-200 hover:border-blue-300 hover:bg-slate-50"
+                                  ? "border-primary bg-gradient-to-r from-primary/5 to-primary/10 shadow-md" 
+                                  : "border-border hover:border-primary/40 hover:bg-muted/30"
                               }`}
                               onClick={() => handleAnswer(question.id, optionValue)}
                             >
@@ -1475,7 +1473,7 @@ export default function TakeAssessment() {
                               />
                               <Label 
                                 htmlFor={`option-${index}`} 
-                                className={`flex-1 cursor-pointer text-sm sm:text-base text-slate-700 ${isArabic ? 'text-right' : 'text-left'}`}
+                                className={`flex-1 cursor-pointer text-sm sm:text-base text-foreground/80 ${isArabic ? 'text-right' : 'text-left'}`}
                                 style={{ unicodeBidi: 'plaintext' }}
                               >
                                 {option.text}
@@ -1497,7 +1495,7 @@ export default function TakeAssessment() {
               variant="outline"
               onClick={handlePrevious}
               disabled={isFirst}
-              className="h-12 sm:h-14 px-4 sm:px-6 bg-white shadow-lg hover:shadow-xl border-slate-200 text-sm sm:text-base flex-1 sm:flex-none"
+              className="h-12 sm:h-14 px-4 sm:px-6 bg-card shadow-lg hover:shadow-xl border-border text-sm sm:text-base flex-1 sm:flex-none"
             >
               <ArrowLeft className={`w-4 h-4 sm:w-5 sm:h-5 ${isArabic ? "ml-1 sm:ml-2 rotate-180" : "mr-1 sm:mr-2"}`} />
               <span className="hidden sm:inline">{t.previous}</span>
@@ -1506,8 +1504,8 @@ export default function TakeAssessment() {
             <Button 
               onClick={handleNext} 
               className="h-12 sm:h-14 px-6 sm:px-8 shadow-lg hover:shadow-xl text-sm sm:text-base flex-1 sm:flex-none"
-              style={{ 
-                background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6, #6366f1)'
+              style={{
+                background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, hsl(243 75% 59%), hsl(243 70% 68%))'
               }}
             >
               <span className="hidden sm:inline">{isLast ? t.submit : t.next}</span>
@@ -1533,22 +1531,22 @@ export default function TakeAssessment() {
   };
 
   const renderSubmitting = () => (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-violet-100" dir={isArabic ? "rtl" : "ltr"}>
-      <motion.div 
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-primary/5 to-primary/10" dir={isArabic ? "rtl" : "ltr"}>
+      <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="text-center"
       >
-        <div 
+        <div
           className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl"
-          style={{ 
-            background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, #3b82f6, #6366f1)'
+          style={{
+            background: primaryColor ? `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` : 'linear-gradient(135deg, hsl(243 75% 59%), hsl(243 70% 68%))'
           }}
         >
           <Loader2 className="w-12 h-12 animate-spin text-white" />
         </div>
-        <p className="text-xl font-semibold font-display text-slate-800">{t.submitting}</p>
-        <p className="text-slate-500 mt-1">{t.pleaseWait}</p>
+        <p className="text-xl font-semibold font-display text-foreground">{t.submitting}</p>
+        <p className="text-muted-foreground mt-1">{t.pleaseWait}</p>
       </motion.div>
     </div>
   );
@@ -1558,20 +1556,20 @@ export default function TakeAssessment() {
     const orgLogo = orgData?.logoUrl;
     const orgName = orgData?.name;
     const completedPrimaryColor = orgData?.primaryColor || primaryColor;
-    
+
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-green-50 to-teal-100 p-4" dir={isArabic ? "rtl" : "ltr"}>
-        <motion.div 
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-success/5 via-success/10 to-success/5 p-4" dir={isArabic ? "rtl" : "ltr"}>
+        <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: "spring", duration: 0.6 }}
           className="max-w-md w-full"
         >
           <Card className="text-center shadow-2xl border-0 overflow-hidden">
-            <div 
+            <div
               className="p-6 text-white"
-              style={{ 
-                background: completedPrimaryColor ? `linear-gradient(135deg, ${completedPrimaryColor}, ${completedPrimaryColor}dd)` : 'linear-gradient(135deg, #10b981, #059669)'
+              style={{
+                background: completedPrimaryColor ? `linear-gradient(135deg, ${completedPrimaryColor}, ${completedPrimaryColor}dd)` : 'linear-gradient(135deg, hsl(160 84% 39%), hsl(160 84% 30%))'
               }}
             >
               {orgLogo ? (
@@ -1584,15 +1582,15 @@ export default function TakeAssessment() {
               ) : null}
             </div>
             <CardContent className="pt-8 pb-10">
-              <motion.div 
+              <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", delay: 0.2, duration: 0.5 }}
-                className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center mx-auto mb-6 shadow-xl relative"
+                className="w-24 h-24 rounded-full bg-gradient-to-br from-success to-success/80 flex items-center justify-center mx-auto mb-6 shadow-xl relative"
               >
                 <CheckCircle2 className="w-12 h-12 text-white" />
                 <motion.div
-                  className="absolute inset-0 rounded-full bg-gradient-to-br from-emerald-400 to-green-500"
+                  className="absolute inset-0 rounded-full bg-gradient-to-br from-success to-success/80"
                   initial={{ scale: 1, opacity: 0.5 }}
                   animate={{ scale: 1.5, opacity: 0 }}
                   transition={{ duration: 1, repeat: Infinity }}
@@ -1604,11 +1602,11 @@ export default function TakeAssessment() {
                 transition={{ delay: 0.4 }}
               >
                 <div className="flex items-center justify-center gap-2 mb-3">
-                  <Sparkles className="w-5 h-5 text-amber-500" />
-                  <h1 className="text-3xl font-bold font-display text-slate-800">{t.thankYou}</h1>
-                  <Sparkles className="w-5 h-5 text-amber-500" />
+                  <Sparkles className="w-5 h-5 text-cta" />
+                  <h1 className="text-3xl font-bold font-display text-foreground">{t.thankYou}</h1>
+                  <Sparkles className="w-5 h-5 text-cta" />
                 </div>
-                <p className="text-slate-500">{t.submittedSuccess}</p>
+                <p className="text-muted-foreground">{t.submittedSuccess}</p>
               </motion.div>
             </CardContent>
           </Card>
@@ -1636,7 +1634,7 @@ export default function TakeAssessment() {
 
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-100 p-4" dir={isArabic ? "rtl" : "ltr"}>
+      <div className="min-h-screen bg-gradient-to-br from-success/5 via-success/10 to-success/5 p-4" dir={isArabic ? "rtl" : "ltr"}>
         <div className="max-w-3xl mx-auto py-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1644,10 +1642,10 @@ export default function TakeAssessment() {
           >
             <Card className="shadow-2xl border-0 overflow-hidden">
               {/* Header with gradient branding */}
-              <div 
+              <div
                 className="p-6 text-center text-white"
-                style={{ 
-                  background: resultPrimaryColor ? `linear-gradient(135deg, ${resultPrimaryColor}, ${resultPrimaryColor}dd)` : 'linear-gradient(135deg, #10b981, #059669)'
+                style={{
+                  background: resultPrimaryColor ? `linear-gradient(135deg, ${resultPrimaryColor}, ${resultPrimaryColor}dd)` : 'linear-gradient(135deg, hsl(160 84% 39%), hsl(160 84% 30%))'
                 }}
               >
                 {orgLogo ? (
@@ -1717,7 +1715,7 @@ export default function TakeAssessment() {
                         transition={{ delay: 0.4 }}
                         className="mt-8 text-left"
                       >
-                        <h4 className="font-semibold text-lg text-slate-700 mb-4 text-center">
+                        <h4 className="font-semibold text-lg text-foreground/80 mb-4 text-center">
                           {isArabic ? "تحليل الكفاءات" : "Competency Breakdown"}
                         </h4>
                         <div className="grid gap-3">
@@ -1727,10 +1725,10 @@ export default function TakeAssessment() {
                               initial={{ opacity: 0, x: isArabic ? 20 : -20 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ delay: 0.1 * index + 0.5 }}
-                              className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm"
+                              className="p-4 bg-card rounded-xl border border-border shadow-sm"
                             >
                               <div className="flex items-center justify-between mb-2">
-                                <span className="font-medium text-slate-700">{competency}</span>
+                                <span className="font-medium text-foreground/80">{competency}</span>
                                 <span 
                                   className="text-sm font-bold px-3 py-1 rounded-full text-white"
                                   style={{ 
@@ -1740,7 +1738,7 @@ export default function TakeAssessment() {
                                   {data.grade} ({data.percentage}%)
                                 </span>
                               </div>
-                              <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                              <div className="h-3 bg-muted rounded-full overflow-hidden">
                                 <motion.div 
                                   className="h-full rounded-full"
                                   initial={{ width: 0 }}
@@ -1761,7 +1759,7 @@ export default function TakeAssessment() {
 
                 {!isGraded && scoreSummary?.traits && (
                   <div className="space-y-4">
-                    <h3 className="font-semibold text-lg font-display text-slate-800 flex items-center gap-2">
+                    <h3 className="font-semibold text-lg font-display text-foreground flex items-center gap-2">
                       <div 
                         className="w-8 h-8 rounded-lg flex items-center justify-center text-white"
                         style={{ 
@@ -1779,10 +1777,10 @@ export default function TakeAssessment() {
                           initial={{ opacity: 0, x: isArabic ? 20 : -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.1 * index }}
-                          className="p-4 bg-gradient-to-r from-slate-50 to-white rounded-xl border border-slate-100 shadow-sm"
+                          className="p-4 bg-gradient-to-r from-muted/50 to-card rounded-xl border border-border/50 shadow-sm"
                         >
                           <div className="flex items-center justify-between mb-2">
-                            <span className="capitalize font-medium text-slate-700">{trait}</span>
+                            <span className="capitalize font-medium text-foreground/80">{trait}</span>
                             <span 
                               className="text-sm font-bold px-3 py-1 rounded-full text-white"
                               style={{ 
@@ -1792,7 +1790,7 @@ export default function TakeAssessment() {
                               {typeof score === 'number' ? score.toFixed(1) : score}/5
                             </span>
                           </div>
-                          <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-3 bg-muted rounded-full overflow-hidden">
                             <motion.div 
                               className="h-full rounded-full"
                               initial={{ width: 0 }}
@@ -1816,7 +1814,7 @@ export default function TakeAssessment() {
                     transition={{ delay: 0.3 }}
                     className="border-t pt-6"
                   >
-                    <h3 className="font-semibold text-lg font-display text-slate-800 mb-4 flex items-center gap-2">
+                    <h3 className="font-semibold text-lg font-display text-foreground mb-4 flex items-center gap-2">
                       <div 
                         className="w-8 h-8 rounded-lg flex items-center justify-center text-white"
                         style={{ 
@@ -1836,7 +1834,7 @@ export default function TakeAssessment() {
                     >
                       <p 
                         dir={isArabic ? "rtl" : "ltr"}
-                        className={`whitespace-pre-wrap leading-relaxed text-slate-700 ${isArabic ? "text-right" : "text-left"}`}
+                        className={`whitespace-pre-wrap leading-relaxed text-foreground/80 ${isArabic ? "text-right" : "text-left"}`}
                         style={{ unicodeBidi: "plaintext" }}
                       >
                         {aiReport}

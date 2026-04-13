@@ -26,7 +26,7 @@ export interface UserWithRole {
 
 export type AppRole = "super_admin" | "org_admin" | "hr_admin";
 
-export type ActiveSection = 'dashboard' | 'organizations' | 'users' | 'subscriptions' | 'settings';
+export type ActiveSection = 'dashboard' | 'organizations' | 'users' | 'subscriptions' | 'settings' | 'stripe';
 
 export const planColors: Record<string, string> = {
   free: 'bg-muted text-muted-foreground',

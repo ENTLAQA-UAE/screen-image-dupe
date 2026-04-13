@@ -103,11 +103,31 @@ const getIconColor = (type: string) => {
 
 const getCardGradient = (type: string) => {
   switch (type?.toLowerCase()) {
-    case 'cognitive': return "bg-gradient-to-br from-blue-500 to-blue-600";
-    case 'personality': return "bg-gradient-to-br from-rose-500 to-rose-600";
-    case 'situational': return "bg-gradient-to-br from-amber-500 to-amber-600";
-    case 'language': return "bg-gradient-to-br from-violet-500 to-violet-600";
-    default: return "bg-gradient-to-br from-slate-500 to-slate-600";
+    case 'cognitive': return "bg-white dark:bg-card border border-border border-l-4 border-l-primary";
+    case 'personality': return "bg-white dark:bg-card border border-border border-l-4 border-l-pink-500";
+    case 'situational': return "bg-white dark:bg-card border border-border border-l-4 border-l-cta";
+    case 'language': return "bg-white dark:bg-card border border-border border-l-4 border-l-violet-500";
+    default: return "bg-white dark:bg-card border border-border border-l-4 border-l-muted-foreground";
+  }
+};
+
+const getCardTextColor = (type: string) => {
+  switch (type?.toLowerCase()) {
+    case 'cognitive': return "text-primary";
+    case 'personality': return "text-pink-500";
+    case 'situational': return "text-cta";
+    case 'language': return "text-violet-500";
+    default: return "text-muted-foreground";
+  }
+};
+
+const getCardIconBg = (type: string) => {
+  switch (type?.toLowerCase()) {
+    case 'cognitive': return "bg-primary/10 text-primary";
+    case 'personality': return "bg-pink-500/10 text-pink-500";
+    case 'situational': return "bg-cta/10 text-cta";
+    case 'language': return "bg-violet-500/10 text-violet-500";
+    default: return "bg-muted text-muted-foreground";
   }
 };
 
@@ -413,7 +433,7 @@ const Assessments = () => {
 
   return (
     <DashboardLayout activeItem="Assessments">
-      <div className="p-8">
+      <div>
         {/* Limit Warning */}
         <LimitWarning 
           resourceType="assessments" 
@@ -427,7 +447,7 @@ const Assessments = () => {
             <motion.h1 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-2xl font-display font-bold text-foreground mb-1"
+              className="text-2xl font-bold text-foreground mb-1"
             >
               {t.assessments.title}
               <LimitBadge currentUsage={usage.assessments} limit={limits.assessments} />
@@ -501,8 +521,9 @@ const Assessments = () => {
               const assessmentTypes = getAssessmentTypes(t);
               const statusConfig = getStatusConfig(t);
               const IconComponent = getAssessmentIcon(assessment.type);
-              const iconColor = getIconColor(assessment.type);
               const cardGradient = getCardGradient(assessment.type);
+              const cardTextColor = getCardTextColor(assessment.type);
+              const cardIconBg = getCardIconBg(assessment.type);
               const status = statusConfig[assessment.status as keyof typeof statusConfig] || statusConfig.draft;
               const StatusIcon = status.icon;
 
@@ -512,15 +533,15 @@ const Assessments = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className={`rounded-2xl p-6 hover:shadow-xl transition-all hover:scale-[1.02] ${cardGradient} text-white`}
+                  className={`rounded-2xl p-6 hover:shadow-xl transition-all hover:scale-[1.02] ${cardGradient}`}
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${iconColor} backdrop-blur-sm`}>
+                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${cardIconBg}`}>
                       <IconComponent className="w-7 h-7" />
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-white/80 hover:text-white hover:bg-white/20">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted">
                           <MoreHorizontal className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -569,24 +590,24 @@ const Assessments = () => {
                     </DropdownMenu>
                   </div>
 
-                  <h3 className="font-semibold text-white text-lg mb-1 line-clamp-1">
+                  <h3 className="font-semibold text-foreground text-lg mb-1 line-clamp-1">
                     {assessment.title}
                   </h3>
-                  <p className="text-sm text-white/70 mb-4 line-clamp-2">
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                     {assessment.description || t.assessments.noDescription}
                   </p>
 
                   <div className="flex items-center justify-between text-sm">
-                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-white/20 text-white backdrop-blur-sm">
+                    <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium ${status.color}`}>
                       <StatusIcon className="w-3 h-3 mr-1.5" />
                       {status.label}
                     </span>
-                    <span className="text-white/80 font-medium">
+                    <span className="text-muted-foreground font-medium">
                       {assessment.questions_count} {t.assessments.questions.toLowerCase()}
                     </span>
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-white/20 text-xs text-white/60">
+                  <div className="mt-4 pt-4 border-t border-border text-xs text-muted-foreground">
                     {t.assessments.created} {formatDate(assessment.created_at)}
                   </div>
                 </motion.div>
