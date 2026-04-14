@@ -131,10 +131,10 @@ export function useSubscription(): SubscriptionState {
 
   const daysRemaining = (() => {
     if (isTrial && trialEnd) {
-      return Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+      return Math.max(0, Math.floor((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
     }
     if (periodEnd) {
-      return Math.max(0, Math.ceil((periodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+      return Math.max(0, Math.floor((periodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
     }
     return 0;
   })();
