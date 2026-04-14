@@ -66,14 +66,14 @@
 
     --radius: 0.75rem;
 
-    /* Sidebar: Deep Indigo 950 (#1E1B4B) */
-    --sidebar-background: 244 47% 20%;
-    --sidebar-foreground: 226 100% 94%;
+    /* Sidebar: Light theme by default (org admin can customize via branding) */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 221 39% 11%;
     --sidebar-primary: 243 75% 59%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 244 47% 28%;
-    --sidebar-accent-foreground: 226 100% 94%;
-    --sidebar-border: 244 40% 30%;
+    --sidebar-accent: 220 14% 96%;
+    --sidebar-accent-foreground: 221 39% 11%;
+    --sidebar-border: 220 13% 91%;
     --sidebar-ring: 243 75% 59%;
 
     /* Gradients */

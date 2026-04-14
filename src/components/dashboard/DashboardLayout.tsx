@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useOrganizationBranding } from "@/contexts/OrganizationBrandingContext";
+import { useSubscription } from "@/hooks/useSubscription";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { NotificationCenter } from "@/components/dashboard/NotificationCenter";
 import { TrialBanner } from "@/components/TrialBanner";
@@ -25,6 +26,8 @@ import {
   Menu,
   PanelLeftClose,
   PanelLeft,
+  Clock,
+  Sparkles,
 } from "lucide-react";
 
 interface NavItem {
@@ -61,9 +64,10 @@ interface DashboardLayoutProps {
 export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, signOut, isOrgAdmin, isHrAdmin } = useAuth();
+  const { user, signOut, isSuperAdmin, isOrgAdmin, isHrAdmin } = useAuth();
   const { t, isRTL, dir } = useLanguage();
   const { branding } = useOrganizationBranding();
+  const { isTrial, daysRemaining } = useSubscription();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -74,6 +78,7 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
   }, [isOrgAdmin, isHrAdmin]);
 
   const getRoleLabel = () => {
+    if (isSuperAdmin()) return t.roles.superAdmin;
     if (isOrgAdmin()) return t.roles.orgAdmin;
     if (isHrAdmin()) return t.roles.hrAdmin;
     return t.roles.user;
@@ -342,8 +347,38 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Trial Countdown — shown for org_admin on trial */}
+            {isOrgAdmin() && isTrial && (
+              <button
+                onClick={() => navigate('/subscription')}
+                className={`hidden md:inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-semibold transition-colors ${
+                  daysRemaining <= 3
+                    ? 'bg-amber-500/10 text-amber-700 hover:bg-amber-500/15 border border-amber-500/20'
+                    : 'bg-primary/5 text-primary hover:bg-primary/10 border border-primary/15'
+                }`}
+              >
+                {daysRemaining <= 3 ? (
+                  <Clock className="w-3.5 h-3.5" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5" />
+                )}
+                <span>
+                  {daysRemaining} {daysRemaining === 1 ? 'day' : 'days'} trial
+                </span>
+              </button>
+            )}
             <LanguageSwitcher />
             <NotificationCenter />
+            {/* User info — name + role label, consistent across roles */}
+            <div className={`flex items-center gap-3 ps-3 ms-1 border-s border-border/60`}>
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
+                {getUserName().charAt(0).toUpperCase()}
+              </div>
+              <div className="hidden sm:block leading-tight">
+                <p className="text-sm font-medium text-foreground">{getUserName()}</p>
+                <p className="text-[11px] text-muted-foreground">{getRoleLabel()}</p>
+              </div>
+            </div>
           </div>
         </header>
 
