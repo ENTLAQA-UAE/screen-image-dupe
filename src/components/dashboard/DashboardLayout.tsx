@@ -1,15 +1,24 @@
-import { ReactNode, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useOrganizationBranding } from "@/contexts/OrganizationBrandingContext";
 import { useSubscription } from "@/hooks/useSubscription";
+import { supabase } from "@/integrations/supabase/client";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { NotificationCenter } from "@/components/dashboard/NotificationCenter";
 import { TrialBanner } from "@/components/TrialBanner";
 import { TrialExpiredGate } from "@/components/TrialExpiredGate";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   BarChart3,
   FileText,
@@ -28,6 +37,7 @@ import {
   PanelLeft,
   Clock,
   Sparkles,
+  User as UserIcon,
 } from "lucide-react";
 
 interface NavItem {
@@ -86,6 +96,27 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
   })();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setAvatarUrl(null);
+      return;
+    }
+    let cancelled = false;
+    supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!cancelled) setAvatarUrl(data?.avatar_url ?? null);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // Re-fetch when navigating (e.g. after updating the avatar on /profile).
+  }, [user, location.pathname]);
 
   const navItems = useMemo(() => {
     if (isOrgAdmin()) return orgAdminNavItems;
@@ -183,27 +214,6 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
           );
         })}
       </nav>
-
-      {/* Sign Out */}
-      <div className={`p-3 ${useCustomColor ? 'border-t border-white/10' : 'border-t border-sidebar-border'}`}>
-        <button
-          onClick={() => {
-            onItemClick?.();
-            handleSignOut();
-          }}
-          title={collapsed ? t.nav.signOut : undefined}
-          className={`w-full flex items-center gap-3 rounded-lg text-[13px] font-medium transition-all duration-150 ${
-            collapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2.5'
-          } ${
-            useCustomColor
-              ? 'text-white/50 hover:bg-white/10 hover:text-white'
-              : 'text-sidebar-foreground/40 hover:bg-destructive/10 hover:text-destructive'
-          }`}
-        >
-          <LogOut className="w-4 h-4 flex-shrink-0" />
-          {!collapsed && t.nav.signOut}
-        </button>
-      </div>
     </>
   );
 
@@ -282,6 +292,49 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
         <div className="flex items-center gap-1">
           <LanguageSwitcher />
           <NotificationCenter />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="ms-1 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/20"
+                aria-label={t.nav.profile || 'Profile'}
+              >
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={getUserName()}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
+                    {getUserName().charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col leading-tight">
+                  <span className="text-sm font-medium truncate">{getUserName()}</span>
+                  <span className="text-[11px] text-muted-foreground truncate">
+                    {user?.email}
+                  </span>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate('/profile')}>
+                <UserIcon className="w-4 h-4 me-2" />
+                {t.nav.profile || 'Profile'}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={handleSignOut}
+                className="text-destructive focus:text-destructive"
+              >
+                <LogOut className="w-4 h-4 me-2" />
+                {t.nav.signOut}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
@@ -365,16 +418,54 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
             )}
             <LanguageSwitcher />
             <NotificationCenter />
-            {/* User info — name + role label, consistent across roles */}
-            <div className={`flex items-center gap-3 ps-3 ms-1 border-s border-border/60`}>
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
-                {getUserName().charAt(0).toUpperCase()}
-              </div>
-              <div className="hidden sm:block leading-tight">
-                <p className="text-sm font-medium text-foreground">{getUserName()}</p>
-                <p className="text-[11px] text-muted-foreground">{getRoleLabel()}</p>
-              </div>
-            </div>
+            {/* User info — opens dropdown with Profile / Sign Out */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="flex items-center gap-3 ps-3 ms-1 border-s border-border/60 rounded-e-md hover:bg-accent/40 transition-colors py-1 pe-2 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  aria-label={t.nav.profile || 'Profile'}
+                >
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt={getUserName()}
+                      className="w-8 h-8 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
+                      {getUserName().charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="hidden sm:block leading-tight text-start">
+                    <p className="text-sm font-medium text-foreground">{getUserName()}</p>
+                    <p className="text-[11px] text-muted-foreground">{getRoleLabel()}</p>
+                  </div>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col leading-tight">
+                    <span className="text-sm font-medium truncate">{getUserName()}</span>
+                    <span className="text-[11px] text-muted-foreground truncate">
+                      {user?.email}
+                    </span>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <UserIcon className="w-4 h-4 me-2" />
+                  {t.nav.profile || 'Profile'}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleSignOut}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <LogOut className="w-4 h-4 me-2" />
+                  {t.nav.signOut}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 

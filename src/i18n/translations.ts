@@ -16,6 +16,7 @@ export const translations = {
       subscription: "Subscription",
       settings: "Settings",
       signOut: "Sign Out",
+      profile: "Profile",
       search: "Search...",
     },
     // Roles
@@ -699,6 +700,7 @@ export const translations = {
       subscription: "الاشتراك",
       settings: "الإعدادات",
       signOut: "تسجيل الخروج",
+      profile: "الملف الشخصي",
       search: "بحث...",
     },
     // Roles
