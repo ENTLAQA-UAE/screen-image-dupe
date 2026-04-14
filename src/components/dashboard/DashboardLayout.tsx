@@ -67,7 +67,23 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
   const { user, signOut, isSuperAdmin, isOrgAdmin, isHrAdmin } = useAuth();
   const { t, isRTL, dir } = useLanguage();
   const { branding } = useOrganizationBranding();
-  const { isTrial, daysRemaining } = useSubscription();
+  const { subscription, isTrial, isPaid, daysRemaining } = useSubscription();
+
+  // Show trial chip whenever the org has a trial_end in the future and isn't on a paid plan,
+  // regardless of exact status string ('trial' vs 'trialing' etc.)
+  const hasActiveTrial =
+    !!subscription?.trial_end &&
+    new Date(subscription.trial_end).getTime() > Date.now() &&
+    !isPaid;
+  const showTrialChip = isOrgAdmin() && (isTrial || hasActiveTrial);
+  const trialDays = (() => {
+    if (daysRemaining > 0) return daysRemaining;
+    if (subscription?.trial_end) {
+      const diff = new Date(subscription.trial_end).getTime() - Date.now();
+      return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+    }
+    return 0;
+  })();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -168,25 +184,8 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
         })}
       </nav>
 
-      {/* User Section */}
+      {/* Sign Out */}
       <div className={`p-3 ${useCustomColor ? 'border-t border-white/10' : 'border-t border-sidebar-border'}`}>
-        {!collapsed && (
-          <div className={`flex items-center gap-3 px-3 py-2 rounded-lg mb-1 ${useCustomColor ? 'hover:bg-white/5' : ''}`}>
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-semibold ${
-              useCustomColor ? 'bg-white/15 text-white' : 'bg-sidebar-primary/15 text-sidebar-primary'
-            }`}>
-              {getUserName().charAt(0).toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className={`text-sm font-medium truncate ${useCustomColor ? 'text-white' : 'text-sidebar-foreground'}`}>
-                {getUserName()}
-              </p>
-              <p className={`text-[11px] truncate ${useCustomColor ? 'text-white/40' : 'text-sidebar-foreground/40'}`}>
-                {getRoleLabel()}
-              </p>
-            </div>
-          </div>
-        )}
         <button
           onClick={() => {
             onItemClick?.();
@@ -331,9 +330,6 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
         {/* Desktop Top Bar */}
         <header
           className={`hidden lg:flex h-16 bg-card border-b border-border items-center justify-between px-6 sticky top-0 z-40`}
-          style={{
-            [isRTL ? 'marginRight' : 'marginLeft']: contentOffset,
-          }}
         >
           <div className="flex items-center gap-4">
             <div className="relative">
@@ -348,22 +344,22 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
           </div>
           <div className="flex items-center gap-2">
             {/* Trial Countdown — shown for org_admin on trial */}
-            {isOrgAdmin() && isTrial && (
+            {showTrialChip && (
               <button
                 onClick={() => navigate('/subscription')}
                 className={`hidden md:inline-flex items-center gap-1.5 h-9 px-3 rounded-lg text-xs font-semibold transition-colors ${
-                  daysRemaining <= 3
+                  trialDays <= 3
                     ? 'bg-amber-500/10 text-amber-700 hover:bg-amber-500/15 border border-amber-500/20'
                     : 'bg-primary/5 text-primary hover:bg-primary/10 border border-primary/15'
                 }`}
               >
-                {daysRemaining <= 3 ? (
+                {trialDays <= 3 ? (
                   <Clock className="w-3.5 h-3.5" />
                 ) : (
                   <Sparkles className="w-3.5 h-3.5" />
                 )}
                 <span>
-                  {daysRemaining} {daysRemaining === 1 ? 'day' : 'days'} trial
+                  {trialDays} {trialDays === 1 ? 'day' : 'days'} trial
                 </span>
               </button>
             )}
@@ -383,17 +379,10 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
         </header>
 
         {/* Trial Banner */}
-        <div style={{ [isRTL ? 'marginRight' : 'marginLeft']: contentOffset }}>
-          <TrialBanner />
-        </div>
+        <TrialBanner />
 
         {/* Page Content */}
-        <main
-          className="min-h-[calc(100vh-4rem)]"
-          style={{
-            [isRTL ? 'marginRight' : 'marginLeft']: contentOffset,
-          }}
-        >
+        <main className="min-h-[calc(100vh-4rem)]">
           <TrialExpiredGate>
             <div className="p-4 sm:p-6 lg:p-8">
               {children}
