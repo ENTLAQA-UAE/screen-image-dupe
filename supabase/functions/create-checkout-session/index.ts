@@ -169,6 +169,7 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: "subscription",
+      payment_method_types: ["card"],
       line_items: [lineItem],
       success_url: successUrl || `${req.headers.get("origin")}/subscription?checkout=success`,
       cancel_url: cancelUrl || `${req.headers.get("origin")}/subscription?checkout=cancel`,
