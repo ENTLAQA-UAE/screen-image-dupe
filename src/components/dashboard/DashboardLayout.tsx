@@ -80,7 +80,7 @@ export const DashboardLayout = ({ children, activeItem }: DashboardLayoutProps) 
     if (daysRemaining > 0) return daysRemaining;
     if (subscription?.trial_end) {
       const diff = new Date(subscription.trial_end).getTime() - Date.now();
-      return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+      return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
     }
     return 0;
   })();
