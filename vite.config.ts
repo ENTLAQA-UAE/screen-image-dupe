@@ -17,8 +17,8 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt'],
       manifest: {
-        name: 'Jadarat Assess',
-        short_name: 'Jadarat',
+        name: 'Qudurat',
+        short_name: 'Qudurat',
         description: 'AI-powered enterprise assessment platform',
         theme_color: '#0f172a',
         background_color: '#ffffff',
