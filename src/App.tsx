@@ -27,6 +27,7 @@ import SuperAdmin from "./pages/SuperAdmin";
 import UserManagement from "./pages/UserManagement";
 import Subscription from "./pages/Subscription";
 import Onboarding from "./pages/Onboarding";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import PrintPreview from "./pages/PrintPreview";
 
@@ -165,7 +166,15 @@ const App = () => (
                   </ProtectedRoute>
                 } 
               />
-              <Route 
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/super-admin"
                 element={
                   <ProtectedRoute requiredRoles={['super_admin']}>
